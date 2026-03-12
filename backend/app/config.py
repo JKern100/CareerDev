@@ -26,7 +26,9 @@ class Settings(BaseSettings):
     def async_database_url(self) -> str:
         """Convert standard DATABASE_URL to async version for deployment platforms."""
         url = self.DATABASE_URL
-        # Render provides postgresql://, convert to postgresql+asyncpg://
+        # Render provides postgres:// or postgresql://, convert to postgresql+asyncpg://
+        if url.startswith("postgres://"):
+            return url.replace("postgres://", "postgresql+asyncpg://", 1)
         if url.startswith("postgresql://"):
             return url.replace("postgresql://", "postgresql+asyncpg://", 1)
         return url
