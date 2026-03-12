@@ -5,8 +5,8 @@ class Settings(BaseSettings):
     APP_NAME: str = "CareerDev"
     DEBUG: bool = True
 
-    DATABASE_URL: str = "postgresql+asyncpg://careerdev:careerdev@localhost:5432/careerdev"
-    DATABASE_URL_SYNC: str = "postgresql://careerdev:careerdev@localhost:5432/careerdev"
+    DATABASE_URL: str = "sqlite+aiosqlite:///./careerdev.db"
+    DATABASE_URL_SYNC: str = "sqlite:///./careerdev.db"
 
     REDIS_URL: str = "redis://localhost:6379/0"
 
@@ -14,10 +14,22 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
     ALGORITHM: str = "HS256"
 
+    # Allowed CORS origins (comma-separated for multiple)
+    ALLOWED_ORIGINS: str = "http://localhost:3000"
+
     # LLM / RAG settings (placeholder)
     LLM_API_KEY: str = ""
     LLM_MODEL: str = "claude-sonnet-4-6"
     EMBEDDING_MODEL: str = "text-embedding-3-small"
+
+    @property
+    def async_database_url(self) -> str:
+        """Convert standard DATABASE_URL to async version for deployment platforms."""
+        url = self.DATABASE_URL
+        # Render provides postgresql://, convert to postgresql+asyncpg://
+        if url.startswith("postgresql://"):
+            return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return url
 
     class Config:
         env_file = ".env"
