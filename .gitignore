@@ -23,5 +23,11 @@ out/
 .DS_Store
 Thumbs.db
 
+# Database
+*.db
+
+# Next.js generated
+next-env.d.ts
+
 # Docker
 pgdata/
