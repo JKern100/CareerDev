@@ -1,0 +1,163 @@
+[
+  {
+    "id": "P1",
+    "name": "Aviation Training — Cabin Crew Instructor / Training Operations",
+    "description": "Leverage flight crew experience to transition into aviation training roles. Teach what you've lived — safety, service, CRM, and cabin operations.",
+    "typical_roles": ["Cabin Crew Instructor", "Training Operations Coordinator", "Aviation Training Specialist"],
+    "prerequisites": {"min_years_aviation": 3, "min_training_skill": 3},
+    "salary_band_refs": {
+      "L&D Specialist": {"min_aed": 16000, "max_aed": 23000, "source": "Cooper Fitch UAE Salary Guide 2024"},
+      "Training Manager": {"min_aed": 22400, "max_aed": 36000, "source": "Cooper Fitch UAE Salary Guide 2024"}
+    },
+    "recommended_credentials": [
+      {"name": "IATA CRM for Instructors", "duration": "4 days / 32 hours", "source_url": "https://www.iata.org/en/training/courses/crm-instructors/sac057veen02/en/"},
+      {"name": "IATA Instructional Techniques", "duration": "3 days / 24 hours", "source_url": "https://www.iata.org/en/training/courses/instructional-techniques/gmc012veen02/en/"}
+    ],
+    "skill_questions": ["Q027", "Q028", "Q029", "Q033", "Q034", "Q035"],
+    "interest_questions": ["Q016", "Q017", "Q019", "Q106"],
+    "interest_match_values": {"Q106": ["L&D"]},
+    "environment_questions": ["Q047", "Q048", "Q049", "Q050"],
+    "feasibility_questions": ["Q061", "Q062", "Q064", "Q065", "Q070"],
+    "compensation_questions": ["Q089", "Q066"]
+  },
+  {
+    "id": "P2",
+    "name": "Corporate Learning & Development (L&D Specialist → L&D Manager)",
+    "description": "Apply your instructing, coaching, and facilitation skills in corporate environments. Train adults in any industry using skills honed in aviation.",
+    "typical_roles": ["L&D Specialist", "L&D Manager", "Corporate Trainer"],
+    "prerequisites": {"min_training_skill": 3},
+    "salary_band_refs": {
+      "L&D Specialist": {"min_aed": 16000, "max_aed": 23000, "source": "Cooper Fitch UAE Salary Guide 2024"},
+      "L&D Manager": {"min_aed": 27700, "max_aed": 39000, "source": "Cooper Fitch UAE Salary Guide 2024"}
+    },
+    "recommended_credentials": [
+      {"name": "CIPD Level 5 Associate Diploma in People Management", "duration": "12-16 months", "source_url": "https://www.cipd.org/en/learning/qualifications/associate/associate-diploma-in-people-management/"},
+      {"name": "IATA Instructional Techniques", "duration": "3 days / 24 hours", "source_url": "https://www.iata.org/en/training/courses/instructional-techniques/gmc012veen02/en/"}
+    ],
+    "skill_questions": ["Q028", "Q029", "Q033", "Q034", "Q035", "Q036"],
+    "interest_questions": ["Q019", "Q034", "Q106"],
+    "interest_match_values": {"Q106": ["L&D"]},
+    "environment_questions": ["Q047", "Q048", "Q049", "Q050"],
+    "feasibility_questions": ["Q061", "Q062", "Q064", "Q065", "Q070"],
+    "compensation_questions": ["Q089", "Q066"]
+  },
+  {
+    "id": "P3",
+    "name": "HR Pathway (HR Generalist / Talent Acquisition / HRBP)",
+    "description": "Your people skills, conflict resolution, and compliance mindset translate directly into HR roles. Start as a generalist and grow into strategic business partnering.",
+    "typical_roles": ["HR Generalist", "Talent Acquisition Specialist", "HRBP"],
+    "prerequisites": {},
+    "salary_band_refs": {
+      "HR Generalist": {"min_aed": 16000, "max_aed": 20000, "source": "Cooper Fitch UAE Salary Guide 2024"},
+      "TA Specialist": {"min_aed": 16000, "max_aed": 21000, "source": "Cooper Fitch UAE Salary Guide 2024"},
+      "HRBP": {"min_aed": 33000, "max_aed": 54000, "source": "Cooper Fitch UAE Salary Guide 2024"}
+    },
+    "recommended_credentials": [
+      {"name": "CIPD Level 5 Associate Diploma in People Management", "duration": "12-16 months", "source_url": "https://www.cipd.org/en/learning/qualifications/associate/associate-diploma-in-people-management/"},
+      {"name": "SHRM Certification", "duration": "Varies", "source_url": "https://www.shrm.org/credentials/certification/eligibility-criteria"}
+    ],
+    "skill_questions": ["Q028", "Q029", "Q030", "Q031", "Q033", "Q035"],
+    "interest_questions": ["Q018", "Q019", "Q106"],
+    "interest_match_values": {"Q106": ["HR"]},
+    "environment_questions": ["Q047", "Q048", "Q049", "Q050", "Q051"],
+    "feasibility_questions": ["Q061", "Q062", "Q064", "Q065", "Q070", "Q071"],
+    "compensation_questions": ["Q089", "Q066"]
+  },
+  {
+    "id": "P4",
+    "name": "Customer Experience / Customer Success",
+    "description": "Your service orientation and de-escalation skills are exactly what CX teams need. Move from serving passengers to designing and managing customer journeys.",
+    "typical_roles": ["Customer Success Manager", "Service Excellence Manager", "Complaints Escalation Manager"],
+    "prerequisites": {},
+    "salary_band_refs": {
+      "Customer Success Manager / TAM": {"min_aed": 27000, "max_aed": 39000, "source": "Cooper Fitch UAE Salary Guide 2024"}
+    },
+    "recommended_credentials": [],
+    "skill_questions": ["Q027", "Q028", "Q029", "Q030", "Q036"],
+    "interest_questions": ["Q017", "Q018", "Q051", "Q106"],
+    "interest_match_values": {"Q106": ["CX"]},
+    "environment_questions": ["Q047", "Q048", "Q049", "Q050", "Q051"],
+    "feasibility_questions": ["Q061", "Q062", "Q064", "Q065", "Q071"],
+    "compensation_questions": ["Q089", "Q066"]
+  },
+  {
+    "id": "P5",
+    "name": "Operations Coordination",
+    "description": "Apply your operational planning and cross-team coordination skills to airline ops, airport ops, scheduling, or service delivery management.",
+    "typical_roles": ["Operations Manager", "Scheduling Coordinator", "Service Delivery Manager"],
+    "prerequisites": {},
+    "salary_band_refs": {
+      "Operations Manager": {"min_aed": 21000, "max_aed": 39000, "source": "Cooper Fitch UAE Salary Guide 2024"}
+    },
+    "recommended_credentials": [
+      {"name": "CAPM (PMI)", "duration": "23 hours PM education required", "source_url": "https://www.pmi.org/certifications/certified-associate-capm"}
+    ],
+    "skill_questions": ["Q033", "Q035", "Q036", "Q037", "Q031"],
+    "interest_questions": ["Q019", "Q020", "Q106"],
+    "interest_match_values": {"Q106": ["Operations"]},
+    "environment_questions": ["Q047", "Q048", "Q049", "Q052"],
+    "feasibility_questions": ["Q061", "Q062", "Q064", "Q065", "Q071"],
+    "compensation_questions": ["Q089", "Q066"]
+  },
+  {
+    "id": "P6",
+    "name": "Safety / HSE / Compliance",
+    "description": "Your safety-first mindset and compliance experience are highly valued in HSE, quality, and audit roles across industries — not just aviation.",
+    "typical_roles": ["HSE Engineer", "HSE Manager", "Quality Assurance Specialist"],
+    "prerequisites": {"min_safety_interest": 3},
+    "salary_band_refs": {
+      "HSE Engineer": {"min_aed": 14000, "max_aed": 20000, "source": "Cooper Fitch UAE Salary Guide 2024"},
+      "HSE Manager": {"min_aed": 24000, "max_aed": 36000, "source": "Cooper Fitch UAE Salary Guide 2024"}
+    },
+    "recommended_credentials": [
+      {"name": "NEBOSH International General Certificate", "duration": "63 taught hours + ~40 private study", "source_url": "https://www.nebosh.org.uk/qualifications/international-general-certificate/"},
+      {"name": "ISO 45001 Lead Auditor (CQI/IRCA)", "duration": "5 days", "source_url": "https://www.bsigroup.com/en-ID/training-courses/iso-45001-lead-auditor/"}
+    ],
+    "skill_questions": ["Q031", "Q032", "Q035", "Q036", "Q020"],
+    "interest_questions": ["Q016", "Q020", "Q106"],
+    "interest_match_values": {"Q106": ["Safety"]},
+    "environment_questions": ["Q047", "Q048", "Q049", "Q052"],
+    "feasibility_questions": ["Q061", "Q062", "Q064", "Q065", "Q070"],
+    "compensation_questions": ["Q089", "Q066"]
+  },
+  {
+    "id": "P7",
+    "name": "Project Coordination / Project Management",
+    "description": "Your planning, stakeholder communication, and documentation skills form a strong base for project management — especially in operations excellence.",
+    "typical_roles": ["IT Project Manager", "Project Coordinator", "Program Manager"],
+    "prerequisites": {"min_study_readiness": 3},
+    "salary_band_refs": {
+      "IT Project Manager": {"min_aed": 39000, "max_aed": 55000, "source": "Cooper Fitch UAE Salary Guide 2024"}
+    },
+    "recommended_credentials": [
+      {"name": "CAPM (PMI)", "duration": "23 hours PM education required", "source_url": "https://www.pmi.org/certifications/certified-associate-capm"}
+    ],
+    "skill_questions": ["Q033", "Q035", "Q036", "Q037", "Q028"],
+    "interest_questions": ["Q019", "Q056", "Q106"],
+    "interest_match_values": {"Q106": ["Operations"]},
+    "environment_questions": ["Q047", "Q048", "Q049", "Q053"],
+    "feasibility_questions": ["Q061", "Q062", "Q064", "Q065", "Q070", "Q100", "Q101"],
+    "compensation_questions": ["Q089", "Q066"]
+  },
+  {
+    "id": "P8",
+    "name": "Tech-Adjacent Pivot (UX/UI, Business Analyst)",
+    "description": "If you have strong interest in tech, structured thinking, and study readiness, a pivot into UX design or business analysis is achievable with the right portfolio and credentials.",
+    "typical_roles": ["UX/UI Designer (Junior-Mid)", "Business Analyst"],
+    "prerequisites": {"min_tech_interest": true, "min_study_hours": 10},
+    "salary_band_refs": {
+      "UX/UI Designer": {"min_aed": 22000, "max_aed": 34000, "source": "Cooper Fitch UAE Salary Guide 2024"},
+      "Business Analyst": {"min_aed": 11000, "max_aed": 16000, "source": "Cooper Fitch UAE Salary Guide 2024"}
+    },
+    "recommended_credentials": [
+      {"name": "Google UX Professional Certificate (Coursera)", "duration": "~6 months @ 10 hrs/week", "source_url": "https://www.coursera.org/professional-certificates/google-ux-design"},
+      {"name": "Google Digital Marketing & E-commerce (Coursera)", "duration": "~6 months @ 10 hrs/week", "source_url": "https://www.coursera.org/professional-certificates/google-digital-marketing-ecommerce"}
+    ],
+    "skill_questions": ["Q037", "Q035", "Q036", "Q042", "Q044"],
+    "interest_questions": ["Q042", "Q043", "Q106"],
+    "interest_match_values": {"Q106": ["Tech"]},
+    "environment_questions": ["Q047", "Q048", "Q053"],
+    "feasibility_questions": ["Q061", "Q062", "Q064", "Q065", "Q070", "Q100", "Q101"],
+    "compensation_questions": ["Q089", "Q066"]
+  }
+]
