@@ -1,8 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import String, Float, Integer, DateTime, Text, ForeignKey, JSON
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import String, Float, Integer, DateTime, Text, ForeignKey, JSON, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -32,8 +31,8 @@ class Pathway(Base):
 class PathwayScore(Base):
     __tablename__ = "pathway_scores"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"), nullable=False)
     pathway_id: Mapped[str] = mapped_column(String(10), ForeignKey("pathways.id"), nullable=False)
 
     raw_score: Mapped[float] = mapped_column(Float, default=0.0)

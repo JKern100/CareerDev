@@ -1,8 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import String, Integer, Boolean, Float, DateTime, Text, ForeignKey, JSON
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import String, Integer, Boolean, Float, DateTime, Text, ForeignKey, JSON, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -27,8 +26,8 @@ class Question(Base):
 class Answer(Base):
     __tablename__ = "answers"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"), nullable=False)
     question_id: Mapped[str] = mapped_column(String(10), ForeignKey("questions.id"), nullable=False)
     value_json: Mapped[dict] = mapped_column(JSON, nullable=False)  # the actual answer
     confidence: Mapped[int] = mapped_column(Integer, default=50)  # 0-100
@@ -42,8 +41,8 @@ class Answer(Base):
 class Evidence(Base):
     __tablename__ = "evidence"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"), nullable=False)
     evidence_type: Mapped[str] = mapped_column(String(50), nullable=False)  # story, link, file, certificate, etc.
     storage_uri: Mapped[str | None] = mapped_column(String(500))
     content: Mapped[str | None] = mapped_column(Text)

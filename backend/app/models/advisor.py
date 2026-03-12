@@ -1,8 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import String, Boolean, DateTime, Text, ForeignKey, JSON
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import String, Boolean, DateTime, Text, ForeignKey, JSON, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -11,8 +10,8 @@ from app.database import Base
 class Advisor(Base):
     __tablename__ = "advisors"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), unique=True, nullable=False)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"), unique=True, nullable=False)
     credentials: Mapped[str | None] = mapped_column(Text)
     specialties: Mapped[list | None] = mapped_column(JSON)
     languages: Mapped[list | None] = mapped_column(JSON)
@@ -26,9 +25,9 @@ class Advisor(Base):
 class AdvisorSession(Base):
     __tablename__ = "advisor_sessions"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    advisor_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("advisors.id"), nullable=False)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"), nullable=False)
+    advisor_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("advisors.id"), nullable=False)
     status: Mapped[str] = mapped_column(String(20), default="booked")  # booked, in_progress, completed, cancelled
     notes: Mapped[str | None] = mapped_column(Text)
     recording_opt_in: Mapped[bool] = mapped_column(Boolean, default=False)
