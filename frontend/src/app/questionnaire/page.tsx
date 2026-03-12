@@ -4,27 +4,48 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   getNextQuestions,
+  getModuleQuestions,
   submitAnswers,
   completeQuestionnaire,
+  getProgress,
   QuestionSet,
+  ModuleStatus,
 } from "@/lib/api";
 import QuestionField from "@/components/QuestionField";
 
 type AnswerMap = Record<string, { value: string | number | string[]; confidence: number }>;
 
+const MODULE_ORDER = ["A", "B", "C", "D", "E", "F", "G", "H"];
+
 export default function QuestionnairePage() {
   const router = useRouter();
   const [questionSet, setQuestionSet] = useState<QuestionSet | null>(null);
   const [answers, setAnswers] = useState<AnswerMap>({});
+  const [modules, setModules] = useState<ModuleStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [complete, setComplete] = useState(false);
 
-  const loadQuestions = useCallback(async () => {
+  const loadProgress = useCallback(async () => {
+    try {
+      const progress = await getProgress();
+      setModules(progress.modules);
+    } catch {
+      // Non-critical; progress tabs will just not update
+    }
+  }, []);
+
+  const loadQuestions = useCallback(async (module?: string) => {
     try {
       setLoading(true);
-      const qs = await getNextQuestions();
+      setError("");
+      let qs: QuestionSet;
+      if (module) {
+        qs = await getModuleQuestions(module);
+      } else {
+        qs = await getNextQuestions();
+      }
       setQuestionSet(qs);
       // Initialize answers for this module
       const initial: AnswerMap = {};
@@ -32,6 +53,7 @@ export default function QuestionnairePage() {
         initial[q.question_id] = { value: "", confidence: 50 };
       }
       setAnswers(initial);
+      await loadProgress();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "";
       if (msg.includes("Questionnaire complete")) {
@@ -42,7 +64,7 @@ export default function QuestionnairePage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [loadProgress]);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -79,8 +101,17 @@ export default function QuestionnairePage() {
           confidence: a.confidence,
         }));
 
-      await submitAnswers(payload);
-      await loadQuestions();
+      const result = await submitAnswers(payload);
+
+      if (result.questionnaire_complete) {
+        setComplete(true);
+      } else if (result.next_module) {
+        // Load the next module directly using the response
+        await loadQuestions(result.next_module);
+      } else {
+        // Fallback: reload via /next
+        await loadQuestions();
+      }
       window.scrollTo(0, 0);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to save answers");
@@ -89,12 +120,26 @@ export default function QuestionnairePage() {
     }
   }
 
+  async function handleModuleClick(module: string) {
+    await loadQuestions(module);
+    window.scrollTo(0, 0);
+  }
+
   async function handleComplete() {
     try {
       await completeQuestionnaire();
       router.push("/results");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to complete");
+    }
+  }
+
+  function handleBack() {
+    if (!questionSet) return;
+    const currentIdx = MODULE_ORDER.indexOf(questionSet.module);
+    if (currentIdx > 0) {
+      loadQuestions(MODULE_ORDER[currentIdx - 1]);
+      window.scrollTo(0, 0);
     }
   }
 
@@ -122,27 +167,60 @@ export default function QuestionnairePage() {
 
   if (!questionSet) return null;
 
+  const currentModuleIdx = MODULE_ORDER.indexOf(questionSet.module);
+
   return (
     <div className="container">
-      <div className="flex justify-between items-center mb-2">
+      {/* Module header */}
+      <div className="flex justify-between items-center mb-1">
         <div>
-          <h1>{questionSet.module_label}</h1>
           <p className="text-sm text-muted">
-            Module {questionSet.module} — {questionSet.questions.length} questions
+            Module {currentModuleIdx + 1} of {MODULE_ORDER.length}
           </p>
         </div>
         <p className="text-sm">
           {questionSet.answered_questions}/{questionSet.total_questions} answered
+          {" "}({Math.round(questionSet.progress * 100)}% complete)
         </p>
       </div>
 
-      <div className="progress-bar mb-3">
+      {/* Progress bar */}
+      <div className="progress-bar mb-2">
         <div
           className="progress-bar-fill"
           style={{ width: `${questionSet.progress * 100}%` }}
         />
       </div>
 
+      {/* Module tabs */}
+      {modules.length > 0 && (
+        <div style={{ display: "flex", gap: "0.25rem", overflowX: "auto", marginBottom: "1.5rem", paddingBottom: "0.5rem" }}>
+          {modules.map((m) => {
+            const isActive = m.module === questionSet.module;
+            return (
+              <button
+                key={m.module}
+                onClick={() => handleModuleClick(m.module)}
+                className="btn"
+                style={{
+                  whiteSpace: "nowrap",
+                  fontSize: "0.75rem",
+                  padding: "0.375rem 0.75rem",
+                  background: isActive ? "var(--primary)" : m.is_complete ? "#d1fae5" : "transparent",
+                  color: isActive ? "white" : m.is_complete ? "#065f46" : "var(--muted)",
+                  border: `1px solid ${isActive ? "var(--primary)" : m.is_complete ? "#059669" : "var(--border)"}`,
+                }}
+              >
+                {m.module_label} {m.answered_questions}/{m.total_questions}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      <h1 className="mb-2">{questionSet.module_label}</h1>
+
+      {/* Questions */}
       <div className="flex flex-col gap-1">
         {questionSet.questions.map((q) => (
           <QuestionField
@@ -172,13 +250,20 @@ export default function QuestionnairePage() {
         </p>
       )}
 
+      {/* Navigation buttons */}
       <div className="mt-3" style={{ display: "flex", gap: "0.5rem" }}>
+        {currentModuleIdx > 0 && (
+          <button className="btn btn-outline" onClick={handleBack}>
+            Back
+          </button>
+        )}
         <button
           className="btn btn-primary"
           onClick={handleSubmit}
           disabled={submitting}
+          style={{ flex: 1 }}
         >
-          {submitting ? "Saving..." : "Save & Continue"}
+          {submitting ? "Saving..." : "Save & Next Module"}
         </button>
       </div>
     </div>

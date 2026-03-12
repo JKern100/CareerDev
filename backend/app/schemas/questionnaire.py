@@ -45,6 +45,25 @@ class AnswerOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class SubmitAnswersOut(BaseModel):
+    answers: list[AnswerOut]
+    next_module: str | None
+    next_module_label: str | None
+    module_complete: bool
+    questionnaire_complete: bool
+    progress: float  # 0.0 to 1.0
+
+
+class ModuleStatusOut(BaseModel):
+    module: str
+    module_label: str
+    total_questions: int
+    answered_questions: int
+    required_questions: int
+    required_answered: int
+    is_complete: bool
+
+
 class QuestionnaireProgressOut(BaseModel):
     total_modules: int
     completed_modules: int
@@ -53,3 +72,4 @@ class QuestionnaireProgressOut(BaseModel):
     current_module: str | None
     current_question_id: str | None
     progress_pct: float
+    modules: list[ModuleStatusOut]

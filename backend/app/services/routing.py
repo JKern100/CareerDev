@@ -129,22 +129,34 @@ def get_questions_for_module(module: str) -> list[QuestionDef]:
     return [q for q in get_question_bank() if q.module == module]
 
 
+def is_module_complete(module: str, answered_ids: set[str]) -> bool:
+    """Check if all required questions in a module have been answered."""
+    module_questions = get_questions_for_module(module)
+    required_ids = {q.question_id for q in module_questions if q.required}
+    return required_ids.issubset(answered_ids)
+
+
 def get_next_module(current_module: str | None, answered_ids: set[str]) -> str | None:
-    """Determine the next module to show based on progress."""
-    if current_module is None:
-        return "A"
+    """Determine the next module to show based on progress.
 
-    idx = CORE_MODULES.index(current_module) if current_module in CORE_MODULES else -1
+    Scans all modules from the start (or from current_module) and returns
+    the first module with unanswered required questions. If all are complete,
+    returns None.
+    """
+    # Determine starting point for the scan
+    start_idx = 0
+    if current_module and current_module in CORE_MODULES:
+        idx = CORE_MODULES.index(current_module)
+        # If current module is complete, start scanning from the next one
+        if is_module_complete(current_module, answered_ids):
+            start_idx = idx + 1
+        else:
+            return current_module  # Still in current module
 
-    # Check if current module is complete
-    current_questions = get_questions_for_module(current_module)
-    required_ids = {q.question_id for q in current_questions if q.required}
-    if not required_ids.issubset(answered_ids):
-        return current_module  # Still in current module
-
-    # Move to next module
-    if idx + 1 < len(CORE_MODULES):
-        return CORE_MODULES[idx + 1]
+    # Scan forward for the first incomplete module
+    for i in range(start_idx, len(CORE_MODULES)):
+        if not is_module_complete(CORE_MODULES[i], answered_ids):
+            return CORE_MODULES[i]
 
     return None  # All modules complete
 

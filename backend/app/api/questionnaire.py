@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -11,6 +11,8 @@ from app.schemas.questionnaire import (
     AnswerIn,
     AnswerBatchIn,
     AnswerOut,
+    SubmitAnswersOut,
+    ModuleStatusOut,
     QuestionnaireProgressOut,
 )
 from app.services.routing import (
@@ -18,6 +20,7 @@ from app.services.routing import (
     get_questions_for_module,
     get_next_module,
     get_unanswered_questions,
+    is_module_complete,
     check_consent_block,
     MODULE_LABELS,
     CORE_MODULES,
@@ -49,6 +52,20 @@ async def _get_answers_dict(user_id, db: AsyncSession) -> dict:
     }
 
 
+def _build_question_out(q) -> QuestionOut:
+    return QuestionOut(
+        question_id=q.question_id,
+        module=q.module,
+        prompt=q.prompt,
+        question_type=q.question_type,
+        required=q.required,
+        options=q.options_json,
+        min_val=q.min_val,
+        max_val=q.max_val,
+        tags=q.tags_json,
+    )
+
+
 @router.get("/next", response_model=QuestionSetOut)
 async def get_next_questions(
     user: User = Depends(get_current_user),
@@ -58,7 +75,6 @@ async def get_next_questions(
     answered_ids = await _get_answered_ids(user.id, db)
     answers_dict = await _get_answers_dict(user.id, db)
 
-    # Check consent block
     if check_consent_block(answers_dict):
         raise HTTPException(status_code=403, detail="Consent declined. Cannot proceed with questionnaire.")
 
@@ -67,43 +83,53 @@ async def get_next_questions(
         raise HTTPException(status_code=200, detail="Questionnaire complete")
 
     unanswered = get_unanswered_questions(module, answered_ids)
-
     total_questions = len(get_question_bank())
     answered_count = len(answered_ids)
     progress = answered_count / total_questions if total_questions > 0 else 0
 
-    questions_out = [
-        QuestionOut(
-            question_id=q.question_id,
-            module=q.module,
-            prompt=q.prompt,
-            question_type=q.question_type,
-            required=q.required,
-            options=q.options_json,
-            min_val=q.min_val,
-            max_val=q.max_val,
-            tags=q.tags_json,
-        )
-        for q in unanswered
-    ]
-
     return QuestionSetOut(
         module=module,
         module_label=MODULE_LABELS.get(module, module),
-        questions=questions_out,
+        questions=[_build_question_out(q) for q in unanswered],
         progress=round(progress, 3),
         total_questions=total_questions,
         answered_questions=answered_count,
     )
 
 
-@router.post("/answer", response_model=list[AnswerOut])
+@router.get("/module/{module}", response_model=QuestionSetOut)
+async def get_module_questions(
+    module: str,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get all questions for a specific module (for tab-based navigation)."""
+    if module not in CORE_MODULES:
+        raise HTTPException(status_code=400, detail=f"Invalid module: {module}")
+
+    answered_ids = await _get_answered_ids(user.id, db)
+    module_questions = get_questions_for_module(module)
+    total_questions = len(get_question_bank())
+    answered_count = len(answered_ids)
+    progress = answered_count / total_questions if total_questions > 0 else 0
+
+    return QuestionSetOut(
+        module=module,
+        module_label=MODULE_LABELS.get(module, module),
+        questions=[_build_question_out(q) for q in module_questions],
+        progress=round(progress, 3),
+        total_questions=total_questions,
+        answered_questions=answered_count,
+    )
+
+
+@router.post("/answer", response_model=SubmitAnswersOut)
 async def submit_answers(
     data: AnswerBatchIn,
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Submit one or more answers."""
+    """Submit one or more answers. Returns next module info."""
     valid_ids = {q.question_id for q in get_question_bank()}
     results = []
 
@@ -134,21 +160,59 @@ async def submit_answers(
 
         results.append(answer)
 
-    # Update user's current position
-    answered_ids = await _get_answered_ids(user.id, db)
-    for ans in data.answers:
-        answered_ids.add(ans.question_id)
+    # Flush so the DB query below sees the new answers
+    await db.flush()
 
-    next_module = get_next_module(user.current_module, answered_ids)
+    # Recompute answered_ids from DB (now includes flushed answers)
+    answered_ids = await _get_answered_ids(user.id, db)
+
+    # Determine the current module from the submitted answers
+    submitted_modules = set()
+    for ans in data.answers:
+        for q in get_question_bank():
+            if q.question_id == ans.question_id:
+                submitted_modules.add(q.module)
+                break
+
+    # Check if the submitted module(s) are now complete
+    current_submitted_module = sorted(submitted_modules)[0] if submitted_modules else user.current_module
+    module_complete = False
+    if current_submitted_module:
+        module_complete = is_module_complete(current_submitted_module, answered_ids)
+
+    # Find next module
+    next_module = get_next_module(current_submitted_module, answered_ids)
+    questionnaire_complete = next_module is None
+
+    # Update user state
     user.current_module = next_module
-    if next_module is None:
+    if questionnaire_complete:
         user.questionnaire_completed = True
 
     await db.commit()
     for r in results:
         await db.refresh(r)
 
-    return results
+    total_questions = len(get_question_bank())
+    progress = len(answered_ids) / total_questions if total_questions > 0 else 0
+
+    return SubmitAnswersOut(
+        answers=[
+            AnswerOut(
+                id=r.id,
+                question_id=r.question_id,
+                value_json=r.value_json,
+                confidence=r.confidence,
+                evidence_refs=r.evidence_refs,
+            )
+            for r in results
+        ],
+        next_module=next_module,
+        next_module_label=MODULE_LABELS.get(next_module, None) if next_module else None,
+        module_complete=module_complete,
+        questionnaire_complete=questionnaire_complete,
+        progress=round(progress, 3),
+    )
 
 
 @router.post("/complete")
@@ -167,17 +231,30 @@ async def get_progress(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get current questionnaire progress."""
+    """Get current questionnaire progress with per-module breakdown."""
     answered_ids = await _get_answered_ids(user.id, db)
     total_questions = len(get_question_bank())
 
-    # Count completed modules
+    modules_status = []
     completed_modules = 0
     for module in CORE_MODULES:
         module_qs = get_questions_for_module(module)
-        required_ids = {q.question_id for q in module_qs if q.required}
-        if required_ids.issubset(answered_ids):
+        required_qs = [q for q in module_qs if q.required]
+        module_answered = {q.question_id for q in module_qs if q.question_id in answered_ids}
+        required_answered = {q.question_id for q in required_qs if q.question_id in answered_ids}
+        complete = len(required_answered) == len(required_qs)
+        if complete:
             completed_modules += 1
+
+        modules_status.append(ModuleStatusOut(
+            module=module,
+            module_label=MODULE_LABELS.get(module, module),
+            total_questions=len(module_qs),
+            answered_questions=len(module_answered),
+            required_questions=len(required_qs),
+            required_answered=len(required_answered),
+            is_complete=complete,
+        ))
 
     return QuestionnaireProgressOut(
         total_modules=len(CORE_MODULES),
@@ -187,4 +264,5 @@ async def get_progress(
         current_module=user.current_module,
         current_question_id=user.current_question_id,
         progress_pct=round(len(answered_ids) / total_questions * 100, 1) if total_questions > 0 else 0,
+        modules=modules_status,
     )

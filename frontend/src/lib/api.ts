@@ -84,13 +84,36 @@ export async function getNextQuestions() {
   return request<QuestionSet>("/questionnaire/next");
 }
 
+export async function getModuleQuestions(module: string) {
+  return request<QuestionSet>(`/questionnaire/module/${module}`);
+}
+
+export interface SubmitAnswersResponse {
+  answers: { id: string; question_id: string; value_json: Record<string, unknown>; confidence: number }[];
+  next_module: string | null;
+  next_module_label: string | null;
+  module_complete: boolean;
+  questionnaire_complete: boolean;
+  progress: number;
+}
+
 export async function submitAnswers(
   answers: { question_id: string; value: string | number | string[]; confidence: number }[]
 ) {
-  return request("/questionnaire/answer", {
+  return request<SubmitAnswersResponse>("/questionnaire/answer", {
     method: "POST",
     body: JSON.stringify({ answers }),
   });
+}
+
+export interface ModuleStatus {
+  module: string;
+  module_label: string;
+  total_questions: number;
+  answered_questions: number;
+  required_questions: number;
+  required_answered: number;
+  is_complete: boolean;
 }
 
 export async function getProgress() {
@@ -100,6 +123,7 @@ export async function getProgress() {
     total_questions: number;
     answered_questions: number;
     progress_pct: number;
+    modules: ModuleStatus[];
   }>("/questionnaire/progress");
 }
 
