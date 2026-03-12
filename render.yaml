@@ -10,7 +10,6 @@ services:
     runtime: python
     plan: free
     rootDir: backend
-    pythonVersion: "3.11.11"
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
