@@ -101,7 +101,7 @@ async def get_next_questions(
 
     module = get_next_module(user.current_module, answered_ids)
     if module is None:
-        raise HTTPException(status_code=200, detail="Questionnaire complete")
+        raise HTTPException(status_code=400, detail="Questionnaire complete")
 
     unanswered = get_unanswered_questions(module, answered_ids)
     existing = await _get_existing_answers_for_module(user.id, module, db)
