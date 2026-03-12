@@ -197,6 +197,9 @@ export default function QuestionnairePage() {
 
   return (
     <div className="container">
+      {/* Version tag */}
+      <p className="text-sm text-muted" style={{ textAlign: "right", marginBottom: "0.25rem" }}>V.01</p>
+
       {/* Module header */}
       <div className="flex justify-between items-center mb-1">
         <div>
