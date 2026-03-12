@@ -1,0 +1,55 @@
+from pydantic import BaseModel
+from uuid import UUID
+
+
+class QuestionOut(BaseModel):
+    question_id: str
+    module: str
+    prompt: str
+    question_type: str
+    required: bool
+    options: list[str] | None = None
+    min_val: int | None = None
+    max_val: int | None = None
+    tags: list[str] | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class QuestionSetOut(BaseModel):
+    module: str
+    module_label: str
+    questions: list[QuestionOut]
+    progress: float  # 0.0 to 1.0
+    total_questions: int
+    answered_questions: int
+
+
+class AnswerIn(BaseModel):
+    question_id: str
+    value: str | int | float | list[str]
+    confidence: int = 50  # 0-100
+
+
+class AnswerBatchIn(BaseModel):
+    answers: list[AnswerIn]
+
+
+class AnswerOut(BaseModel):
+    id: UUID
+    question_id: str
+    value_json: dict
+    confidence: int
+    evidence_refs: list | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class QuestionnaireProgressOut(BaseModel):
+    total_modules: int
+    completed_modules: int
+    total_questions: int
+    answered_questions: int
+    current_module: str | None
+    current_question_id: str | None
+    progress_pct: float

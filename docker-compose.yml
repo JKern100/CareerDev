@@ -1,0 +1,49 @@
+version: "3.9"
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: careerdev
+      POSTGRES_PASSWORD: careerdev
+      POSTGRES_DB: careerdev
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://careerdev:careerdev@db:5432/careerdev
+      DATABASE_URL_SYNC: postgresql://careerdev:careerdev@db:5432/careerdev
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: change-me-in-production
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./backend/app:/app/app
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend/src:/app/src
+
+volumes:
+  pgdata:
