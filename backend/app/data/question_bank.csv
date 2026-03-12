@@ -78,7 +78,7 @@ Q076,E,Biggest constraint you want the plan to respect,text_short,true,,,,,"[""c
 Q077,E,Biggest trade-off you are willing to make,text_short,true,,,,,"[""tradeoff""]"
 Q078,E,Biggest trade-off you will not make,text_short,true,,,,,"[""tradeoff""]"
 Q079,F,Target cities,multi_select,true,"[""Dubai"",""Abu Dhabi"",""Other emirate""]",,,,"[""location"",""target""]"
-Q080,F,Countries of interest later,multi_select,false,"[""EU"",""UK"",""Canada"",""Australia"",""USA"",""Other""]","{""any_selected"": ""trigger_relocation_module""}",,"[""location"",""relocation""]"
+Q080,F,Countries of interest later,multi_select,false,"[""EU"",""UK"",""Canada"",""Australia"",""USA"",""Other""]",,,"{""any_selected"": ""trigger_relocation_module""}","[""location"",""relocation""]"
 Q081,F,Timeline to relocate,single_select,false,"[""0-6 months"",""6-24 months"",""24+ months"",""Unsure""]",,,,"[""location"",""timeline""]"
 Q082,F,Climate preference,single_select,false,"[""Hot"",""Temperate"",""Cold"",""Doesn't matter""]",,,,"[""preference"",""climate""]"
 Q083,F,Community preference,single_select,false,"[""Expat-heavy"",""Mixed"",""Local""]",,,,"[""preference"",""community""]"

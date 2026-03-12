@@ -99,6 +99,14 @@ def load_question_bank() -> list[QuestionDef]:
                 except json.JSONDecodeError:
                     tags = None
 
+            def _safe_int(val: str) -> int | None:
+                if not val:
+                    return None
+                try:
+                    return int(val)
+                except (ValueError, TypeError):
+                    return None
+
             questions.append(QuestionDef(
                 question_id=row["question_id"],
                 module=row["module"],
@@ -106,8 +114,8 @@ def load_question_bank() -> list[QuestionDef]:
                 question_type=row["type"],
                 required=row["required"].lower() == "true",
                 options_json=options,
-                min_val=int(row["min"]) if row["min"] else None,
-                max_val=int(row["max"]) if row["max"] else None,
+                min_val=_safe_int(row["min"]),
+                max_val=_safe_int(row["max"]),
                 route_if_json=route_if,
                 tags_json=tags,
             ))
