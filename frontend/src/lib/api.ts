@@ -71,10 +71,17 @@ export interface Question {
   tags: string[] | null;
 }
 
+export interface ExistingAnswer {
+  question_id: string;
+  value: string | number | string[] | null;
+  confidence: number;
+}
+
 export interface QuestionSet {
   module: string;
   module_label: string;
   questions: Question[];
+  existing_answers?: ExistingAnswer[];
   progress: number;
   total_questions: number;
   answered_questions: number;

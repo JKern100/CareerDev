@@ -47,10 +47,36 @@ export default function QuestionnairePage() {
         qs = await getNextQuestions();
       }
       setQuestionSet(qs);
-      // Initialize answers for this module
+      // Build map of existing answers from the backend
+      const existingMap = new Map<string, { value: string | number | string[]; confidence: number }>();
+      if (qs.existing_answers) {
+        for (const ea of qs.existing_answers) {
+          if (ea.value != null) {
+            existingMap.set(ea.question_id, {
+              value: ea.value as string | number | string[],
+              confidence: ea.confidence,
+            });
+          }
+        }
+      }
+
+      // Initialize answers: use existing answers if available, else sensible defaults
       const initial: AnswerMap = {};
       for (const q of qs.questions) {
-        initial[q.question_id] = { value: "", confidence: 50 };
+        const existing = existingMap.get(q.question_id);
+        if (existing) {
+          initial[q.question_id] = existing;
+        } else {
+          let defaultValue: string | number | string[] = "";
+          if (q.question_type === "slider_0_10") {
+            defaultValue = Math.round(((q.min_val ?? 0) + (q.max_val ?? 10)) / 2);
+          } else if (q.question_type === "likert_1_5") {
+            defaultValue = 3;
+          } else if (q.question_type === "numeric") {
+            defaultValue = q.min_val ?? 0;
+          }
+          initial[q.question_id] = { value: defaultValue, confidence: 50 };
+        }
       }
       setAnswers(initial);
       await loadProgress();
@@ -245,9 +271,17 @@ export default function QuestionnairePage() {
       </div>
 
       {error && (
-        <p style={{ color: "var(--error)", marginTop: "1rem", fontSize: "0.875rem" }}>
+        <div style={{
+          color: "white",
+          background: "#dc2626",
+          padding: "0.75rem 1rem",
+          borderRadius: "8px",
+          marginTop: "1rem",
+          fontSize: "0.875rem",
+          fontWeight: 500,
+        }}>
           {error}
-        </p>
+        </div>
       )}
 
       {/* Navigation buttons */}

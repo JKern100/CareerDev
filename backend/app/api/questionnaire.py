@@ -8,6 +8,7 @@ from app.models.questionnaire import Answer
 from app.schemas.questionnaire import (
     QuestionOut,
     QuestionSetOut,
+    ExistingAnswerOut,
     AnswerIn,
     AnswerBatchIn,
     AnswerOut,
@@ -52,6 +53,26 @@ async def _get_answers_dict(user_id, db: AsyncSession) -> dict:
     }
 
 
+async def _get_existing_answers_for_module(user_id, module: str, db: AsyncSession) -> list[ExistingAnswerOut]:
+    """Get existing answers for questions in the given module."""
+    module_question_ids = {q.question_id for q in get_questions_for_module(module)}
+    result = await db.execute(
+        select(Answer).where(
+            Answer.user_id == user_id,
+            Answer.question_id.in_(module_question_ids),
+        )
+    )
+    answers = result.scalars().all()
+    return [
+        ExistingAnswerOut(
+            question_id=a.question_id,
+            value=a.value_json.get("value") if a.value_json else None,
+            confidence=a.confidence,
+        )
+        for a in answers
+    ]
+
+
 def _build_question_out(q) -> QuestionOut:
     return QuestionOut(
         question_id=q.question_id,
@@ -83,6 +104,7 @@ async def get_next_questions(
         raise HTTPException(status_code=200, detail="Questionnaire complete")
 
     unanswered = get_unanswered_questions(module, answered_ids)
+    existing = await _get_existing_answers_for_module(user.id, module, db)
     total_questions = len(get_question_bank())
     answered_count = len(answered_ids)
     progress = answered_count / total_questions if total_questions > 0 else 0
@@ -91,6 +113,7 @@ async def get_next_questions(
         module=module,
         module_label=MODULE_LABELS.get(module, module),
         questions=[_build_question_out(q) for q in unanswered],
+        existing_answers=existing,
         progress=round(progress, 3),
         total_questions=total_questions,
         answered_questions=answered_count,
@@ -109,6 +132,7 @@ async def get_module_questions(
 
     answered_ids = await _get_answered_ids(user.id, db)
     module_questions = get_questions_for_module(module)
+    existing = await _get_existing_answers_for_module(user.id, module, db)
     total_questions = len(get_question_bank())
     answered_count = len(answered_ids)
     progress = answered_count / total_questions if total_questions > 0 else 0
@@ -117,6 +141,7 @@ async def get_module_questions(
         module=module,
         module_label=MODULE_LABELS.get(module, module),
         questions=[_build_question_out(q) for q in module_questions],
+        existing_answers=existing,
         progress=round(progress, 3),
         total_questions=total_questions,
         answered_questions=answered_count,

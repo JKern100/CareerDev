@@ -16,10 +16,17 @@ class QuestionOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class ExistingAnswerOut(BaseModel):
+    question_id: str
+    value: str | int | float | list[str] | None = None
+    confidence: int = 50
+
+
 class QuestionSetOut(BaseModel):
     module: str
     module_label: str
     questions: list[QuestionOut]
+    existing_answers: list[ExistingAnswerOut] = []
     progress: float  # 0.0 to 1.0
     total_questions: int
     answered_questions: int
