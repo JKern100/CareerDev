@@ -31,6 +31,12 @@ class AnalysisRunOut(BaseModel):
     status: str
 
 
+class SummaryOut(BaseModel):
+    summary_text: str
+    generated_with_ai: bool
+    created_at: datetime | None = None
+
+
 class ReportOut(BaseModel):
     id: UUID
     user_id: UUID

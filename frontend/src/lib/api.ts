@@ -138,6 +138,21 @@ export async function completeQuestionnaire() {
   return request("/questionnaire/complete", { method: "POST" });
 }
 
+// Summary
+export interface SummaryReport {
+  summary_text: string;
+  generated_with_ai: boolean;
+  created_at: string | null;
+}
+
+export async function generateSummary() {
+  return request<SummaryReport>("/analysis/summary", { method: "POST" });
+}
+
+export async function getSummary() {
+  return request<SummaryReport>("/analysis/summary");
+}
+
 // Analysis
 export async function runAnalysis() {
   return request<{ job_id: string; status: string }>("/analysis/run", {

@@ -9,11 +9,88 @@ from app.models.user import User
 from app.models.questionnaire import Answer
 from app.models.pathway import PathwayScore
 from app.models.report import Report
-from app.schemas.analysis import PathwayScoreOut, AnalysisRunOut, ReportOut
+from app.config import settings
+from app.schemas.analysis import PathwayScoreOut, AnalysisRunOut, ReportOut, SummaryOut
 from app.services.scoring import score_pathways
+from app.services.summary import generate_summary_with_ai, generate_summary_without_ai
 from app.api.deps import get_current_user
 
 router = APIRouter(prefix="/analysis", tags=["analysis"])
+
+
+@router.post("/summary", response_model=SummaryOut)
+async def generate_summary(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Generate a narrative summary report playing back the user's answers."""
+    if not user.questionnaire_completed:
+        raise HTTPException(status_code=400, detail="Complete the questionnaire first")
+
+    # Load user answers
+    result = await db.execute(select(Answer).where(Answer.user_id == user.id))
+    answers_raw = result.scalars().all()
+    answers = {
+        a.question_id: {
+            "value": a.value_json.get("value") if a.value_json else None,
+            "confidence": a.confidence,
+        }
+        for a in answers_raw
+    }
+
+    # Generate the narrative
+    api_key = settings.LLM_API_KEY
+    if api_key:
+        summary_text = await generate_summary_with_ai(answers, user.full_name, api_key)
+        used_ai = True
+    else:
+        summary_text = generate_summary_without_ai(answers, user.full_name)
+        used_ai = False
+
+    # Store in a report record
+    report = Report(
+        user_id=user.id,
+        report_json={"type": "summary", "text": summary_text, "generated_with_ai": used_ai},
+        status="complete",
+    )
+    db.add(report)
+    await db.commit()
+    await db.refresh(report)
+
+    return SummaryOut(
+        summary_text=summary_text,
+        generated_with_ai=used_ai,
+        created_at=report.created_at,
+    )
+
+
+@router.get("/summary", response_model=SummaryOut)
+async def get_summary(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get the latest summary report for the current user."""
+    result = await db.execute(
+        select(Report)
+        .where(Report.user_id == user.id)
+        .order_by(Report.created_at.desc())
+    )
+    reports = result.scalars().all()
+    # Find the most recent summary-type report
+    summary_report = None
+    for r in reports:
+        if isinstance(r.report_json, dict) and r.report_json.get("type") == "summary":
+            summary_report = r
+            break
+
+    if not summary_report:
+        raise HTTPException(status_code=404, detail="No summary found. Generate one first.")
+
+    return SummaryOut(
+        summary_text=summary_report.report_json.get("text", ""),
+        generated_with_ai=summary_report.report_json.get("generated_with_ai", False),
+        created_at=summary_report.created_at,
+    )
 
 
 @router.post("/run", response_model=AnalysisRunOut)

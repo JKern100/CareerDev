@@ -154,7 +154,7 @@ export default function QuestionnairePage() {
   async function handleComplete() {
     try {
       await completeQuestionnaire();
-      router.push("/results");
+      router.push("/summary");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to complete");
     }

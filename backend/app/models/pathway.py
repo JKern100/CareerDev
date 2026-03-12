@@ -33,7 +33,7 @@ class PathwayScore(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"), nullable=False)
-    pathway_id: Mapped[str] = mapped_column(String(10), ForeignKey("pathways.id"), nullable=False)
+    pathway_id: Mapped[str] = mapped_column(String(10), nullable=False)
 
     raw_score: Mapped[float] = mapped_column(Float, default=0.0)
     confidence_factor: Mapped[float] = mapped_column(Float, default=0.5)
