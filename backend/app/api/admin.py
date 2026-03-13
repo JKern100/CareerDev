@@ -55,6 +55,12 @@ class DashboardStats(BaseModel):
     avg_answers_per_user: float
 
 
+VALID_QUESTION_TYPES = [
+    "single_select", "multi_select", "likert_1_5", "slider_0_10",
+    "numeric", "text_short", "text_long", "file_upload",
+]
+
+
 class QuestionOut(BaseModel):
     question_id: str
     module: str
@@ -65,18 +71,37 @@ class QuestionOut(BaseModel):
     min_val: float | None
     max_val: float | None
     tags_json: list | None
+    order: int = 0
 
     model_config = {"from_attributes": True}
 
 
+class QuestionCreate(BaseModel):
+    question_id: str
+    module: str
+    prompt: str
+    question_type: str
+    required: bool = True
+    options_json: list | None = None
+    min_val: float | None = None
+    max_val: float | None = None
+    tags_json: list | None = None
+
+
 class QuestionUpdate(BaseModel):
     prompt: str | None = None
+    module: str | None = None
     question_type: str | None = None
     required: bool | None = None
     options_json: list | None = None
     min_val: float | None = None
     max_val: float | None = None
     tags_json: list | None = None
+
+
+class QuestionReorder(BaseModel):
+    question_id: str
+    direction: str  # "up" or "down"
 
 
 class UserAnswerOut(BaseModel):
@@ -277,7 +302,9 @@ async def list_questions(
     admin: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(select(Question).order_by(Question.id))
+    result = await db.execute(
+        select(Question).order_by(Question.module, Question.order, Question.id)
+    )
     questions = result.scalars().all()
     return [
         QuestionOut(
@@ -290,9 +317,61 @@ async def list_questions(
             min_val=q.min_val,
             max_val=q.max_val,
             tags_json=q.tags_json if isinstance(q.tags_json, list) else None,
+            order=q.order or 0,
         )
         for q in questions
     ]
+
+
+@router.post("/questions", response_model=QuestionOut)
+async def create_question(
+    data: QuestionCreate,
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    existing = await db.execute(select(Question).where(Question.id == data.question_id))
+    if existing.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail=f"Question ID '{data.question_id}' already exists")
+
+    if data.question_type not in VALID_QUESTION_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid question type. Must be one of: {', '.join(VALID_QUESTION_TYPES)}",
+        )
+
+    # Place new question at the end of its module
+    max_order = (await db.execute(
+        select(func.max(Question.order)).where(Question.module == data.module)
+    )).scalar() or 0
+
+    q = Question(
+        id=data.question_id,
+        module=data.module,
+        prompt=data.prompt,
+        question_type=data.question_type,
+        required=data.required,
+        options_json=data.options_json,
+        min_val=data.min_val,
+        max_val=data.max_val,
+        tags_json=data.tags_json,
+        order=max_order + 1,
+    )
+    db.add(q)
+    await db.commit()
+    await db.refresh(q)
+
+    return QuestionOut(
+        question_id=q.id,
+        module=q.module,
+        prompt=q.prompt,
+        question_type=q.question_type,
+        required=q.required,
+        options_json=q.options_json,
+        min_val=q.min_val,
+        max_val=q.max_val,
+        tags_json=q.tags_json if isinstance(q.tags_json, list) else None,
+        order=q.order or 0,
+    )
 
 
 @router.patch("/questions/{question_id}")
@@ -307,8 +386,16 @@ async def update_question(
     if not q:
         raise HTTPException(status_code=404, detail="Question not found")
 
+    if data.question_type is not None and data.question_type not in VALID_QUESTION_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid question type. Must be one of: {', '.join(VALID_QUESTION_TYPES)}",
+        )
+
     if data.prompt is not None:
         q.prompt = data.prompt
+    if data.module is not None:
+        q.module = data.module
     if data.question_type is not None:
         q.question_type = data.question_type
     if data.required is not None:
@@ -324,6 +411,77 @@ async def update_question(
 
     await db.commit()
     return {"detail": "Question updated"}
+
+
+@router.delete("/questions/{question_id}")
+async def delete_question(
+    question_id: str,
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(select(Question).where(Question.id == question_id))
+    q = result.scalar_one_or_none()
+    if not q:
+        raise HTTPException(status_code=404, detail="Question not found")
+
+    # Check if any answers reference this question
+    answer_count = (await db.execute(
+        select(func.count(Answer.id)).where(Answer.question_id == question_id)
+    )).scalar() or 0
+
+    if answer_count > 0:
+        # Delete associated answers first
+        await db.execute(delete(Answer).where(Answer.question_id == question_id))
+
+    await db.delete(q)
+    await db.commit()
+    return {"detail": f"Question {question_id} deleted" + (f" (along with {answer_count} answers)" if answer_count else "")}
+
+
+@router.post("/questions/reorder")
+async def reorder_question(
+    data: QuestionReorder,
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(select(Question).where(Question.id == data.question_id))
+    q = result.scalar_one_or_none()
+    if not q:
+        raise HTTPException(status_code=404, detail="Question not found")
+
+    if data.direction not in ("up", "down"):
+        raise HTTPException(status_code=400, detail="Direction must be 'up' or 'down'")
+
+    # Get all questions in the same module sorted by order
+    module_result = await db.execute(
+        select(Question)
+        .where(Question.module == q.module)
+        .order_by(Question.order, Question.id)
+    )
+    module_questions = list(module_result.scalars().all())
+
+    # Find current index
+    current_idx = next((i for i, mq in enumerate(module_questions) if mq.id == q.id), None)
+    if current_idx is None:
+        raise HTTPException(status_code=500, detail="Question not found in module")
+
+    if data.direction == "up" and current_idx == 0:
+        return {"detail": "Already at top"}
+    if data.direction == "down" and current_idx == len(module_questions) - 1:
+        return {"detail": "Already at bottom"}
+
+    # Swap with neighbor
+    swap_idx = current_idx - 1 if data.direction == "up" else current_idx + 1
+    neighbor = module_questions[swap_idx]
+
+    q.order, neighbor.order = neighbor.order, q.order
+    # If orders were equal, force distinct values
+    if q.order == neighbor.order:
+        q.order = swap_idx
+        neighbor.order = current_idx
+
+    await db.commit()
+    return {"detail": f"Question moved {data.direction}"}
 
 
 # ── Promote user to admin (utility) ─────────────────────────────────────
