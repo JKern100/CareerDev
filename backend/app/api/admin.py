@@ -286,10 +286,10 @@ async def list_questions(
             prompt=q.prompt,
             question_type=q.question_type,
             required=q.required,
-            options=q.options_json,
+            options_json=q.options_json,
             min_val=q.min_val,
             max_val=q.max_val,
-            tags=q.tags_json,
+            tags_json=q.tags_json if isinstance(q.tags_json, list) else None,
         )
         for q in questions
     ]
