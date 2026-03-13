@@ -40,12 +40,29 @@ export async function register(email: string, password: string, fullName?: strin
 }
 
 export async function login(email: string, password: string) {
-  const data = await request<{ access_token: string }>("/auth/login", {
+  const data = await request<{ access_token: string; is_first_login: boolean }>("/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
   localStorage.setItem("token", data.access_token);
+  if (data.is_first_login) {
+    localStorage.setItem("is_first_login", "true");
+  }
   return data;
+}
+
+export async function verifyEmail(token: string) {
+  return request<{ detail: string }>("/auth/verify-email", {
+    method: "POST",
+    body: JSON.stringify({ token }),
+  });
+}
+
+export async function resendVerification(email: string) {
+  return request<{ detail: string }>("/auth/resend-verification", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
 }
 
 export async function getMe() {

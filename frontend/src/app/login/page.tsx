@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { login, getMe } from "@/lib/api";
+import { login, getMe, resendVerification } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -10,10 +10,28 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showResend, setShowResend] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendMsg, setResendMsg] = useState("");
+
+  async function handleResend() {
+    setResending(true);
+    setResendMsg("");
+    try {
+      await resendVerification(email);
+      setResendMsg("Verification email sent! Check your inbox.");
+    } catch {
+      setResendMsg("Failed to resend. Please try again.");
+    } finally {
+      setResending(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setShowResend(false);
+    setResendMsg("");
     setLoading(true);
     try {
       await login(email, password);
@@ -26,7 +44,11 @@ export default function LoginPage() {
         router.push("/questionnaire");
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      const msg = err instanceof Error ? err.message : "Login failed";
+      setError(msg);
+      if (msg.toLowerCase().includes("verify your email")) {
+        setShowResend(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -59,7 +81,27 @@ export default function LoginPage() {
             required
           />
         </div>
-        {error && <p style={{ color: "var(--error)", fontSize: "0.875rem" }}>{error}</p>}
+        {error && (
+          <div>
+            <p style={{ color: "var(--error)", fontSize: "0.875rem" }}>{error}</p>
+            {showResend && (
+              <div style={{ marginTop: "0.5rem" }}>
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={handleResend}
+                  disabled={resending}
+                  style={{ fontSize: "0.8rem", padding: "0.375rem 0.75rem" }}
+                >
+                  {resending ? "Sending..." : "Resend verification email"}
+                </button>
+                {resendMsg && (
+                  <p className="text-sm" style={{ marginTop: "0.375rem", color: "var(--success)" }}>{resendMsg}</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
         <div style={{ textAlign: "right" }}>
           <a
             href="/forgot-password"

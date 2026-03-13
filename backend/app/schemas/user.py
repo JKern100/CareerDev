@@ -21,6 +21,7 @@ class UserResponse(BaseModel):
     role: str
     country_pack: str
     language: str
+    email_verified: bool
     questionnaire_completed: bool
     current_module: str | None
     current_question_id: str | None
@@ -32,6 +33,7 @@ class UserResponse(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    is_first_login: bool = False
 
 
 class ForgotPasswordRequest(BaseModel):

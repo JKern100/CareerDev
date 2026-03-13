@@ -27,6 +27,7 @@ export default function QuestionnairePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [complete, setComplete] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   const loadProgress = useCallback(async () => {
     try {
@@ -103,6 +104,11 @@ export default function QuestionnairePage() {
     if (!token) {
       router.push("/login");
       return;
+    }
+    // Show welcome popup on first login
+    if (localStorage.getItem("is_first_login") === "true") {
+      setShowWelcome(true);
+      localStorage.removeItem("is_first_login");
     }
     loadQuestions();
   }, [router, loadQuestions]);
@@ -203,6 +209,65 @@ export default function QuestionnairePage() {
 
   return (
     <>
+    {/* First-login welcome modal */}
+    {showWelcome && (
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 1000,
+        background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "1rem",
+      }}>
+        <div style={{
+          background: "white", borderRadius: "16px", maxWidth: "520px",
+          width: "100%", padding: "2.5rem 2rem", textAlign: "center",
+          boxShadow: "0 25px 50px rgba(0,0,0,0.15)",
+        }}>
+          <div style={{
+            width: "56px", height: "56px", borderRadius: "50%",
+            background: "#dbeafe", display: "inline-flex",
+            alignItems: "center", justifyContent: "center",
+            fontSize: "1.5rem", marginBottom: "1.25rem",
+          }}>
+            &#127919;
+          </div>
+          <h1 style={{ fontSize: "1.4rem", marginBottom: "0.75rem" }}>
+            Welcome to your career assessment
+          </h1>
+          <p style={{ color: "var(--muted)", lineHeight: 1.8, fontSize: "0.925rem" }}>
+            This questionnaire is the foundation of your personalised career transition plan. It covers 8 modules across about <strong style={{ color: "var(--fg)" }}>108 questions</strong> and typically takes <strong style={{ color: "var(--fg)" }}>20 &ndash; 30 minutes</strong> to complete.
+          </p>
+          <div style={{
+            background: "#f8fafc", borderRadius: "10px",
+            padding: "1rem 1.25rem", margin: "1.25rem 0",
+            textAlign: "left", lineHeight: 1.75, fontSize: "0.875rem",
+            color: "#475569",
+          }}>
+            <p style={{ fontWeight: 600, color: "var(--fg)", marginBottom: "0.375rem" }}>
+              A few things to know:
+            </p>
+            <p>
+              <span style={{ color: "var(--primary)", fontWeight: 600 }}>Be thoughtful.</span>{" "}
+              Your answers directly shape the career pathways we recommend. The more honest and considered your responses, the better your results will be.
+            </p>
+            <p style={{ marginTop: "0.5rem" }}>
+              <span style={{ color: "var(--primary)", fontWeight: 600 }}>Your progress is saved.</span>{" "}
+              You can close the browser and come back any time &mdash; you&apos;ll pick up right where you left off.
+            </p>
+            <p style={{ marginTop: "0.5rem" }}>
+              <span style={{ color: "var(--primary)", fontWeight: 600 }}>Take your time.</span>{" "}
+              If you&apos;re short on time right now, it&apos;s better to do a few modules well and return later than to rush through everything at once.
+            </p>
+          </div>
+          <button
+            className="btn btn-primary"
+            onClick={() => setShowWelcome(false)}
+            style={{ padding: "0.75rem 2rem", fontSize: "0.95rem", marginTop: "0.25rem" }}
+          >
+            I&apos;m ready &mdash; let&apos;s begin
+          </button>
+        </div>
+      </div>
+    )}
     <AppHeader />
     <div className="container">
       {/* Version tag */}
