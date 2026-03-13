@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
 
     # Allowed CORS origins (comma-separated for multiple)
-    ALLOWED_ORIGINS: str = "http://localhost:3000"
+    ALLOWED_ORIGINS: str = "http://localhost:3000,https://career-dev.vercel.app"
 
     # Password reset
     RESET_TOKEN_EXPIRE_MINUTES: int = 30
