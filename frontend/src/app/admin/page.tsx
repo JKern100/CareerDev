@@ -11,6 +11,7 @@ import {
   deleteAdminUser,
   updateAdminQuestion,
   getUserAnswers,
+  impersonateUser,
   DashboardStats,
   AdminUser,
   AdminQuestion,
@@ -150,6 +151,21 @@ export default function AdminPage() {
     }
   }
 
+  async function handleImpersonate(userId: string, email: string) {
+    if (!confirm(`Log in as ${email}? You'll be viewing the app as this user.`)) return;
+    try {
+      // Save admin token so we can return later
+      const adminToken = localStorage.getItem("token");
+      const result = await impersonateUser(userId);
+      localStorage.setItem("admin_token", adminToken || "");
+      localStorage.setItem("token", result.access_token);
+      localStorage.setItem("impersonating", email);
+      router.push("/questionnaire");
+    } catch (err: unknown) {
+      setActionMsg(err instanceof Error ? err.message : "Failed to impersonate");
+    }
+  }
+
   async function handleSaveQuestion(questionId: string) {
     try {
       await updateAdminQuestion(questionId, { prompt: editPrompt });
@@ -190,9 +206,14 @@ export default function AdminPage() {
           <div style={styles.logo}>CD</div>
           <span style={{ fontWeight: 700, fontSize: "1.1rem" }}>Admin Panel</span>
         </div>
-        <button style={styles.logoutBtn} onClick={() => { localStorage.removeItem("token"); router.push("/"); }}>
-          Log out
-        </button>
+        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+          <a href="/questionnaire" style={{ ...styles.logoutBtn, textDecoration: "none" }}>
+            User View
+          </a>
+          <button style={styles.logoutBtn} onClick={() => { localStorage.removeItem("token"); localStorage.removeItem("admin_token"); localStorage.removeItem("impersonating"); router.push("/"); }}>
+            Log out
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -278,6 +299,12 @@ export default function AdminPage() {
                         Reset Questionnaire
                       </button>
                     )}
+                    <button
+                      style={{ ...styles.btnOutline, borderColor: "#2563eb", color: "#60a5fa" }}
+                      onClick={() => handleImpersonate(selectedUser.id, selectedUser.email)}
+                    >
+                      View as User
+                    </button>
                     <button style={styles.btnDanger} onClick={() => handleDeleteUser(selectedUser.id, selectedUser.email)}>
                       Delete User
                     </button>

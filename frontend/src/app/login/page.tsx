@@ -18,7 +18,9 @@ export default function LoginPage() {
     try {
       await login(email, password);
       const user = await getMe();
-      if (user.questionnaire_completed) {
+      if (user.role === "admin" || user.role === "auditor") {
+        router.push("/admin");
+      } else if (user.questionnaire_completed) {
         router.push("/results");
       } else {
         router.push("/questionnaire");

@@ -282,3 +282,10 @@ export async function promoteUser(userId: string) {
     method: "POST",
   });
 }
+
+export async function impersonateUser(userId: string) {
+  return request<{ access_token: string; user_email: string; user_name: string | null }>(
+    `/admin/impersonate/${userId}`,
+    { method: "POST" }
+  );
+}

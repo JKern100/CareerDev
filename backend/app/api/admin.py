@@ -16,7 +16,7 @@ from app.models.questionnaire import Answer, Question
 from app.models.report import Report
 from app.models.pathway import PathwayScore
 from app.api.deps import get_admin_user
-from app.services.auth import hash_password
+from app.services.auth import hash_password, create_access_token
 from app.config import settings
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -367,3 +367,26 @@ async def admin_setup(
     user.role = UserRole.ADMIN
     await db.commit()
     return {"detail": f"{user.email} is now an admin"}
+
+
+# ── Impersonate user ──────────────────────────────────────────────────
+
+@router.post("/impersonate/{user_id}")
+async def impersonate_user(
+    user_id: str,
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Generate a token to log in as another user. Admin only."""
+    result = await db.execute(select(User).where(User.id == user_id))
+    target = result.scalar_one_or_none()
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    token = create_access_token(data={"sub": str(target.id)})
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user_email": target.email,
+        "user_name": target.full_name,
+    }
