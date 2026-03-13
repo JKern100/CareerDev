@@ -204,6 +204,39 @@ export default function SummaryPage() {
         </button>
       </div>
 
+      {/* Human review recommendation */}
+      <div
+        style={{
+          marginTop: "1.5rem",
+          padding: "1.5rem",
+          background: "linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(139, 92, 246, 0.08))",
+          borderRadius: "12px",
+          border: "1px solid rgba(37, 99, 235, 0.25)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+          <span style={{ fontSize: "0.75rem", background: "var(--primary)", color: "white", padding: "0.2rem 0.6rem", borderRadius: "20px", fontWeight: 600 }}>
+            Recommended
+          </span>
+        </div>
+        <h3 style={{ marginBottom: "0.5rem" }}>1-on-1 Human Career Review</h3>
+        <p className="text-muted" style={{ marginBottom: "1rem", lineHeight: 1.6 }}>
+          Get a personalized 45-minute session with a career advisor who will walk
+          through your profile summary, validate the AI analysis, and help you
+          build an actionable next-steps plan tailored to your situation.
+        </p>
+        <button
+          className="btn btn-outline"
+          style={{ fontSize: "0.95rem", padding: "0.65rem 1.5rem" }}
+          onClick={() => window.open("https://calendly.com", "_blank")}
+        >
+          Book a review session
+        </button>
+        <p className="text-sm text-muted" style={{ marginTop: "0.75rem" }}>
+          Available for UAE-based crew. Sessions conducted via Zoom or in-person in Dubai.
+        </p>
+      </div>
+
       {/* Regenerate and back options */}
       <div
         className="mt-2"

@@ -6,35 +6,21 @@ import { getMe } from "@/lib/api";
 
 export default function Home() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [dashboardPath, setDashboardPath] = useState("/questionnaire");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      setLoading(false);
-      return;
-    }
+    if (!token) return;
     getMe()
       .then((user) => {
-        if (user.questionnaire_completed) {
-          router.push("/summary");
-        } else {
-          router.push("/questionnaire");
-        }
+        setIsLoggedIn(true);
+        setDashboardPath(user.questionnaire_completed ? "/summary" : "/questionnaire");
       })
       .catch(() => {
         localStorage.removeItem("token");
-        setLoading(false);
       });
-  }, [router]);
-
-  if (loading) {
-    return (
-      <div style={{ minHeight: "100vh", background: "#0a0e1a", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p style={{ color: "#94a3b8" }}>Loading...</p>
-      </div>
-    );
-  }
+  }, []);
 
   return (
     <div style={{ background: "#0a0e1a", color: "#f1f5f9", minHeight: "100vh" }}>
@@ -82,10 +68,10 @@ export default function Home() {
             Pathways
           </a>
           <button
-            onClick={() => router.push("/login")}
+            onClick={() => router.push(isLoggedIn ? dashboardPath : "/login")}
             style={{
-              background: "transparent",
-              border: "1px solid #334155",
+              background: isLoggedIn ? "#2563eb" : "transparent",
+              border: isLoggedIn ? "none" : "1px solid #334155",
               color: "#f1f5f9",
               padding: "0.5rem 1rem",
               borderRadius: "8px",
@@ -93,7 +79,7 @@ export default function Home() {
               fontSize: "0.9rem",
             }}
           >
-            Sign in
+            {isLoggedIn ? "Go to dashboard" : "Sign in"}
           </button>
         </div>
       </nav>
@@ -158,39 +144,62 @@ export default function Home() {
         </p>
 
         <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
-          <button
-            onClick={() => router.push("/register")}
-            style={{
-              background: "#2563eb",
-              color: "white",
-              border: "none",
-              padding: "0.875rem 2rem",
-              borderRadius: "10px",
-              fontSize: "1rem",
-              fontWeight: 600,
-              cursor: "pointer",
-              transition: "background 0.15s",
-            }}
-            onMouseOver={(e) => (e.currentTarget.style.background = "#1d4ed8")}
-            onMouseOut={(e) => (e.currentTarget.style.background = "#2563eb")}
-          >
-            Start your assessment
-          </button>
-          <button
-            onClick={() => router.push("/login")}
-            style={{
-              background: "rgba(255,255,255,0.05)",
-              color: "#f1f5f9",
-              border: "1px solid #334155",
-              padding: "0.875rem 2rem",
-              borderRadius: "10px",
-              fontSize: "1rem",
-              fontWeight: 500,
-              cursor: "pointer",
-            }}
-          >
-            Sign in
-          </button>
+          {isLoggedIn ? (
+            <button
+              onClick={() => router.push(dashboardPath)}
+              style={{
+                background: "#2563eb",
+                color: "white",
+                border: "none",
+                padding: "0.875rem 2rem",
+                borderRadius: "10px",
+                fontSize: "1rem",
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "background 0.15s",
+              }}
+              onMouseOver={(e) => (e.currentTarget.style.background = "#1d4ed8")}
+              onMouseOut={(e) => (e.currentTarget.style.background = "#2563eb")}
+            >
+              Continue where you left off
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={() => router.push("/register")}
+                style={{
+                  background: "#2563eb",
+                  color: "white",
+                  border: "none",
+                  padding: "0.875rem 2rem",
+                  borderRadius: "10px",
+                  fontSize: "1rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "background 0.15s",
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.background = "#1d4ed8")}
+                onMouseOut={(e) => (e.currentTarget.style.background = "#2563eb")}
+              >
+                Start your assessment
+              </button>
+              <button
+                onClick={() => router.push("/login")}
+                style={{
+                  background: "rgba(255,255,255,0.05)",
+                  color: "#f1f5f9",
+                  border: "1px solid #334155",
+                  padding: "0.875rem 2rem",
+                  borderRadius: "10px",
+                  fontSize: "1rem",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                }}
+              >
+                Sign in
+              </button>
+            </>
+          )}
         </div>
 
         <p style={{ color: "#475569", fontSize: "0.85rem", marginTop: "1.5rem" }}>
@@ -434,7 +443,7 @@ export default function Home() {
           Create a free account and start your career assessment today.
         </p>
         <button
-          onClick={() => router.push("/register")}
+          onClick={() => router.push(isLoggedIn ? dashboardPath : "/register")}
           style={{
             background: "#2563eb",
             color: "white",
@@ -446,7 +455,7 @@ export default function Home() {
             cursor: "pointer",
           }}
         >
-          Get started free
+          {isLoggedIn ? "Go to dashboard" : "Get started free"}
         </button>
       </section>
 
