@@ -99,7 +99,7 @@ async def get_dashboard_stats(
     week_ago = now - timedelta(days=7)
     month_ago = now - timedelta(days=30)
 
-    total_users = (await db.execute(func.count(User.id))).scalar() or 0
+    total_users = (await db.execute(select(func.count(User.id)))).scalar() or 0
     completed = (await db.execute(
         select(func.count(User.id)).where(User.questionnaire_completed == True)
     )).scalar() or 0
@@ -108,8 +108,8 @@ async def get_dashboard_stats(
         select(func.count(func.distinct(Report.user_id)))
     )).scalar() or 0
 
-    total_answers = (await db.execute(func.count(Answer.id))).scalar() or 0
-    total_reports = (await db.execute(func.count(Report.id))).scalar() or 0
+    total_answers = (await db.execute(select(func.count(Answer.id)))).scalar() or 0
+    total_reports = (await db.execute(select(func.count(Report.id)))).scalar() or 0
 
     users_7d = (await db.execute(
         select(func.count(User.id)).where(User.created_at >= week_ago)
