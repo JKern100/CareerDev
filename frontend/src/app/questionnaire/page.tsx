@@ -82,12 +82,17 @@ export default function QuestionnairePage() {
       setAnswers(initial);
       await loadProgress();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "";
-      if (msg.includes("Questionnaire complete")) {
-        setComplete(true);
-      } else {
-        setError(msg);
+      if (!module) {
+        // If /next failed (questionnaire complete or any error), fall back to module A for review
+        try {
+          await loadQuestions("A");
+          return;
+        } catch {
+          // If even module A fails, show the error
+        }
       }
+      const msg = err instanceof Error ? err.message : "Failed to load questions";
+      setError(msg);
     } finally {
       setLoading(false);
     }
