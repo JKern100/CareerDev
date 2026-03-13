@@ -7,6 +7,7 @@ import { getMe } from "@/lib/api";
 export default function AppHeader() {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdvisor, setIsAdvisor] = useState(false);
   const [impersonating, setImpersonating] = useState<string | null>(null);
 
   useEffect(() => {
@@ -17,6 +18,9 @@ export default function AppHeader() {
       .then((user) => {
         if (user.role === "admin" || user.role === "auditor") {
           setIsAdmin(true);
+        }
+        if (user.role === "advisor" || user.role === "admin") {
+          setIsAdvisor(true);
         }
       })
       .catch(() => {});
@@ -109,6 +113,23 @@ export default function AppHeader() {
         <span style={{ fontWeight: 600, fontSize: "1rem" }}>CareerDev</span>
       </a>
       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+        {isAdvisor && (
+          <a
+            href="/advisor"
+            style={{
+              background: "rgba(139, 92, 246, 0.1)",
+              border: "1px solid rgba(139, 92, 246, 0.3)",
+              color: "#a78bfa",
+              padding: "0.4rem 1rem",
+              borderRadius: "8px",
+              fontSize: "0.85rem",
+              textDecoration: "none",
+              cursor: "pointer",
+            }}
+          >
+            Advisor
+          </a>
+        )}
         {isAdmin && (
           <a
             href="/admin"

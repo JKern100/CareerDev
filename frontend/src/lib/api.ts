@@ -289,3 +289,103 @@ export async function impersonateUser(userId: string) {
     { method: "POST" }
   );
 }
+
+// Scheduling
+export interface AdvisorProfile {
+  id: string;
+  user_id: string;
+  name: string | null;
+  bio: string | null;
+  credentials: string | null;
+  specialties: string[] | null;
+  languages: string[] | null;
+  timezone: string | null;
+  session_duration_minutes: number;
+  active: boolean;
+}
+
+export interface AvailabilitySlotData {
+  id: string;
+  day_of_week: number;
+  day_name: string;
+  start_time: string;
+  end_time: string;
+}
+
+export interface TimeSlot {
+  date: string;
+  start_time: string;
+  end_time: string;
+}
+
+export interface BookingData {
+  id: string;
+  user_id: string;
+  user_name: string | null;
+  user_email: string | null;
+  advisor_id: string;
+  advisor_name: string | null;
+  date: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+  notes: string | null;
+  created_at: string | null;
+}
+
+// Advisor self-service
+export async function getMyAdvisorProfile() {
+  return request<AdvisorProfile>("/scheduling/my-profile");
+}
+
+export async function updateMyAdvisorProfile(data: Partial<AdvisorProfile>) {
+  return request<AdvisorProfile>("/scheduling/my-profile", {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getMyAvailability() {
+  return request<AvailabilitySlotData[]>("/scheduling/my-availability");
+}
+
+export async function setMyAvailability(slots: { day_of_week: number; start_time: string; end_time: string }[]) {
+  return request<{ detail: string }>("/scheduling/my-availability", {
+    method: "PUT",
+    body: JSON.stringify({ slots }),
+  });
+}
+
+export async function getMyAdvisorBookings() {
+  return request<BookingData[]>("/scheduling/my-bookings");
+}
+
+// User-facing
+export async function listAdvisors() {
+  return request<AdvisorProfile[]>("/scheduling/advisors");
+}
+
+export async function getAdvisorSlots(advisorId: string, daysAhead = 14) {
+  return request<TimeSlot[]>(`/scheduling/advisors/${advisorId}/slots?days_ahead=${daysAhead}`);
+}
+
+export async function bookSession(advisorId: string, date: string, startTime: string) {
+  return request<BookingData>("/scheduling/book", {
+    method: "POST",
+    body: JSON.stringify({ advisor_id: advisorId, date, start_time: startTime }),
+  });
+}
+
+export async function getMyUserBookings() {
+  return request<BookingData[]>("/scheduling/my-user-bookings");
+}
+
+export async function cancelBooking(bookingId: string) {
+  return request<{ detail: string }>(`/scheduling/cancel/${bookingId}`, {
+    method: "POST",
+  });
+}
+
+export async function getAllBookings() {
+  return request<BookingData[]>("/scheduling/all-bookings");
+}

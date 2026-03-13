@@ -231,7 +231,7 @@ export default function SummaryPage() {
         <button
           className="btn btn-outline"
           style={{ fontSize: "0.95rem", padding: "0.65rem 1.5rem" }}
-          onClick={() => window.open("https://calendly.com", "_blank")}
+          onClick={() => router.push("/book")}
         >
           Book a review session
         </button>
