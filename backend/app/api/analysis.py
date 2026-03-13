@@ -116,7 +116,18 @@ async def run_analysis(
     }
 
     # Run scoring
-    scored = score_pathways(answers)
+    try:
+        scored = score_pathways(answers)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Scoring engine error: {str(e)}")
+
+    # Delete old scores for this user before inserting new ones
+    old_scores = await db.execute(
+        select(PathwayScore).where(PathwayScore.user_id == user.id)
+    )
+    for old in old_scores.scalars().all():
+        await db.delete(old)
+    await db.flush()
 
     # Persist scores
     for sp in scored:
