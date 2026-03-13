@@ -12,6 +12,7 @@ import {
   ModuleStatus,
 } from "@/lib/api";
 import QuestionField from "@/components/QuestionField";
+import AppHeader from "@/components/AppHeader";
 
 type AnswerMap = Record<string, { value: string | number | string[]; confidence: number }>;
 
@@ -196,6 +197,8 @@ export default function QuestionnairePage() {
   const currentModuleIdx = MODULE_ORDER.indexOf(questionSet.module);
 
   return (
+    <>
+    <AppHeader />
     <div className="container">
       {/* Version tag */}
       <p className="text-sm text-muted" style={{ textAlign: "right", marginBottom: "0.25rem" }}>V.01</p>
@@ -304,5 +307,6 @@ export default function QuestionnairePage() {
         </button>
       </div>
     </div>
+    </>
   );
 }
