@@ -228,7 +228,26 @@ export interface AdminQuestion {
   min_val: number | null;
   max_val: number | null;
   tags_json: string[] | null;
+  order: number;
 }
+
+export const QUESTION_TYPES = [
+  "single_select", "multi_select", "likert_1_5", "slider_0_10",
+  "numeric", "text_short", "text_long", "file_upload",
+] as const;
+
+export const MODULES = ["A", "B", "C", "D", "E", "F", "G", "H"] as const;
+
+export const MODULE_LABELS: Record<string, string> = {
+  A: "Consent & Baseline",
+  B: "Aviation Profile & Satisfaction",
+  C: "Transferable Skills & Evidence",
+  D: "Work Style & Environment Preferences",
+  E: "Constraints & Feasibility (UAE)",
+  F: "Location & Mobility",
+  G: "Compensation & Benefits Modeling",
+  H: "Learning, Credentials & Study Pathways",
+};
 
 export interface UserAnswer {
   question_id: string;
@@ -270,10 +289,30 @@ export async function getAdminQuestions() {
   return request<AdminQuestion[]>("/admin/questions");
 }
 
+export async function createAdminQuestion(data: Record<string, unknown>) {
+  return request<AdminQuestion>("/admin/questions", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
 export async function updateAdminQuestion(questionId: string, data: Record<string, unknown>) {
   return request<{ detail: string }>(`/admin/questions/${questionId}`, {
     method: "PATCH",
     body: JSON.stringify(data),
+  });
+}
+
+export async function deleteAdminQuestion(questionId: string) {
+  return request<{ detail: string }>(`/admin/questions/${questionId}`, {
+    method: "DELETE",
+  });
+}
+
+export async function reorderAdminQuestion(questionId: string, direction: "up" | "down") {
+  return request<{ detail: string }>("/admin/questions/reorder", {
+    method: "POST",
+    body: JSON.stringify({ question_id: questionId, direction }),
   });
 }
 

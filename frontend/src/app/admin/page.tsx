@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   getMe,
@@ -10,15 +10,380 @@ import {
   updateAdminUser,
   deleteAdminUser,
   updateAdminQuestion,
+  createAdminQuestion,
+  deleteAdminQuestion,
+  reorderAdminQuestion,
   getUserAnswers,
   impersonateUser,
   DashboardStats,
   AdminUser,
   AdminQuestion,
   UserAnswer,
+  QUESTION_TYPES,
+  MODULES,
+  MODULE_LABELS,
 } from "@/lib/api";
 
 type Tab = "dashboard" | "users" | "questions";
+
+/* ── Help Content ─────────────────────────────────────────────────────── */
+
+const HELP_CONTENT: Record<Tab, { title: string; sections: { heading: string; body: string }[] }> = {
+  dashboard: {
+    title: "Dashboard Help",
+    sections: [
+      {
+        heading: "Overview",
+        body: "The dashboard shows key metrics about your application's usage. Stats refresh each time you visit this tab.",
+      },
+      {
+        heading: "Metrics Explained",
+        body: `- **Total Users**: All registered accounts.\n- **Completed Questionnaire**: Users who finished all 8 modules.\n- **Completion Rate**: Percentage of users who completed the questionnaire.\n- **Users with Reports**: Users who have generated an analysis report.\n- **Total Answers / Reports**: Aggregate counts across all users.\n- **Avg Answers/User**: Average number of answered questions per user.\n- **New (7/30 days)**: Recently registered users.`,
+      },
+    ],
+  },
+  users: {
+    title: "User Management Help",
+    sections: [
+      {
+        heading: "Viewing Users",
+        body: "Search users by email or name. Click **View** to see their full profile, answers, and management options.",
+      },
+      {
+        heading: "Roles",
+        body: `- **user**: Standard user, can take the questionnaire.\n- **advisor**: Can manage their own scheduling availability.\n- **admin**: Full access to the admin panel.\n- **auditor**: Read-only admin access (same view, cannot modify).`,
+      },
+      {
+        heading: "Actions",
+        body: `- **Change Role**: Select a new role from the dropdown.\n- **Reset Questionnaire**: Clears their completion flag so they can retake it.\n- **View as User**: Opens the app as that user (impersonation). Your admin session is preserved.\n- **Delete User**: Permanently removes the user and all their answers, reports, and pathway scores. This cannot be undone.`,
+      },
+    ],
+  },
+  questions: {
+    title: "Question Management Help",
+    sections: [
+      {
+        heading: "Overview",
+        body: "Manage the 108-question questionnaire organized across 8 modules (A through H). Questions are shown in module order.",
+      },
+      {
+        heading: "Editing a Question",
+        body: "Click the **Edit** button (pencil icon) to open the full editor. You can change the prompt text, type, module, required flag, options (for select types), value range (for numeric/slider types), and tags.",
+      },
+      {
+        heading: "Question Types",
+        body: `- **single_select**: Radio-button choice from a list of options.\n- **multi_select**: Checkbox selection of multiple options.\n- **likert_1_5**: 1-to-5 agreement scale.\n- **slider_0_10**: Draggable slider from 0 to 10.\n- **numeric**: Free-form number entry with optional min/max.\n- **text_short**: Single-line text input.\n- **text_long**: Multi-line textarea for detailed responses.\n- **file_upload**: File attachment (certificates, screenshots, etc.).`,
+      },
+      {
+        heading: "Adding a Question",
+        body: 'Click **+ Add Question** to create a new question. You must provide a unique ID (e.g. "Q109"), select a module, type, and write the prompt text. The question is added to the end of its module.',
+      },
+      {
+        heading: "Moving Questions",
+        body: "Use the up/down arrow buttons to reorder questions within their module. This changes the order users see them.",
+      },
+      {
+        heading: "Deleting a Question",
+        body: "Click the trash icon to delete a question. If users have already answered it, those answers will also be deleted. This cannot be undone.",
+      },
+      {
+        heading: "Modules",
+        body: Object.entries(MODULE_LABELS).map(([k, v]) => `- **Module ${k}**: ${v}`).join("\n"),
+      },
+    ],
+  },
+};
+
+/* ── Help Modal Component ─────────────────────────────────────────────── */
+
+function HelpModal({ tab, onClose }: { tab: Tab; onClose: () => void }) {
+  const help = HELP_CONTENT[tab];
+  return (
+    <div style={modalStyles.overlay} onClick={onClose}>
+      <div style={modalStyles.modal} onClick={(e) => e.stopPropagation()}>
+        <div style={modalStyles.header}>
+          <h2 style={{ fontSize: "1.2rem", fontWeight: 700, margin: 0 }}>{help.title}</h2>
+          <button style={modalStyles.closeBtn} onClick={onClose}>X</button>
+        </div>
+        <div style={modalStyles.body}>
+          {help.sections.map((s, i) => (
+            <div key={i} style={{ marginBottom: "1.25rem" }}>
+              <h3 style={{ fontSize: "1rem", fontWeight: 600, color: "#93c5fd", marginBottom: "0.5rem" }}>
+                {s.heading}
+              </h3>
+              <div style={{ color: "#cbd5e1", fontSize: "0.88rem", lineHeight: "1.6" }}>
+                {s.body.split("\n").map((line, j) => {
+                  // Render bold markdown
+                  const parts = line.split(/\*\*(.*?)\*\*/g);
+                  return (
+                    <p key={j} style={{ margin: "0.2rem 0" }}>
+                      {parts.map((part, k) =>
+                        k % 2 === 1 ? <strong key={k} style={{ color: "#f1f5f9" }}>{part}</strong> : part
+                      )}
+                    </p>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Question Editor Modal ─────────────────────────────────────────── */
+
+interface QuestionEditorProps {
+  question: AdminQuestion | null; // null = creating new
+  onSave: (data: Record<string, unknown>) => Promise<void>;
+  onClose: () => void;
+}
+
+function QuestionEditor({ question, onSave, onClose }: QuestionEditorProps) {
+  const isNew = !question;
+  const [questionId, setQuestionId] = useState(question?.question_id || "");
+  const [module, setModule] = useState(question?.module || "A");
+  const [prompt, setPrompt] = useState(question?.prompt || "");
+  const [questionType, setQuestionType] = useState(question?.question_type || "single_select");
+  const [required, setRequired] = useState(question?.required ?? true);
+  const [optionsText, setOptionsText] = useState(
+    question?.options_json ? question.options_json.join("\n") : ""
+  );
+  const [minVal, setMinVal] = useState<string>(question?.min_val?.toString() || "");
+  const [maxVal, setMaxVal] = useState<string>(question?.max_val?.toString() || "");
+  const [tagsText, setTagsText] = useState(
+    question?.tags_json ? question.tags_json.join(", ") : ""
+  );
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const needsOptions = ["single_select", "multi_select"].includes(questionType);
+  const needsRange = ["likert_1_5", "slider_0_10", "numeric"].includes(questionType);
+
+  async function handleSave() {
+    if (!prompt.trim()) {
+      setError("Prompt is required");
+      return;
+    }
+    if (isNew && !questionId.trim()) {
+      setError("Question ID is required");
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+    try {
+      const payload: Record<string, unknown> = {
+        prompt: prompt.trim(),
+        question_type: questionType,
+        required,
+      };
+
+      if (isNew) {
+        payload.question_id = questionId.trim();
+        payload.module = module;
+      } else {
+        payload.module = module;
+      }
+
+      if (needsOptions && optionsText.trim()) {
+        payload.options_json = optionsText.split("\n").map((o) => o.trim()).filter(Boolean);
+      } else if (!needsOptions) {
+        payload.options_json = null;
+      }
+
+      if (needsRange) {
+        if (minVal) payload.min_val = parseFloat(minVal);
+        if (maxVal) payload.max_val = parseFloat(maxVal);
+      }
+
+      if (tagsText.trim()) {
+        payload.tags_json = tagsText.split(",").map((t) => t.trim()).filter(Boolean);
+      }
+
+      await onSave(payload);
+      onClose();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Save failed");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div style={modalStyles.overlay} onClick={onClose}>
+      <div style={{ ...modalStyles.modal, maxWidth: "600px" }} onClick={(e) => e.stopPropagation()}>
+        <div style={modalStyles.header}>
+          <h2 style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0 }}>
+            {isNew ? "Add New Question" : `Edit ${question.question_id}`}
+          </h2>
+          <button style={modalStyles.closeBtn} onClick={onClose}>X</button>
+        </div>
+        <div style={modalStyles.body}>
+          {error && <p style={{ color: "#ef4444", fontSize: "0.85rem", marginBottom: "0.75rem" }}>{error}</p>}
+
+          {isNew && (
+            <div style={fieldStyles.group}>
+              <label style={fieldStyles.label}>Question ID</label>
+              <input
+                style={fieldStyles.input}
+                value={questionId}
+                onChange={(e) => setQuestionId(e.target.value)}
+                placeholder="e.g. Q109"
+              />
+              <p style={fieldStyles.hint}>Must be unique. Convention: Q + 3-digit number.</p>
+            </div>
+          )}
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+            <div style={fieldStyles.group}>
+              <label style={fieldStyles.label}>Module</label>
+              <select
+                style={fieldStyles.select}
+                value={module}
+                onChange={(e) => setModule(e.target.value)}
+              >
+                {MODULES.map((m) => (
+                  <option key={m} value={m}>
+                    {m} - {MODULE_LABELS[m]}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div style={fieldStyles.group}>
+              <label style={fieldStyles.label}>Question Type</label>
+              <select
+                style={fieldStyles.select}
+                value={questionType}
+                onChange={(e) => setQuestionType(e.target.value)}
+              >
+                {QUESTION_TYPES.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div style={fieldStyles.group}>
+            <label style={fieldStyles.label}>Prompt</label>
+            <textarea
+              style={{ ...fieldStyles.input, minHeight: "80px", resize: "vertical" }}
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Enter the question text..."
+            />
+          </div>
+
+          <div style={fieldStyles.group}>
+            <label style={fieldStyles.label}>
+              <input
+                type="checkbox"
+                checked={required}
+                onChange={(e) => setRequired(e.target.checked)}
+                style={{ marginRight: "0.5rem" }}
+              />
+              Required
+            </label>
+          </div>
+
+          {needsOptions && (
+            <div style={fieldStyles.group}>
+              <label style={fieldStyles.label}>Options (one per line)</label>
+              <textarea
+                style={{ ...fieldStyles.input, minHeight: "100px", resize: "vertical" }}
+                value={optionsText}
+                onChange={(e) => setOptionsText(e.target.value)}
+                placeholder={"Option 1\nOption 2\nOption 3"}
+              />
+            </div>
+          )}
+
+          {needsRange && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+              <div style={fieldStyles.group}>
+                <label style={fieldStyles.label}>Min Value</label>
+                <input
+                  style={fieldStyles.input}
+                  type="number"
+                  value={minVal}
+                  onChange={(e) => setMinVal(e.target.value)}
+                />
+              </div>
+              <div style={fieldStyles.group}>
+                <label style={fieldStyles.label}>Max Value</label>
+                <input
+                  style={fieldStyles.input}
+                  type="number"
+                  value={maxVal}
+                  onChange={(e) => setMaxVal(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+
+          <div style={fieldStyles.group}>
+            <label style={fieldStyles.label}>Tags (comma-separated)</label>
+            <input
+              style={fieldStyles.input}
+              value={tagsText}
+              onChange={(e) => setTagsText(e.target.value)}
+              placeholder="e.g. baseline, location, consent"
+            />
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "1rem" }}>
+            <button style={styles.btnOutline} onClick={onClose}>Cancel</button>
+            <button
+              style={{ ...styles.btnSmall, background: "#2563eb", padding: "0.5rem 1.25rem", fontSize: "0.9rem" }}
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving ? "Saving..." : isNew ? "Create Question" : "Save Changes"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Confirm Dialog ───────────────────────────────────────────────── */
+
+function ConfirmDialog({
+  title,
+  message,
+  confirmLabel,
+  onConfirm,
+  onCancel,
+}: {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div style={modalStyles.overlay} onClick={onCancel}>
+      <div style={{ ...modalStyles.modal, maxWidth: "420px" }} onClick={(e) => e.stopPropagation()}>
+        <div style={modalStyles.header}>
+          <h2 style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0 }}>{title}</h2>
+          <button style={modalStyles.closeBtn} onClick={onCancel}>X</button>
+        </div>
+        <div style={modalStyles.body}>
+          <p style={{ color: "#cbd5e1", fontSize: "0.9rem", lineHeight: 1.5 }}>{message}</p>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "1.25rem" }}>
+            <button style={styles.btnOutline} onClick={onCancel}>Cancel</button>
+            <button style={styles.btnDanger} onClick={onConfirm}>{confirmLabel}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Main Admin Page ──────────────────────────────────────────────── */
 
 export default function AdminPage() {
   const router = useRouter();
@@ -37,9 +402,13 @@ export default function AdminPage() {
 
   // Questions
   const [questions, setQuestions] = useState<AdminQuestion[]>([]);
-  const [editingQuestion, setEditingQuestion] = useState<string | null>(null);
-  const [editPrompt, setEditPrompt] = useState("");
   const [questionFilter, setQuestionFilter] = useState("");
+  const [moduleFilter, setModuleFilter] = useState<string>("all");
+
+  // Modals
+  const [showHelp, setShowHelp] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState<AdminQuestion | null | "new">(null);
+  const [confirmDelete, setConfirmDelete] = useState<AdminQuestion | null>(null);
 
   // Feedback
   const [actionMsg, setActionMsg] = useState("");
@@ -62,6 +431,13 @@ export default function AdminPage() {
         router.push("/login");
       });
   }, [router]);
+
+  // Auto-clear feedback messages
+  useEffect(() => {
+    if (!actionMsg) return;
+    const t = setTimeout(() => setActionMsg(""), 4000);
+    return () => clearTimeout(t);
+  }, [actionMsg]);
 
   async function loadDashboard() {
     setLoading(true);
@@ -87,7 +463,7 @@ export default function AdminPage() {
     }
   }
 
-  async function loadQuestions() {
+  const loadQuestions = useCallback(async () => {
     setLoading(true);
     try {
       const q = await getAdminQuestions();
@@ -97,7 +473,7 @@ export default function AdminPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   async function handleTabChange(t: Tab) {
     setTab(t);
@@ -154,7 +530,6 @@ export default function AdminPage() {
   async function handleImpersonate(userId: string, email: string) {
     if (!confirm(`Log in as ${email}? You'll be viewing the app as this user.`)) return;
     try {
-      // Save admin token so we can return later
       const adminToken = localStorage.getItem("token");
       const result = await impersonateUser(userId);
       localStorage.setItem("admin_token", adminToken || "");
@@ -166,14 +541,35 @@ export default function AdminPage() {
     }
   }
 
-  async function handleSaveQuestion(questionId: string) {
-    try {
-      await updateAdminQuestion(questionId, { prompt: editPrompt });
+  async function handleSaveQuestion(data: Record<string, unknown>) {
+    if (editingQuestion === "new") {
+      await createAdminQuestion(data);
+      setActionMsg("Question created");
+    } else if (editingQuestion) {
+      await updateAdminQuestion(editingQuestion.question_id, data);
       setActionMsg("Question updated");
-      setEditingQuestion(null);
+    }
+    await loadQuestions();
+  }
+
+  async function handleDeleteQuestion(q: AdminQuestion) {
+    try {
+      const result = await deleteAdminQuestion(q.question_id);
+      setActionMsg(result.detail);
+      setConfirmDelete(null);
       await loadQuestions();
     } catch (err: unknown) {
-      setActionMsg(err instanceof Error ? err.message : "Failed");
+      setActionMsg(err instanceof Error ? err.message : "Failed to delete");
+      setConfirmDelete(null);
+    }
+  }
+
+  async function handleMoveQuestion(questionId: string, direction: "up" | "down") {
+    try {
+      await reorderAdminQuestion(questionId, direction);
+      await loadQuestions();
+    } catch (err: unknown) {
+      setActionMsg(err instanceof Error ? err.message : "Failed to move");
     }
   }
 
@@ -183,12 +579,13 @@ export default function AdminPage() {
       (u.full_name || "").toLowerCase().includes(userSearch.toLowerCase())
   );
 
-  const filteredQuestions = questions.filter(
-    (q) =>
+  const filteredQuestions = questions.filter((q) => {
+    const matchesText =
       q.question_id.toLowerCase().includes(questionFilter.toLowerCase()) ||
-      q.prompt.toLowerCase().includes(questionFilter.toLowerCase()) ||
-      q.module.toLowerCase().includes(questionFilter.toLowerCase())
-  );
+      q.prompt.toLowerCase().includes(questionFilter.toLowerCase());
+    const matchesModule = moduleFilter === "all" || q.module === moduleFilter;
+    return matchesText && matchesModule;
+  });
 
   if (loading && !stats && users.length === 0) {
     return (
@@ -200,6 +597,29 @@ export default function AdminPage() {
 
   return (
     <div style={styles.page}>
+      {/* Help Modal */}
+      {showHelp && <HelpModal tab={tab} onClose={() => setShowHelp(false)} />}
+
+      {/* Question Editor Modal */}
+      {editingQuestion && (
+        <QuestionEditor
+          question={editingQuestion === "new" ? null : editingQuestion}
+          onSave={handleSaveQuestion}
+          onClose={() => setEditingQuestion(null)}
+        />
+      )}
+
+      {/* Delete Confirm Dialog */}
+      {confirmDelete && (
+        <ConfirmDialog
+          title="Delete Question"
+          message={`Are you sure you want to delete "${confirmDelete.question_id}: ${confirmDelete.prompt.substring(0, 60)}..."? Any user answers to this question will also be deleted. This cannot be undone.`}
+          confirmLabel="Delete"
+          onConfirm={() => handleDeleteQuestion(confirmDelete)}
+          onCancel={() => setConfirmDelete(null)}
+        />
+      )}
+
       {/* Header */}
       <div style={styles.header}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
@@ -207,6 +627,13 @@ export default function AdminPage() {
           <span style={{ fontWeight: 700, fontSize: "1.1rem" }}>Admin Panel</span>
         </div>
         <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+          <button
+            style={{ ...styles.logoutBtn, borderColor: "#3b82f6", color: "#93c5fd" }}
+            onClick={() => setShowHelp(true)}
+            title="Help"
+          >
+            ? Help
+          </button>
           <a href="/questionnaire" style={{ ...styles.logoutBtn, textDecoration: "none" }}>
             User View
           </a>
@@ -239,7 +666,12 @@ export default function AdminPage() {
         {/* ── Dashboard ── */}
         {tab === "dashboard" && stats && (
           <div>
-            <h2 style={styles.h2}>Overview</h2>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+              <h2 style={styles.h2}>Overview</h2>
+              <button style={styles.helpLink} onClick={() => setShowHelp(true)}>
+                What do these metrics mean?
+              </button>
+            </div>
             <div style={styles.statsGrid}>
               <StatCard label="Total Users" value={stats.total_users} />
               <StatCard label="Completed Questionnaire" value={stats.users_completed_questionnaire} />
@@ -259,12 +691,17 @@ export default function AdminPage() {
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
               <h2 style={styles.h2}>Users ({users.length})</h2>
-              <input
-                placeholder="Search by email or name..."
-                value={userSearch}
-                onChange={(e) => setUserSearch(e.target.value)}
-                style={styles.searchInput}
-              />
+              <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                <button style={styles.helpLink} onClick={() => setShowHelp(true)}>
+                  Help
+                </button>
+                <input
+                  placeholder="Search by email or name..."
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  style={styles.searchInput}
+                />
+              </div>
             </div>
 
             {selectedUser ? (
@@ -357,7 +794,7 @@ export default function AdminPage() {
                     {filteredUsers.map((u) => (
                       <tr key={u.id}>
                         <td style={styles.td}>{u.email}</td>
-                        <td style={styles.td}>{u.full_name || "—"}</td>
+                        <td style={styles.td}>{u.full_name || "\u2014"}</td>
                         <td style={styles.td}>
                           <span style={{
                             ...styles.roleBadge,
@@ -393,69 +830,127 @@ export default function AdminPage() {
         {/* ── Questions ── */}
         {tab === "questions" && (
           <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-              <h2 style={styles.h2}>Questions ({questions.length})</h2>
-              <input
-                placeholder="Filter by ID, module, or text..."
-                value={questionFilter}
-                onChange={(e) => setQuestionFilter(e.target.value)}
-                style={styles.searchInput}
-              />
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "0.5rem" }}>
+              <h2 style={styles.h2}>Questions ({filteredQuestions.length})</h2>
+              <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+                <button style={styles.helpLink} onClick={() => setShowHelp(true)}>
+                  Help
+                </button>
+                <select
+                  style={{ ...styles.select, width: "auto" }}
+                  value={moduleFilter}
+                  onChange={(e) => setModuleFilter(e.target.value)}
+                >
+                  <option value="all">All Modules</option>
+                  {MODULES.map((m) => (
+                    <option key={m} value={m}>Module {m}</option>
+                  ))}
+                </select>
+                <input
+                  placeholder="Filter by ID or text..."
+                  value={questionFilter}
+                  onChange={(e) => setQuestionFilter(e.target.value)}
+                  style={styles.searchInput}
+                />
+                <button
+                  style={{ ...styles.btnSmall, background: "#2563eb", padding: "0.45rem 1rem" }}
+                  onClick={() => setEditingQuestion("new")}
+                >
+                  + Add Question
+                </button>
+              </div>
             </div>
+
             <div style={{ overflowX: "auto" }}>
               <table style={styles.table}>
                 <thead>
                   <tr>
+                    <th style={{ ...styles.th, width: "60px" }}>Order</th>
                     <th style={styles.th}>ID</th>
                     <th style={styles.th}>Module</th>
-                    <th style={{ ...styles.th, minWidth: "300px" }}>Prompt</th>
+                    <th style={{ ...styles.th, minWidth: "280px" }}>Prompt</th>
                     <th style={styles.th}>Type</th>
-                    <th style={styles.th}>Required</th>
+                    <th style={styles.th}>Req</th>
                     <th style={styles.th}>Options</th>
-                    <th style={styles.th}>Actions</th>
+                    <th style={styles.th}>Tags</th>
+                    <th style={{ ...styles.th, minWidth: "140px" }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredQuestions.map((q) => (
-                    <tr key={q.question_id}>
-                      <td style={styles.td}>{q.question_id}</td>
-                      <td style={styles.td}>{q.module}</td>
-                      <td style={styles.td}>
-                        {editingQuestion === q.question_id ? (
-                          <input
-                            value={editPrompt}
-                            onChange={(e) => setEditPrompt(e.target.value)}
-                            style={{ ...styles.searchInput, width: "100%" }}
-                          />
-                        ) : (
-                          q.prompt
-                        )}
-                      </td>
-                      <td style={styles.td}>{q.question_type}</td>
-                      <td style={styles.td}>{q.required ? "Yes" : "No"}</td>
-                      <td style={styles.td}>
-                        {q.options_json ? q.options_json.join(", ") : "—"}
-                      </td>
-                      <td style={styles.td}>
-                        {editingQuestion === q.question_id ? (
-                          <div style={{ display: "flex", gap: "0.25rem" }}>
-                            <button style={styles.btnSmall} onClick={() => handleSaveQuestion(q.question_id)}>Save</button>
-                            <button style={styles.btnSmall} onClick={() => setEditingQuestion(null)}>Cancel</button>
+                  {filteredQuestions.map((q, idx) => {
+                    // Determine if this question is first/last in its module (for move buttons)
+                    const sameModule = filteredQuestions.filter((fq) => fq.module === q.module);
+                    const moduleIdx = sameModule.findIndex((fq) => fq.question_id === q.question_id);
+                    const isFirst = moduleIdx === 0;
+                    const isLast = moduleIdx === sameModule.length - 1;
+
+                    return (
+                      <tr key={q.question_id} style={{ background: idx % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}>
+                        <td style={styles.td}>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "2px", alignItems: "center" }}>
+                            <button
+                              style={{ ...styles.iconBtn, opacity: isFirst ? 0.3 : 1 }}
+                              onClick={() => !isFirst && handleMoveQuestion(q.question_id, "up")}
+                              disabled={isFirst}
+                              title="Move up"
+                            >
+                              &#9650;
+                            </button>
+                            <button
+                              style={{ ...styles.iconBtn, opacity: isLast ? 0.3 : 1 }}
+                              onClick={() => !isLast && handleMoveQuestion(q.question_id, "down")}
+                              disabled={isLast}
+                              title="Move down"
+                            >
+                              &#9660;
+                            </button>
                           </div>
-                        ) : (
-                          <button
-                            style={styles.btnSmall}
-                            onClick={() => { setEditingQuestion(q.question_id); setEditPrompt(q.prompt); }}
-                          >
-                            Edit
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td style={{ ...styles.td, fontFamily: "monospace", fontSize: "0.8rem" }}>{q.question_id}</td>
+                        <td style={styles.td}>
+                          <span style={styles.moduleBadge}>{q.module}</span>
+                        </td>
+                        <td style={styles.td}>{q.prompt}</td>
+                        <td style={styles.td}>
+                          <span style={styles.typeBadge}>{q.question_type}</span>
+                        </td>
+                        <td style={styles.td}>{q.required ? "Yes" : "No"}</td>
+                        <td style={{ ...styles.td, maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {q.options_json ? q.options_json.join(", ") : "\u2014"}
+                        </td>
+                        <td style={{ ...styles.td, maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {q.tags_json ? q.tags_json.join(", ") : "\u2014"}
+                        </td>
+                        <td style={styles.td}>
+                          <div style={{ display: "flex", gap: "0.25rem" }}>
+                            <button
+                              style={styles.btnSmall}
+                              onClick={() => setEditingQuestion(q)}
+                              title="Edit question"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              style={{ ...styles.iconBtn, color: "#ef4444", fontSize: "0.9rem" }}
+                              onClick={() => setConfirmDelete(q)}
+                              title="Delete question"
+                            >
+                              &#128465;
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
+
+            {filteredQuestions.length === 0 && (
+              <p style={{ ...styles.muted, textAlign: "center", padding: "2rem" }}>
+                No questions match your filters.
+              </p>
+            )}
           </div>
         )}
       </div>
@@ -471,6 +966,8 @@ function StatCard({ label, value }: { label: string; value: string | number }) {
     </div>
   );
 }
+
+/* ── Styles ────────────────────────────────────────────────────────── */
 
 const styles: Record<string, React.CSSProperties> = {
   page: { background: "#0a0e1a", color: "#f1f5f9", minHeight: "100vh" },
@@ -500,8 +997,8 @@ const styles: Record<string, React.CSSProperties> = {
   tabActive: {
     color: "#f1f5f9", borderBottomColor: "#2563eb", fontWeight: 600,
   },
-  content: { maxWidth: "1200px", margin: "0 auto", padding: "1.5rem 2rem" },
-  h2: { fontSize: "1.25rem", fontWeight: 700, marginBottom: "1rem" },
+  content: { maxWidth: "1400px", margin: "0 auto", padding: "1.5rem 2rem" },
+  h2: { fontSize: "1.25rem", fontWeight: 700, marginBottom: "0" },
   error: { color: "#ef4444", padding: "0.75rem 2rem", fontSize: "0.9rem" },
   success: { color: "#22c55e", padding: "0.75rem 2rem", fontSize: "0.9rem" },
   muted: { color: "#64748b", fontSize: "0.9rem" },
@@ -519,7 +1016,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   searchInput: {
     background: "#0f172a", border: "1px solid #334155", color: "#f1f5f9",
-    padding: "0.5rem 0.75rem", borderRadius: "8px", fontSize: "0.85rem", width: "250px",
+    padding: "0.5rem 0.75rem", borderRadius: "8px", fontSize: "0.85rem", width: "220px",
   },
   table: { width: "100%", borderCollapse: "collapse" as const, fontSize: "0.85rem" },
   th: {
@@ -537,6 +1034,14 @@ const styles: Record<string, React.CSSProperties> = {
   roleBadge: {
     padding: "0.2rem 0.6rem", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 600,
   },
+  moduleBadge: {
+    background: "#1e3a5f", color: "#93c5fd", padding: "0.2rem 0.5rem",
+    borderRadius: "4px", fontSize: "0.75rem", fontWeight: 600,
+  },
+  typeBadge: {
+    background: "rgba(99, 102, 241, 0.15)", color: "#a5b4fc", padding: "0.2rem 0.5rem",
+    borderRadius: "4px", fontSize: "0.72rem", fontFamily: "monospace",
+  },
   btnSmall: {
     background: "#1e293b", border: "1px solid #334155", color: "#f1f5f9",
     padding: "0.3rem 0.75rem", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem",
@@ -549,6 +1054,10 @@ const styles: Record<string, React.CSSProperties> = {
     background: "transparent", border: "1px solid #dc2626", color: "#dc2626",
     padding: "0.4rem 1rem", borderRadius: "8px", cursor: "pointer", fontSize: "0.85rem",
   },
+  iconBtn: {
+    background: "transparent", border: "none", color: "#94a3b8",
+    cursor: "pointer", fontSize: "0.7rem", padding: "2px 4px", lineHeight: 1,
+  },
   backBtn: {
     background: "transparent", border: "none", color: "#60a5fa",
     cursor: "pointer", fontSize: "0.9rem", padding: "0", marginBottom: "1rem",
@@ -557,4 +1066,47 @@ const styles: Record<string, React.CSSProperties> = {
     background: "#0f172a", border: "1px solid #334155", color: "#f1f5f9",
     padding: "0.4rem 0.75rem", borderRadius: "8px", fontSize: "0.85rem",
   },
+  helpLink: {
+    background: "transparent", border: "none", color: "#60a5fa",
+    cursor: "pointer", fontSize: "0.82rem", padding: "0", textDecoration: "underline",
+  },
+};
+
+const modalStyles: Record<string, React.CSSProperties> = {
+  overlay: {
+    position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    zIndex: 1000, padding: "1rem",
+  },
+  modal: {
+    background: "#111827", border: "1px solid #1e293b", borderRadius: "12px",
+    maxWidth: "650px", width: "100%", maxHeight: "80vh", display: "flex",
+    flexDirection: "column",
+  },
+  header: {
+    display: "flex", justifyContent: "space-between", alignItems: "center",
+    padding: "1rem 1.5rem", borderBottom: "1px solid #1e293b",
+  },
+  closeBtn: {
+    background: "transparent", border: "none", color: "#94a3b8",
+    cursor: "pointer", fontSize: "1rem", padding: "0.25rem",
+  },
+  body: {
+    padding: "1.25rem 1.5rem", overflowY: "auto",
+  },
+};
+
+const fieldStyles: Record<string, React.CSSProperties> = {
+  group: { marginBottom: "1rem" },
+  label: { display: "block", fontSize: "0.82rem", color: "#94a3b8", marginBottom: "0.35rem", fontWeight: 500 },
+  input: {
+    width: "100%", background: "#0f172a", border: "1px solid #334155",
+    color: "#f1f5f9", padding: "0.5rem 0.75rem", borderRadius: "8px",
+    fontSize: "0.88rem", boxSizing: "border-box" as const,
+  },
+  select: {
+    width: "100%", background: "#0f172a", border: "1px solid #334155",
+    color: "#f1f5f9", padding: "0.5rem 0.75rem", borderRadius: "8px", fontSize: "0.88rem",
+  },
+  hint: { fontSize: "0.75rem", color: "#64748b", marginTop: "0.25rem" },
 };
