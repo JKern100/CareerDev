@@ -1,13 +1,55 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import select
+from sqlalchemy import select, text, inspect
 
 from app.config import settings
 from app.database import engine, Base, async_session
 from app.models.questionnaire import Question
 from app.services.routing import get_question_bank
+
+logger = logging.getLogger(__name__)
+
+
+def _add_missing_columns(conn):
+    """Add any columns that exist in models but not in the DB tables.
+
+    create_all only creates new tables — it won't ALTER existing ones.
+    This function inspects each table and adds missing columns with defaults.
+    """
+    inspector = inspect(conn)
+    existing_tables = inspector.get_table_names()
+
+    # Map SQLAlchemy types to SQL type strings for PostgreSQL/SQLite
+    type_map = {
+        "FLOAT": "FLOAT DEFAULT 0.0",
+        "VARCHAR": "VARCHAR(200) DEFAULT ''",
+        "TEXT": "TEXT DEFAULT ''",
+        "INTEGER": "INTEGER DEFAULT 0",
+        "JSON": "JSON",
+        "BOOLEAN": "BOOLEAN DEFAULT false",
+        "DATETIME": "TIMESTAMP",
+        "UUID": "UUID",
+    }
+
+    for table in Base.metadata.tables.values():
+        if table.name not in existing_tables:
+            continue
+
+        existing_columns = {col["name"] for col in inspector.get_columns(table.name)}
+        for column in table.columns:
+            if column.name not in existing_columns:
+                col_type = type(column.type).__name__.upper()
+                sql_type = type_map.get(col_type, "TEXT")
+                logger.info(f"Adding missing column {table.name}.{column.name} ({sql_type})")
+                try:
+                    conn.execute(text(
+                        f'ALTER TABLE {table.name} ADD COLUMN "{column.name}" {sql_type}'
+                    ))
+                except Exception as e:
+                    logger.warning(f"Could not add column {table.name}.{column.name}: {e}")
 
 
 async def _seed_questions():
@@ -45,6 +87,7 @@ async def lifespan(app: FastAPI):
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(_add_missing_columns)
 
     await _seed_questions()
     yield
