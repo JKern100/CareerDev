@@ -58,6 +58,14 @@ export default function LoginPage() {
           />
         </div>
         {error && <p style={{ color: "var(--error)", fontSize: "0.875rem" }}>{error}</p>}
+        <div style={{ textAlign: "right" }}>
+          <a
+            href="/forgot-password"
+            style={{ color: "var(--primary)", fontSize: "0.85rem", textDecoration: "none" }}
+          >
+            Forgot password?
+          </a>
+        </div>
         <button className="btn btn-primary mt-2" disabled={loading} type="submit">
           {loading ? "Signing in..." : "Sign In"}
         </button>

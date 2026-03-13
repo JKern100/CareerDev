@@ -4,8 +4,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.user import User
-from app.schemas.user import UserRegister, UserLogin, UserResponse, TokenResponse
-from app.services.auth import hash_password, verify_password, create_access_token
+from app.schemas.user import (
+    UserRegister, UserLogin, UserResponse, TokenResponse,
+    ForgotPasswordRequest, ResetPasswordRequest,
+)
+from app.services.auth import (
+    hash_password, verify_password, create_access_token,
+    create_reset_token, decode_reset_token,
+)
+from app.services.email import send_reset_email
 from app.api.deps import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -42,6 +49,33 @@ async def login(data: UserLogin, db: AsyncSession = Depends(get_db)):
 @router.get("/me", response_model=UserResponse)
 async def me(user: User = Depends(get_current_user)):
     return user
+
+
+@router.post("/forgot-password")
+async def forgot_password(data: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)):
+    # Always return success to avoid leaking which emails exist
+    result = await db.execute(select(User).where(User.email == data.email))
+    user = result.scalar_one_or_none()
+    if user:
+        token = create_reset_token(user.email)
+        await send_reset_email(user.email, token)
+    return {"detail": "If that email is registered, a reset link has been sent."}
+
+
+@router.post("/reset-password")
+async def reset_password(data: ResetPasswordRequest, db: AsyncSession = Depends(get_db)):
+    email = decode_reset_token(data.token)
+    if not email:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset link")
+
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset link")
+
+    user.hashed_password = hash_password(data.new_password)
+    await db.commit()
+    return {"detail": "Password updated successfully"}
 
 
 @router.post("/logout")

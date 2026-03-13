@@ -58,6 +58,20 @@ export async function getMe() {
   }>("/auth/me");
 }
 
+export async function forgotPassword(email: string) {
+  return request<{ detail: string }>("/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function resetPassword(token: string, newPassword: string) {
+  return request<{ detail: string }>("/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify({ token, new_password: newPassword }),
+  });
+}
+
 // Questionnaire
 export interface Question {
   question_id: string;

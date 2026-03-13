@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { generateSummary, getSummary, SummaryReport } from "@/lib/api";
+import AppHeader from "@/components/AppHeader";
 
 export default function SummaryPage() {
   const router = useRouter();
@@ -100,6 +101,8 @@ export default function SummaryPage() {
   if (!summary) return null;
 
   return (
+    <>
+    <AppHeader />
     <div className="container" style={{ maxWidth: "720px" }}>
       <p className="text-sm text-muted" style={{ textAlign: "right", marginBottom: "0.25rem" }}>
         V.01
@@ -263,5 +266,6 @@ export default function SummaryPage() {
           : "This summary was generated from your responses."}
       </p>
     </div>
+    </>
   );
 }

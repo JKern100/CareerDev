@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { runAnalysis, getResults, PathwayResult } from "@/lib/api";
+import AppHeader from "@/components/AppHeader";
 
 export default function ResultsPage() {
   const router = useRouter();
@@ -59,6 +60,8 @@ export default function ResultsPage() {
   }
 
   return (
+    <>
+    <AppHeader />
     <div className="container">
       <h1 style={{ marginBottom: "0.5rem" }}>Your Career Pathways</h1>
       <p className="text-muted mb-3">
@@ -172,5 +175,6 @@ export default function ResultsPage() {
         </p>
       </div>
     </div>
+    </>
   );
 }
