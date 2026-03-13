@@ -17,6 +17,7 @@ from app.models.report import Report
 from app.models.pathway import PathwayScore
 from app.api.deps import get_admin_user
 from app.services.auth import hash_password
+from app.config import settings
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -340,3 +341,29 @@ async def promote_to_admin(
     u.role = UserRole.ADMIN
     await db.commit()
     return {"detail": f"{u.email} promoted to admin"}
+
+
+# ── One-time setup: promote by email + secret key ────────────────────────
+
+class AdminSetupRequest(BaseModel):
+    email: str
+    secret_key: str
+
+
+@router.post("/setup")
+async def admin_setup(
+    data: AdminSetupRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """One-time endpoint to create the first admin. Requires SECRET_KEY."""
+    if data.secret_key != settings.SECRET_KEY:
+        raise HTTPException(status_code=403, detail="Invalid secret key")
+
+    result = await db.execute(select(User).where(User.email == data.email))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.role = UserRole.ADMIN
+    await db.commit()
+    return {"detail": f"{user.email} is now an admin"}
