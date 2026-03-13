@@ -53,6 +53,7 @@ export async function getMe() {
     id: string;
     email: string;
     full_name: string | null;
+    role: string;
     questionnaire_completed: boolean;
     current_module: string | null;
   }>("/auth/me");
@@ -190,4 +191,94 @@ export interface PathwayResult {
 
 export async function getResults() {
   return request<PathwayResult[]>("/analysis/results");
+}
+
+// Admin
+export interface AdminUser {
+  id: string;
+  email: string;
+  full_name: string | null;
+  role: string;
+  questionnaire_completed: boolean;
+  current_module: string | null;
+  answers_count: number;
+  reports_count: number;
+  created_at: string;
+}
+
+export interface DashboardStats {
+  total_users: number;
+  users_completed_questionnaire: number;
+  users_with_reports: number;
+  total_answers: number;
+  total_reports: number;
+  users_last_7_days: number;
+  users_last_30_days: number;
+  completion_rate: number;
+  avg_answers_per_user: number;
+}
+
+export interface AdminQuestion {
+  question_id: string;
+  module: string;
+  prompt: string;
+  question_type: string;
+  required: boolean;
+  options_json: string[] | null;
+  min_val: number | null;
+  max_val: number | null;
+  tags_json: string[] | null;
+}
+
+export interface UserAnswer {
+  question_id: string;
+  value: string | number | string[] | null;
+  confidence: number;
+  created_at: string | null;
+}
+
+export async function getAdminStats() {
+  return request<DashboardStats>("/admin/stats");
+}
+
+export async function getAdminUsers() {
+  return request<AdminUser[]>("/admin/users");
+}
+
+export async function getAdminUser(userId: string) {
+  return request<AdminUser>(`/admin/users/${userId}`);
+}
+
+export async function updateAdminUser(userId: string, data: Record<string, unknown>) {
+  return request<{ detail: string }>(`/admin/users/${userId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteAdminUser(userId: string) {
+  return request<{ detail: string }>(`/admin/users/${userId}`, {
+    method: "DELETE",
+  });
+}
+
+export async function getUserAnswers(userId: string) {
+  return request<UserAnswer[]>(`/admin/users/${userId}/answers`);
+}
+
+export async function getAdminQuestions() {
+  return request<AdminQuestion[]>("/admin/questions");
+}
+
+export async function updateAdminQuestion(questionId: string, data: Record<string, unknown>) {
+  return request<{ detail: string }>(`/admin/questions/${questionId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function promoteUser(userId: string) {
+  return request<{ detail: string }>(`/admin/promote/${userId}`, {
+    method: "POST",
+  });
 }

@@ -121,64 +121,69 @@ async def run_analysis(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Scoring engine error: {str(e)}")
 
-    # Delete old scores for this user before inserting new ones
-    old_scores = await db.execute(
-        select(PathwayScore).where(PathwayScore.user_id == user.id)
-    )
-    for old in old_scores.scalars().all():
-        await db.delete(old)
-    await db.flush()
-
-    # Persist scores
-    for sp in scored:
-        ps = PathwayScore(
-            user_id=user.id,
-            pathway_id=sp.pathway_id,
-            raw_score=sp.raw_score,
-            confidence_factor=sp.confidence_factor,
-            adjusted_score=sp.adjusted_score,
-            interest_score=sp.interest_score,
-            skill_score=sp.skill_score,
-            environment_score=sp.environment_score,
-            feasibility_score=sp.feasibility_score,
-            compensation_score=sp.compensation_score,
-            risk_score=sp.risk_score,
-            gate_flags=sp.gate_flags,
-            top_evidence_signals=sp.top_evidence_signals,
-            risks_unknowns=sp.risks_unknowns,
+    try:
+        # Delete old scores for this user before inserting new ones
+        old_scores = await db.execute(
+            select(PathwayScore).where(PathwayScore.user_id == user.id)
         )
-        db.add(ps)
+        for old in old_scores.scalars().all():
+            await db.delete(old)
+        await db.flush()
 
-    # Create report
-    report_data = {
-        "top_pathways": [
-            {
-                "rank": i + 1,
-                "pathway_id": sp.pathway_id,
-                "pathway_name": sp.pathway_name,
-                "description": sp.description,
-                "adjusted_score": sp.adjusted_score,
-                "typical_roles": sp.typical_roles,
-                "salary_band_refs": sp.salary_band_refs,
-                "recommended_credentials": sp.recommended_credentials,
-                "gate_flags": sp.gate_flags,
-                "top_evidence_signals": sp.top_evidence_signals,
-                "risks_unknowns": sp.risks_unknowns,
-            }
-            for i, sp in enumerate(scored)
-        ],
-    }
+        # Persist scores
+        for sp in scored:
+            ps = PathwayScore(
+                user_id=user.id,
+                pathway_id=sp.pathway_id,
+                raw_score=sp.raw_score,
+                confidence_factor=sp.confidence_factor,
+                adjusted_score=sp.adjusted_score,
+                interest_score=sp.interest_score,
+                skill_score=sp.skill_score,
+                environment_score=sp.environment_score,
+                feasibility_score=sp.feasibility_score,
+                compensation_score=sp.compensation_score,
+                risk_score=sp.risk_score,
+                gate_flags=sp.gate_flags,
+                top_evidence_signals=sp.top_evidence_signals,
+                risks_unknowns=sp.risks_unknowns,
+            )
+            db.add(ps)
 
-    report = Report(
-        user_id=user.id,
-        report_json=report_data,
-        status="complete",
-    )
-    db.add(report)
-    await db.commit()
-    await db.refresh(report)
+        # Create report
+        report_data = {
+            "top_pathways": [
+                {
+                    "rank": i + 1,
+                    "pathway_id": sp.pathway_id,
+                    "pathway_name": sp.pathway_name,
+                    "description": sp.description,
+                    "adjusted_score": sp.adjusted_score,
+                    "typical_roles": sp.typical_roles,
+                    "salary_band_refs": sp.salary_band_refs,
+                    "recommended_credentials": sp.recommended_credentials,
+                    "gate_flags": sp.gate_flags,
+                    "top_evidence_signals": sp.top_evidence_signals,
+                    "risks_unknowns": sp.risks_unknowns,
+                }
+                for i, sp in enumerate(scored)
+            ],
+        }
 
-    return AnalysisRunOut(job_id=report.id, status="complete")
+        report = Report(
+            user_id=user.id,
+            report_json=report_data,
+            status="complete",
+        )
+        db.add(report)
+        await db.commit()
+        await db.refresh(report)
+
+        return AnalysisRunOut(job_id=report.id, status="complete")
+
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to save results: {type(e).__name__}: {str(e)}")
 
 
 @router.get("/results", response_model=list[PathwayScoreOut])
