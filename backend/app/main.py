@@ -1,5 +1,6 @@
 import logging
 from contextlib import asynccontextmanager
+from datetime import datetime
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -127,6 +128,30 @@ async def _repair_question_data():
             logger.info("Repaired %d questions with incorrect tags_json data", repaired)
 
 
+async def _backfill_existing_users_verified():
+    """Mark pre-existing users as email_verified so they aren't locked out."""
+    from app.models.user import User
+    async with async_session() as session:
+        result = await session.execute(
+            select(User).where(
+                User.email_verified == False,  # noqa: E712
+                User.has_logged_in == False,  # noqa: E712
+                User.created_at < datetime.utcnow(),
+            )
+        )
+        users = result.scalars().all()
+        updated = 0
+        for user in users:
+            # If the user has any answers, they clearly existed before verification was added
+            if len(user.answers) > 0 or user.questionnaire_completed:
+                user.email_verified = True
+                user.has_logged_in = True
+                updated += 1
+        if updated:
+            await session.commit()
+            logger.info("Backfilled %d existing users as email_verified", updated)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Import all models so Base.metadata knows about them
@@ -144,6 +169,7 @@ async def lifespan(app: FastAPI):
     await _seed_pathways()
     await _seed_questions()
     await _repair_question_data()
+    await _backfill_existing_users_verified()
     yield
 
 

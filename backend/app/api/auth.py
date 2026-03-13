@@ -87,7 +87,7 @@ async def login(data: UserLogin, db: AsyncSession = Depends(get_db)):
     if not user or not verify_password(data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    if not user.email_verified:
+    if not user.email_verified and user.role == "user":
         raise HTTPException(status_code=403, detail="Please verify your email before signing in. Check your inbox for a verification link.")
 
     # Track first login
