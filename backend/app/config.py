@@ -17,6 +17,17 @@ class Settings(BaseSettings):
     # Allowed CORS origins (comma-separated for multiple)
     ALLOWED_ORIGINS: str = "http://localhost:3000"
 
+    # Password reset
+    RESET_TOKEN_EXPIRE_MINUTES: int = 30
+
+    # Email (SMTP)
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM_EMAIL: str = "noreply@careerdev.app"
+    FRONTEND_URL: str = "http://localhost:3000"
+
     # LLM / RAG settings (placeholder)
     LLM_API_KEY: str = ""
     LLM_MODEL: str = "claude-sonnet-4-6"
