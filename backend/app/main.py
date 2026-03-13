@@ -104,6 +104,29 @@ async def _seed_pathways():
         logger.info("Seeded pathways table with %d pathways", len(load_pathways()))
 
 
+async def _repair_question_data():
+    """Fix any questions where tags_json contains a dict instead of a list.
+
+    This can happen if route_if_json data was accidentally stored in tags_json.
+    Re-seeds affected rows from the CSV question bank.
+    """
+    bank = {q.question_id: q for q in get_question_bank()}
+    async with async_session() as session:
+        result = await session.execute(select(Question))
+        questions = result.scalars().all()
+        repaired = 0
+        for q in questions:
+            if isinstance(q.tags_json, dict) or (q.id in bank and q.tags_json != bank[q.id].tags_json):
+                csv_q = bank.get(q.id)
+                if csv_q:
+                    q.tags_json = csv_q.tags_json
+                    q.route_if_json = csv_q.route_if_json
+                    repaired += 1
+        if repaired:
+            await session.commit()
+            logger.info("Repaired %d questions with incorrect tags_json data", repaired)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Import all models so Base.metadata knows about them
@@ -120,6 +143,7 @@ async def lifespan(app: FastAPI):
 
     await _seed_pathways()
     await _seed_questions()
+    await _repair_question_data()
     yield
 
 
