@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import {
@@ -15,6 +15,14 @@ import {
 } from "@/lib/api";
 
 export default function BookPage() {
+  return (
+    <Suspense fallback={<div className="container" style={{ textAlign: "center", marginTop: "4rem" }}><p>Loading...</p></div>}>
+      <BookPageInner />
+    </Suspense>
+  );
+}
+
+function BookPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [advisors, setAdvisors] = useState<AdvisorProfile[]>([]);
