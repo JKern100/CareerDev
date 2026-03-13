@@ -286,10 +286,10 @@ async def list_questions(
             prompt=q.prompt,
             question_type=q.question_type,
             required=q.required,
-            options_json=q.options_json,
+            options=q.options_json,
             min_val=q.min_val,
             max_val=q.max_val,
-            tags_json=q.tags_json,
+            tags=q.tags_json,
         )
         for q in questions
     ]
