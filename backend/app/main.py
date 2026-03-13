@@ -8,7 +8,9 @@ from sqlalchemy import select, text, inspect
 from app.config import settings
 from app.database import engine, Base, async_session
 from app.models.questionnaire import Question
+from app.models.pathway import Pathway
 from app.services.routing import get_question_bank
+from app.services.scoring import load_pathways
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +77,33 @@ async def _seed_questions():
         await session.commit()
 
 
+async def _seed_pathways():
+    """Seed the pathways table from pathways.json."""
+    async with async_session() as session:
+        result = await session.execute(select(Pathway.id).limit(1))
+        if result.scalar_one_or_none() is not None:
+            return  # Already seeded
+
+        for pw in load_pathways():
+            session.add(Pathway(
+                id=pw["id"],
+                name=pw["name"],
+                description=pw["description"],
+                prerequisites=pw.get("prerequisites"),
+                typical_roles=pw.get("typical_roles", []),
+                salary_band_refs=pw.get("salary_band_refs"),
+                recommended_credentials=pw.get("recommended_credentials"),
+                weight_interest=pw.get("weight_interest", 0.25),
+                weight_skill=pw.get("weight_skill", 0.25),
+                weight_environment=pw.get("weight_environment", 0.10),
+                weight_feasibility=pw.get("weight_feasibility", 0.20),
+                weight_compensation=pw.get("weight_compensation", 0.15),
+                weight_risk=pw.get("weight_risk", 0.05),
+            ))
+        await session.commit()
+        logger.info("Seeded pathways table with %d pathways", len(load_pathways()))
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Import all models so Base.metadata knows about them
@@ -89,6 +118,7 @@ async def lifespan(app: FastAPI):
         await conn.run_sync(Base.metadata.create_all)
         await conn.run_sync(_add_missing_columns)
 
+    await _seed_pathways()
     await _seed_questions()
     yield
 
