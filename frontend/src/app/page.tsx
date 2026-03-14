@@ -106,7 +106,7 @@ export default function Home() {
             border: "1px solid rgba(37, 99, 235, 0.3)",
           }}
         >
-          Built for UAE-based flight crew
+          Built for flight crew worldwide
         </div>
 
         <h1
@@ -139,7 +139,7 @@ export default function Home() {
           }}
         >
           AI-powered career advice built for cabin crew. Get ranked career pathways,
-          salary comparisons, and a concrete transition plan grounded in UAE labor
+          salary comparisons, and a concrete transition plan grounded in local labor
           rules and real market data.
         </p>
 
@@ -203,7 +203,7 @@ export default function Home() {
         </div>
 
         <p style={{ color: "#475569", fontSize: "0.85rem", marginTop: "1.5rem" }}>
-          108 guided questions. 8 career pathways. UAE-specific salary data.
+          119 guided questions. 8 career pathways. Location-aware salary data.
         </p>
       </section>
 
@@ -401,11 +401,11 @@ export default function Home() {
             }}
           >
             <h3 style={{ fontSize: "1.1rem", fontWeight: 600, marginBottom: "0.5rem" }}>
-              UAE-First Realism
+              Location-Aware Realism
             </h3>
             <p style={{ color: "#94a3b8", fontSize: "0.9rem", lineHeight: 1.6 }}>
-              Built-in modeling of UAE visas, notice periods, end-of-service benefits,
-              and salary benchmarks from real market data.
+              Built-in modeling of visas, notice periods, end-of-service benefits,
+              and salary benchmarks tailored to your country and currency.
             </p>
           </div>
           <div
@@ -469,7 +469,7 @@ export default function Home() {
           fontSize: "0.8rem",
         }}
       >
-        CareerDev V.01 — Built for UAE-based cabin crew
+        CareerDev V.01 — Built for cabin crew worldwide
       </footer>
     </div>
   );

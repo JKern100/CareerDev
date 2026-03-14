@@ -102,10 +102,10 @@ export default function ResultsPage() {
 
           {pw.salary_band_refs && (
             <div className="mb-2">
-              <h3 className="text-sm">Salary Bands (AED/month)</h3>
+              <h3 className="text-sm">Salary Bands (monthly)</h3>
               {Object.entries(pw.salary_band_refs).map(([role, band]) => (
                 <p key={role} className="text-sm">
-                  {role}: <strong>AED {band.min_aed.toLocaleString()} – {band.max_aed.toLocaleString()}</strong>
+                  {role}: <strong>{band.min_aed.toLocaleString()} – {band.max_aed.toLocaleString()}</strong>
                   <span className="text-muted"> ({band.source})</span>
                 </p>
               ))}
@@ -168,10 +168,10 @@ export default function ResultsPage() {
 
       <div className="mt-3" style={{ textAlign: "center" }}>
         <p className="text-sm text-muted mb-2">
-          Salary data sourced from Cooper Fitch UAE Salary Guide 2024. Treat as market estimates, not offers.
+          Salary data sourced from market salary guides. Treat as market estimates, not offers.
         </p>
         <p className="text-sm text-muted">
-          This report is informational only. For visa/labor decisions, consult official UAE sources.
+          This report is informational only. For visa/labor decisions, consult official sources in your country.
         </p>
       </div>
     </div>

@@ -47,3 +47,23 @@ def decode_reset_token(token: str) -> str | None:
         return payload.get("sub")
     except jwt.JWTError:
         return None
+
+
+def create_email_verification_token(email: str) -> str:
+    expire = datetime.utcnow() + timedelta(hours=24)
+    return jwt.encode(
+        {"sub": email, "purpose": "email_verification", "exp": expire},
+        settings.SECRET_KEY,
+        algorithm=settings.ALGORITHM,
+    )
+
+
+def decode_email_verification_token(token: str) -> str | None:
+    """Returns the email if valid, None otherwise."""
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        if payload.get("purpose") != "email_verification":
+            return None
+        return payload.get("sub")
+    except jwt.JWTError:
+        return None

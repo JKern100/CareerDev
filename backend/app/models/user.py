@@ -29,6 +29,12 @@ class User(Base):
     country_pack: Mapped[str] = mapped_column(String(10), default="UAE")
     language: Mapped[str] = mapped_column(String(10), default="en")
 
+    # Email verification
+    email_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    # First-login tracking
+    has_logged_in: Mapped[bool] = mapped_column(Boolean, default=False)
+
     # Consent
     consent_processing: Mapped[bool] = mapped_column(Boolean, default=False)
     consent_anonymized: Mapped[bool] = mapped_column(Boolean, default=False)

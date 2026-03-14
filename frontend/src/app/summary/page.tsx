@@ -236,7 +236,7 @@ export default function SummaryPage() {
           Book a review session
         </button>
         <p className="text-sm text-muted" style={{ marginTop: "0.75rem" }}>
-          Available for UAE-based crew. Sessions conducted via Zoom or in-person in Dubai.
+          Available worldwide. Sessions conducted via Zoom.
         </p>
       </div>
 

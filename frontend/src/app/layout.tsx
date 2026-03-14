@@ -4,7 +4,7 @@ import pkg from "../../package.json";
 
 export const metadata: Metadata = {
   title: "CareerDev — Flight Crew Career Transition",
-  description: "AI-powered career advice for flight crew in the UAE",
+  description: "AI-powered career advice for flight crew",
 };
 
 export default function RootLayout({

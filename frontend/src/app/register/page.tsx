@@ -1,16 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { register, login } from "@/lib/api";
+import { register, resendVerification } from "@/lib/api";
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [registered, setRegistered] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendMsg, setResendMsg] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -18,13 +19,65 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await register(email, password, fullName || undefined);
-      await login(email, password);
-      router.push("/questionnaire");
+      setRegistered(true);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleResend() {
+    setResending(true);
+    setResendMsg("");
+    try {
+      await resendVerification(email);
+      setResendMsg("Verification email sent! Check your inbox.");
+    } catch {
+      setResendMsg("Failed to resend. Please try again.");
+    } finally {
+      setResending(false);
+    }
+  }
+
+  if (registered) {
+    return (
+      <div className="container" style={{ maxWidth: "460px", textAlign: "center" }}>
+        <div style={{ marginTop: "3rem", marginBottom: "1.5rem" }}>
+          <div style={{
+            width: "64px", height: "64px", borderRadius: "50%",
+            background: "#dbeafe", display: "inline-flex",
+            alignItems: "center", justifyContent: "center", fontSize: "1.75rem",
+          }}>
+            &#9993;
+          </div>
+        </div>
+        <h1>Check your email</h1>
+        <p className="text-muted" style={{ marginTop: "0.5rem", lineHeight: 1.7 }}>
+          We&apos;ve sent a verification link to <strong style={{ color: "var(--fg)" }}>{email}</strong>.
+          <br />
+          Click the link in the email to activate your account, then sign in to get started.
+        </p>
+        <div style={{ marginTop: "1.5rem" }}>
+          <button
+            className="btn btn-outline"
+            onClick={handleResend}
+            disabled={resending}
+            style={{ fontSize: "0.85rem" }}
+          >
+            {resending ? "Sending..." : "Resend verification email"}
+          </button>
+        </div>
+        {resendMsg && (
+          <p className="text-sm" style={{ marginTop: "0.75rem", color: "var(--success)" }}>
+            {resendMsg}
+          </p>
+        )}
+        <p className="text-sm text-muted mt-3">
+          <a href="/login" style={{ color: "var(--primary)" }}>Go to sign in</a>
+        </p>
+      </div>
+    );
   }
 
   return (

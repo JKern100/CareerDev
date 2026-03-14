@@ -470,15 +470,13 @@ async def reorder_question(
     if data.direction == "down" and current_idx == len(module_questions) - 1:
         return {"detail": "Already at bottom"}
 
-    # Swap with neighbor
+    # Swap with neighbor in the list
     swap_idx = current_idx - 1 if data.direction == "up" else current_idx + 1
-    neighbor = module_questions[swap_idx]
+    module_questions[current_idx], module_questions[swap_idx] = module_questions[swap_idx], module_questions[current_idx]
 
-    q.order, neighbor.order = neighbor.order, q.order
-    # If orders were equal, force distinct values
-    if q.order == neighbor.order:
-        q.order = swap_idx
-        neighbor.order = current_idx
+    # Reassign sequential order values to avoid gaps/duplicates
+    for i, mq in enumerate(module_questions):
+        mq.order = i + 1
 
     await db.commit()
     return {"detail": f"Question moved {data.direction}"}
