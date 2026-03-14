@@ -84,7 +84,7 @@ def build_summary_prompt(answers: dict, user_name: str | None = None) -> str:
 
     formatted_answers = _format_answers_for_prompt(answers)
 
-    return f"""You are a career advisor writing a personalized summary report for someone transitioning out of cabin crew work in the UAE.
+    return f"""You are a career advisor writing a personalized summary report for someone transitioning out of cabin crew work.
 
 {name_line}
 
@@ -222,7 +222,7 @@ You've spent {years} years in aviation, working with {employer_type} across airc
     # Constraints
     sections.append(f"""**Your Constraints & Situation**
 
-You're currently on a {visa_type} visa arrangement with a savings runway of {savings} months. Your minimum monthly need is AED {min_salary}, and you're targeting AED {target_salary}. Your highest education level is {education}, and you have {study_hours} hours per week available for development.
+You're currently on a {visa_type} work authorisation with a savings runway of {savings} months. Your minimum monthly need is {min_salary}, and you're targeting {target_salary}. Your highest education level is {education}, and you have {study_hours} hours per week available for development.
 
 Your non-negotiables are: {non_negotiables}. These aren't obstacles — they're the boundaries that will make your next career sustainable.""")
 

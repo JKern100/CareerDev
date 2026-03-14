@@ -260,7 +260,7 @@ export const MODULE_LABELS: Record<string, string> = {
   B: "Aviation Profile & Satisfaction",
   C: "Transferable Skills & Evidence",
   D: "Work Style & Environment Preferences",
-  E: "Constraints & Feasibility (UAE)",
+  E: "Constraints & Feasibility",
   F: "Location & Mobility",
   G: "Compensation & Benefits Modeling",
   H: "Learning, Credentials & Study Pathways",
