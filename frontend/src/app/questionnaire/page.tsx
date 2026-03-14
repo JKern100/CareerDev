@@ -28,6 +28,7 @@ export default function QuestionnairePage() {
   const [error, setError] = useState("");
   const [complete, setComplete] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [saveMessage, setSaveMessage] = useState("");
 
   const loadProgress = useCallback(async () => {
     try {
@@ -113,21 +114,58 @@ export default function QuestionnairePage() {
     loadQuestions();
   }, [router, loadQuestions]);
 
+  async function handleSaveProgress() {
+    if (!questionSet) return;
+    setSubmitting(true);
+    setError("");
+    setSaveMessage("");
+
+    try {
+      const payload = Object.entries(answers)
+        .filter(([, a]) => a.value !== "" && !(Array.isArray(a.value) && a.value.length === 0))
+        .map(([qid, a]) => ({
+          question_id: qid,
+          value: a.value,
+          confidence: a.confidence,
+        }));
+
+      if (payload.length === 0) {
+        setSaveMessage("Nothing to save yet — answer a few questions first.");
+        setSubmitting(false);
+        return;
+      }
+
+      await submitAnswers(payload);
+      await loadProgress();
+      setSaveMessage("Progress saved! You can come back any time to finish.");
+      setTimeout(() => setSaveMessage(""), 4000);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to save progress");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   async function handleSubmit() {
     if (!questionSet) return;
     setSubmitting(true);
     setError("");
+    setSaveMessage("");
 
     // Check required fields
-    for (const q of questionSet.questions) {
-      if (q.required) {
-        const ans = answers[q.question_id];
-        if (!ans || ans.value === "" || (Array.isArray(ans.value) && ans.value.length === 0)) {
-          setError(`Please answer: ${q.prompt}`);
-          setSubmitting(false);
-          return;
-        }
-      }
+    const unanswered = questionSet.questions.filter((q) => {
+      if (!q.required) return false;
+      const ans = answers[q.question_id];
+      return !ans || ans.value === "" || (Array.isArray(ans.value) && ans.value.length === 0);
+    });
+
+    if (unanswered.length > 0) {
+      setError(
+        `${unanswered.length} required question${unanswered.length > 1 ? "s" : ""} still need${unanswered.length === 1 ? "s" : ""} an answer. ` +
+        `You can use "Save Progress" to save what you have so far, or complete the remaining questions to continue.`
+      );
+      setSubmitting(false);
+      return;
     }
 
     try {
@@ -234,7 +272,7 @@ export default function QuestionnairePage() {
             Welcome to your career assessment
           </h1>
           <p style={{ color: "var(--muted)", lineHeight: 1.8, fontSize: "0.925rem" }}>
-            This questionnaire is the foundation of your personalised career transition plan. It covers 8 modules across about <strong style={{ color: "var(--fg)" }}>108 questions</strong> and typically takes <strong style={{ color: "var(--fg)" }}>20 &ndash; 30 minutes</strong> to complete.
+            This questionnaire is the foundation of your personalised career transition plan. It covers 8 modules across about <strong style={{ color: "var(--fg)" }}>119 questions</strong> and typically takes <strong style={{ color: "var(--fg)" }}>20 &ndash; 30 minutes</strong> to complete.
           </p>
           <div style={{
             background: "#f8fafc", borderRadius: "10px",
@@ -348,25 +386,49 @@ export default function QuestionnairePage() {
 
       {error && (
         <div style={{
-          color: "white",
-          background: "#dc2626",
+          color: "#92400e",
+          background: "#fef3c7",
+          border: "1px solid #f59e0b",
+          padding: "0.75rem 1rem",
+          borderRadius: "8px",
+          marginTop: "1rem",
+          fontSize: "0.875rem",
+          lineHeight: 1.5,
+        }}>
+          {error}
+        </div>
+      )}
+
+      {saveMessage && (
+        <div style={{
+          color: "#065f46",
+          background: "#d1fae5",
+          border: "1px solid #059669",
           padding: "0.75rem 1rem",
           borderRadius: "8px",
           marginTop: "1rem",
           fontSize: "0.875rem",
           fontWeight: 500,
         }}>
-          {error}
+          {saveMessage}
         </div>
       )}
 
       {/* Navigation buttons */}
-      <div className="mt-3" style={{ display: "flex", gap: "0.5rem" }}>
+      <div className="mt-3" style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
         {currentModuleIdx > 0 && (
-          <button className="btn btn-outline" onClick={handleBack}>
+          <button className="btn btn-outline" onClick={handleBack} disabled={submitting}>
             Back
           </button>
         )}
+        <button
+          className="btn btn-outline"
+          onClick={handleSaveProgress}
+          disabled={submitting}
+          style={{ flex: "0 0 auto" }}
+        >
+          {submitting ? "Saving..." : "Save Progress"}
+        </button>
         <button
           className="btn btn-primary"
           onClick={handleSubmit}
