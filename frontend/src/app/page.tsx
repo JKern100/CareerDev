@@ -215,7 +215,7 @@ export default function Home() {
         </div>
 
         <p style={{ color: "#475569", fontSize: "0.85rem", marginTop: "1.5rem" }}>
-          119 guided questions. 8 career pathways. Location-aware salary data.
+          119 guided questions. 14 career pathways. Location-aware salary data.
         </p>
       </section>
 
@@ -309,7 +309,7 @@ export default function Home() {
             marginBottom: "1rem",
           }}
         >
-          8 career pathways
+          14 career pathways
         </h2>
         <p
           style={{
@@ -338,7 +338,14 @@ export default function Home() {
             { name: "Operations", icon: "+" },
             { name: "Safety & Compliance", icon: "+" },
             { name: "Project Management", icon: "+" },
-            { name: "Tech-Adjacent", icon: "+" },
+            { name: "Business Analysis", icon: "+" },
+            { name: "UX/UI Design", icon: "+" },
+            { name: "Hospitality & Luxury", icon: "+" },
+            { name: "Private Aviation", icon: "+" },
+            { name: "Healthcare", icon: "+" },
+            { name: "Sales & Biz Dev", icon: "+" },
+            { name: "Entrepreneurship", icon: "+" },
+            { name: "Education & Coaching", icon: "+" },
           ].map((pw) => (
             <div
               key={pw.name}
