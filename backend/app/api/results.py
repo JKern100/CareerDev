@@ -45,4 +45,5 @@ async def get_results(
         markdown_report=report.markdown_report,
         model_name=report.model_name,
         created_at=report.created_at,
+        can_regenerate=user.can_regenerate,
     )

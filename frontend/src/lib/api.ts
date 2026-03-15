@@ -217,6 +217,7 @@ export interface CareerAnalysis {
   markdown_report: string;
   model_name: string;
   created_at: string;
+  can_regenerate: boolean;
 }
 
 export async function getCareerReport() {
@@ -231,6 +232,7 @@ export interface AdminUser {
   role: string;
   questionnaire_completed: boolean;
   current_module: string | null;
+  can_regenerate: boolean;
   answers_count: number;
   reports_count: number;
   created_at: string;

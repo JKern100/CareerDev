@@ -46,6 +46,20 @@ export default function ResultsPage() {
     load();
   }, [router]);
 
+  async function handleRegenerate() {
+    setGenerating(true);
+    setError("");
+    try {
+      await runAnalysis();
+      const data = await getCareerReport();
+      setReport(data);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to regenerate report");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
   if (loading || generating) {
     return (
       <>
@@ -94,6 +108,17 @@ export default function ResultsPage() {
           <p className="text-sm text-muted" style={{ textAlign: "center" }}>
             This report is informational only. For visa/labor decisions, consult official sources in your country.
           </p>
+          {report?.can_regenerate && (
+            <div style={{ textAlign: "center", marginTop: "1rem" }}>
+              <button
+                className="btn btn-outline"
+                onClick={handleRegenerate}
+                disabled={generating}
+              >
+                {generating ? "Regenerating..." : "Regenerate Report"}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </>

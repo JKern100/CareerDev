@@ -23,6 +23,7 @@ class UserResponse(BaseModel):
     language: str
     email_verified: bool
     questionnaire_completed: bool
+    can_regenerate: bool
     current_module: str | None
     current_question_id: str | None
     created_at: datetime

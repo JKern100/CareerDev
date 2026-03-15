@@ -121,6 +121,16 @@ async def run_analysis(
             detail="Complete the questionnaire before running analysis.",
         )
 
+    # Check if user already has a report and needs permission to regenerate
+    existing_report = await db.execute(
+        select(AnalysisReport).where(AnalysisReport.user_id == user.id)
+    )
+    if existing_report.scalar_one_or_none() and not user.can_regenerate:
+        raise HTTPException(
+            status_code=403,
+            detail="Report regeneration is not enabled. Please contact your administrator.",
+        )
+
     # Load user answers
     result = await db.execute(select(Answer).where(Answer.user_id == user.id))
     answers_raw = result.scalars().all()
@@ -224,6 +234,10 @@ async def run_analysis(
             status="complete",
         )
         db.add(report)
+
+        # Reset can_regenerate flag after successful regeneration
+        user.can_regenerate = False
+
         await db.commit()
         await db.refresh(report)
 
