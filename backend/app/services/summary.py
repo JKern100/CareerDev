@@ -256,9 +256,9 @@ When you're ready, click "Generate Career Analysis" to get your detailed, scored
 
 
 async def generate_summary_with_ai(answers: dict, user_name: str | None = None, api_key: str = "") -> str:
-    """Generate a narrative summary using Claude API."""
+    """Generate a narrative summary using Gemini API."""
     try:
-        import anthropic
+        import google.generativeai as genai
     except ImportError:
         return generate_summary_without_ai(answers, user_name)
 
@@ -268,13 +268,15 @@ async def generate_summary_with_ai(answers: dict, user_name: str | None = None, 
     prompt = build_summary_prompt(answers, user_name)
 
     try:
-        client = anthropic.Anthropic(api_key=api_key)
-        message = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=2000,
-            messages=[{"role": "user", "content": prompt}],
+        genai.configure(api_key=api_key)
+        gemini = genai.GenerativeModel(
+            model_name="gemini-2.0-flash",
+            generation_config=genai.types.GenerationConfig(
+                max_output_tokens=2000,
+            ),
         )
-        return message.content[0].text
+        response = gemini.generate_content(prompt)
+        return response.text
     except Exception:
         # Fallback to template if AI fails
         return generate_summary_without_ai(answers, user_name)

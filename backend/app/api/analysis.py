@@ -111,7 +111,7 @@ async def run_analysis(
 
     Step 1: Check questionnaire_completed flag and completion gate (all required answered).
     Step 2: Build system prompt (cached) and user message.
-    Step 3: Call Claude API for Markdown report.
+    Step 3: Call Gemini API for Markdown report.
     Step 4: Store the report (overwrite if exists).
     """
     # --- Pre-checks ---
