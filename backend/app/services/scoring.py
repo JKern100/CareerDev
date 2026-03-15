@@ -1,12 +1,13 @@
 """Deterministic scoring engine.
 
-Computes pathway scores from questionnaire answers using the six-component model:
-- Interest Fit (25%)
-- Skill Fit (25%)
-- Environment Fit (10%)
-- Feasibility (20%)
-- Compensation Fit (15%)
-- Risk Fit (5%)
+Computes pathway scores from questionnaire answers using the six-component model.
+Each pathway defines its own scoring weights (must sum to 1.0):
+- Interest Fit (default 0.25)
+- Skill Fit (default 0.25)
+- Environment Fit (default 0.10)
+- Feasibility (default 0.20)
+- Compensation Fit (default 0.15)
+- Risk Fit (default 0.05)
 
 Confidence adjustment: final_score = raw_score * (0.7 + 0.3 * confidence_factor)
 """
@@ -34,6 +35,7 @@ class ScoredPathway:
     risk_score: float
     typical_roles: list[str]
     salary_band_refs: dict | None
+    salary_global_note: str | None
     recommended_credentials: list[dict] | None
     gate_flags: list[str]
     top_evidence_signals: list[str]
@@ -352,6 +354,7 @@ def score_pathways(answers: dict) -> list[ScoredPathway]:
             risk_score=round(risk, 4),
             typical_roles=pw.get("typical_roles", []),
             salary_band_refs=pw.get("salary_band_refs"),
+            salary_global_note=pw.get("salary_global_note"),
             recommended_credentials=pw.get("recommended_credentials"),
             gate_flags=gate_flags,
             top_evidence_signals=evidence_signals,

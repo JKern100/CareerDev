@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { generateSummary, getSummary, SummaryReport } from "@/lib/api";
+import { generateSummary, getSummary, SummaryReport, APP_VERSION } from "@/lib/api";
 import AppHeader from "@/components/AppHeader";
 
 export default function SummaryPage() {
@@ -105,7 +105,7 @@ export default function SummaryPage() {
     <AppHeader />
     <div className="container" style={{ maxWidth: "720px" }}>
       <p className="text-sm text-muted" style={{ textAlign: "right", marginBottom: "0.25rem" }}>
-        V.01
+        {APP_VERSION}
       </p>
 
       <h1 style={{ marginBottom: "0.25rem" }}>Your Career Profile Summary</h1>

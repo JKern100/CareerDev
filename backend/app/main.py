@@ -93,6 +93,7 @@ async def _seed_pathways():
                 prerequisites=pw.get("prerequisites"),
                 typical_roles=pw.get("typical_roles", []),
                 salary_band_refs=pw.get("salary_band_refs"),
+                salary_global_note=pw.get("salary_global_note"),
                 recommended_credentials=pw.get("recommended_credentials"),
                 weight_interest=pw.get("weight_interest", 0.25),
                 weight_skill=pw.get("weight_skill", 0.25),
@@ -178,7 +179,7 @@ from app.api import auth, questionnaire, analysis, privacy, admin, scheduling
 app = FastAPI(
     title=settings.APP_NAME,
     description="AI Career-Advice App for Flight Crew",
-    version="0.1.0",
+    version="0.2.0",
     lifespan=lifespan,
 )
 

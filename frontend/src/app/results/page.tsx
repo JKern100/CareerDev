@@ -102,13 +102,18 @@ export default function ResultsPage() {
 
           {pw.salary_band_refs && (
             <div className="mb-2">
-              <h3 className="text-sm">Salary Bands (monthly)</h3>
+              <h3 className="text-sm">Salary Bands (monthly, AED)</h3>
               {Object.entries(pw.salary_band_refs).map(([role, band]) => (
                 <p key={role} className="text-sm">
                   {role}: <strong>{band.min_aed.toLocaleString()} – {band.max_aed.toLocaleString()}</strong>
                   <span className="text-muted"> ({band.source})</span>
                 </p>
               ))}
+              {pw.salary_global_note && (
+                <p className="text-sm text-muted" style={{ marginTop: "0.25rem", fontStyle: "italic" }}>
+                  {pw.salary_global_note}
+                </p>
+              )}
             </div>
           )}
 

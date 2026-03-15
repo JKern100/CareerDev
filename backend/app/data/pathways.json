@@ -1,24 +1,32 @@
 [
   {
     "id": "P1",
-    "name": "Aviation Training — Cabin Crew Instructor / Training Operations",
-    "description": "Leverage flight crew experience to transition into aviation training roles. Teach what you've lived — safety, service, CRM, and cabin operations.",
-    "typical_roles": ["Cabin Crew Instructor", "Training Operations Coordinator", "Aviation Training Specialist"],
+    "name": "Aviation Training — Instructor / Training Operations",
+    "description": "Leverage flight crew experience to transition into aviation training roles. Teach what you've lived — safety, service, CRM, cabin operations, ground ops training, and airline soft skills delivery.",
+    "typical_roles": ["Cabin Crew Instructor", "Ground Operations Trainer", "Safety Training Facilitator", "Training Operations Coordinator", "Aviation Training Specialist", "Airline Soft Skills Trainer"],
     "prerequisites": {"min_years_aviation": 3, "min_training_skill": 3},
     "salary_band_refs": {
       "L&D Specialist": {"min_aed": 16000, "max_aed": 23000, "source": "Cooper Fitch UAE Salary Guide 2024"},
       "Training Manager": {"min_aed": 22400, "max_aed": 36000, "source": "Cooper Fitch UAE Salary Guide 2024"}
     },
+    "salary_global_note": "Entry-level instructor roles typically sit in the mid-range for L&D positions in most markets. Senior training manager roles command upper-mid salaries. Consult local salary guides for your target market.",
     "recommended_credentials": [
       {"name": "IATA CRM for Instructors", "duration": "4 days / 32 hours", "source_url": "https://www.iata.org/en/training/courses/crm-instructors/sac057veen02/en/"},
-      {"name": "IATA Instructional Techniques", "duration": "3 days / 24 hours", "source_url": "https://www.iata.org/en/training/courses/instructional-techniques/gmc012veen02/en/"}
+      {"name": "IATA Instructional Techniques", "duration": "3 days / 24 hours", "source_url": "https://www.iata.org/en/training/courses/instructional-techniques/gmc012veen02/en/"},
+      {"name": "IATA Dangerous Goods Regulations (DGR) Initial", "duration": "3 days / 24 hours", "source_url": "https://www.iata.org/en/training/courses/dangerous-goods-initial-category-6/tcgp26/en/"}
     ],
     "skill_questions": ["Q027", "Q028", "Q029", "Q033", "Q034", "Q035"],
     "interest_questions": ["Q016", "Q017", "Q019", "Q106"],
     "interest_match_values": {"Q106": ["L&D"]},
     "environment_questions": ["Q047", "Q048", "Q049", "Q050"],
     "feasibility_questions": ["Q061", "Q062", "Q064", "Q065", "Q070"],
-    "compensation_questions": ["Q089", "Q066"]
+    "compensation_questions": ["Q089", "Q066"],
+    "weight_interest": 0.25,
+    "weight_skill": 0.30,
+    "weight_environment": 0.10,
+    "weight_feasibility": 0.15,
+    "weight_compensation": 0.15,
+    "weight_risk": 0.05
   },
   {
     "id": "P2",
@@ -30,6 +38,7 @@
       "L&D Specialist": {"min_aed": 16000, "max_aed": 23000, "source": "Cooper Fitch UAE Salary Guide 2024"},
       "L&D Manager": {"min_aed": 27700, "max_aed": 39000, "source": "Cooper Fitch UAE Salary Guide 2024"}
     },
+    "salary_global_note": "L&D specialist salaries are mid-range across most markets. Manager-level roles are upper-mid. UK, Australia, and Canada have comparable L&D salary structures. Consult local salary guides for your target market.",
     "recommended_credentials": [
       {"name": "CIPD Level 5 Associate Diploma in People Management", "duration": "12-16 months", "source_url": "https://www.cipd.org/en/learning/qualifications/associate/associate-diploma-in-people-management/"},
       {"name": "IATA Instructional Techniques", "duration": "3 days / 24 hours", "source_url": "https://www.iata.org/en/training/courses/instructional-techniques/gmc012veen02/en/"}
@@ -39,7 +48,13 @@
     "interest_match_values": {"Q106": ["L&D"]},
     "environment_questions": ["Q047", "Q048", "Q049", "Q050"],
     "feasibility_questions": ["Q061", "Q062", "Q064", "Q065", "Q070"],
-    "compensation_questions": ["Q089", "Q066"]
+    "compensation_questions": ["Q089", "Q066"],
+    "weight_interest": 0.25,
+    "weight_skill": 0.25,
+    "weight_environment": 0.10,
+    "weight_feasibility": 0.20,
+    "weight_compensation": 0.15,
+    "weight_risk": 0.05
   },
   {
     "id": "P3",
@@ -52,6 +67,7 @@
       "TA Specialist": {"min_aed": 16000, "max_aed": 21000, "source": "Cooper Fitch UAE Salary Guide 2024"},
       "HRBP": {"min_aed": 33000, "max_aed": 54000, "source": "Cooper Fitch UAE Salary Guide 2024"}
     },
+    "salary_global_note": "HR generalist entry salaries are mid-range. HRBP is a senior strategic role with upper-range compensation in most markets. CIPD recognition is strongest in UK and Gulf markets. Consult local salary guides for your target market.",
     "recommended_credentials": [
       {"name": "CIPD Level 5 Associate Diploma in People Management", "duration": "12-16 months", "source_url": "https://www.cipd.org/en/learning/qualifications/associate/associate-diploma-in-people-management/"},
       {"name": "SHRM Certification", "duration": "Varies", "source_url": "https://www.shrm.org/credentials/certification/eligibility-criteria"}
@@ -61,7 +77,13 @@
     "interest_match_values": {"Q106": ["HR"]},
     "environment_questions": ["Q047", "Q048", "Q049", "Q050", "Q051"],
     "feasibility_questions": ["Q061", "Q062", "Q064", "Q065", "Q070", "Q071"],
-    "compensation_questions": ["Q089", "Q066"]
+    "compensation_questions": ["Q089", "Q066"],
+    "weight_interest": 0.20,
+    "weight_skill": 0.25,
+    "weight_environment": 0.10,
+    "weight_feasibility": 0.20,
+    "weight_compensation": 0.20,
+    "weight_risk": 0.05
   },
   {
     "id": "P4",
@@ -72,13 +94,24 @@
     "salary_band_refs": {
       "Customer Success Manager / TAM": {"min_aed": 27000, "max_aed": 39000, "source": "Cooper Fitch UAE Salary Guide 2024"}
     },
-    "recommended_credentials": [],
+    "salary_global_note": "Customer success manager salaries are mid-to-upper range in most markets, with strong demand in SaaS and tech sectors globally. Consult local salary guides for your target market.",
+    "recommended_credentials": [
+      {"name": "CCXP (Certified Customer Experience Professional)", "duration": "Self-study + exam", "source_url": "https://www.cxpa.org/earn-your-ccxp"},
+      {"name": "CX Management Certificate (Program by CX Academy)", "duration": "8-12 weeks online", "source_url": "https://cxacademy.com.au/"},
+      {"name": "Customer Success Manager Certification (SuccessHACKER)", "duration": "Self-paced online", "source_url": "https://www.successhacker.co/"}
+    ],
     "skill_questions": ["Q027", "Q028", "Q029", "Q030", "Q036"],
     "interest_questions": ["Q017", "Q018", "Q051", "Q106"],
     "interest_match_values": {"Q106": ["CX"]},
     "environment_questions": ["Q047", "Q048", "Q049", "Q050", "Q051"],
     "feasibility_questions": ["Q061", "Q062", "Q064", "Q065", "Q071"],
-    "compensation_questions": ["Q089", "Q066"]
+    "compensation_questions": ["Q089", "Q066"],
+    "weight_interest": 0.30,
+    "weight_skill": 0.20,
+    "weight_environment": 0.15,
+    "weight_feasibility": 0.15,
+    "weight_compensation": 0.15,
+    "weight_risk": 0.05
   },
   {
     "id": "P5",
@@ -89,15 +122,23 @@
     "salary_band_refs": {
       "Operations Manager": {"min_aed": 21000, "max_aed": 39000, "source": "Cooper Fitch UAE Salary Guide 2024"}
     },
+    "salary_global_note": "Operations coordinator entry salaries are mid-range; operations manager roles reach upper-mid in most markets. Aviation and logistics sectors pay a premium. Consult local salary guides for your target market.",
     "recommended_credentials": [
-      {"name": "CAPM (PMI)", "duration": "23 hours PM education required", "source_url": "https://www.pmi.org/certifications/certified-associate-capm"}
+      {"name": "IATA Airport Operations Diploma", "duration": "12-18 months self-paced", "source_url": "https://www.iata.org/en/training/courses/airport-operations-diploma/"},
+      {"name": "Lean Six Sigma Green Belt", "duration": "2-4 weeks intensive or self-paced", "source_url": "https://asq.org/cert/six-sigma-green-belt"}
     ],
     "skill_questions": ["Q033", "Q035", "Q036", "Q037", "Q031"],
     "interest_questions": ["Q019", "Q020", "Q106"],
     "interest_match_values": {"Q106": ["Operations"]},
     "environment_questions": ["Q047", "Q048", "Q049", "Q052"],
     "feasibility_questions": ["Q061", "Q062", "Q064", "Q065", "Q071"],
-    "compensation_questions": ["Q089", "Q066"]
+    "compensation_questions": ["Q089", "Q066"],
+    "weight_interest": 0.20,
+    "weight_skill": 0.30,
+    "weight_environment": 0.10,
+    "weight_feasibility": 0.20,
+    "weight_compensation": 0.15,
+    "weight_risk": 0.05
   },
   {
     "id": "P6",
@@ -109,6 +150,7 @@
       "HSE Engineer": {"min_aed": 14000, "max_aed": 20000, "source": "Cooper Fitch UAE Salary Guide 2024"},
       "HSE Manager": {"min_aed": 24000, "max_aed": 36000, "source": "Cooper Fitch UAE Salary Guide 2024"}
     },
+    "salary_global_note": "HSE roles are in high demand in oil & gas, construction, and manufacturing globally. Entry salaries are moderate; manager-level salaries are upper-mid, especially in Gulf and UK markets. Consult local salary guides for your target market.",
     "recommended_credentials": [
       {"name": "NEBOSH International General Certificate", "duration": "63 taught hours + ~40 private study", "source_url": "https://www.nebosh.org.uk/qualifications/international-general-certificate/"},
       {"name": "ISO 45001 Lead Auditor (CQI/IRCA)", "duration": "5 days", "source_url": "https://www.bsigroup.com/en-ID/training-courses/iso-45001-lead-auditor/"}
@@ -118,46 +160,263 @@
     "interest_match_values": {"Q106": ["Safety"]},
     "environment_questions": ["Q047", "Q048", "Q049", "Q052"],
     "feasibility_questions": ["Q061", "Q062", "Q064", "Q065", "Q070"],
-    "compensation_questions": ["Q089", "Q066"]
+    "compensation_questions": ["Q089", "Q066"],
+    "weight_interest": 0.15,
+    "weight_skill": 0.35,
+    "weight_environment": 0.10,
+    "weight_feasibility": 0.20,
+    "weight_compensation": 0.15,
+    "weight_risk": 0.05
   },
   {
     "id": "P7",
     "name": "Project Coordination / Project Management",
     "description": "Your planning, stakeholder communication, and documentation skills form a strong base for project management — especially in operations excellence.",
-    "typical_roles": ["IT Project Manager", "Project Coordinator", "Program Manager"],
+    "typical_roles": ["Project Coordinator", "IT Project Manager", "Program Manager"],
     "prerequisites": {"min_study_readiness": 3},
     "salary_band_refs": {
+      "Project Coordinator": {"min_aed": 15000, "max_aed": 22000, "source": "Cooper Fitch UAE Salary Guide 2024"},
       "IT Project Manager": {"min_aed": 39000, "max_aed": 55000, "source": "Cooper Fitch UAE Salary Guide 2024"}
     },
+    "salary_global_note": "Project coordinator entry salaries are mid-range. Senior project/program manager roles are among the higher-paid non-executive positions in most markets. Consult local salary guides for your target market.",
     "recommended_credentials": [
-      {"name": "CAPM (PMI)", "duration": "23 hours PM education required", "source_url": "https://www.pmi.org/certifications/certified-associate-capm"}
+      {"name": "CAPM (PMI)", "duration": "23 hours PM education required", "source_url": "https://www.pmi.org/certifications/certified-associate-capm"},
+      {"name": "PMP (PMI)", "duration": "35 hours PM education + 3 years experience", "source_url": "https://www.pmi.org/certifications/project-management-pmp"}
     ],
     "skill_questions": ["Q033", "Q035", "Q036", "Q037", "Q028"],
     "interest_questions": ["Q019", "Q056", "Q106"],
     "interest_match_values": {"Q106": ["Operations"]},
     "environment_questions": ["Q047", "Q048", "Q049", "Q053"],
     "feasibility_questions": ["Q061", "Q062", "Q064", "Q065", "Q070", "Q100", "Q101"],
-    "compensation_questions": ["Q089", "Q066"]
+    "compensation_questions": ["Q089", "Q066"],
+    "weight_interest": 0.20,
+    "weight_skill": 0.25,
+    "weight_environment": 0.10,
+    "weight_feasibility": 0.25,
+    "weight_compensation": 0.15,
+    "weight_risk": 0.05
   },
   {
-    "id": "P8",
-    "name": "Tech-Adjacent Pivot (UX/UI, Business Analyst)",
-    "description": "If you have strong interest in tech, structured thinking, and study readiness, a pivot into UX design or business analysis is achievable with the right portfolio and credentials.",
-    "typical_roles": ["UX/UI Designer (Junior-Mid)", "Business Analyst"],
+    "id": "P8a",
+    "name": "Business Analysis",
+    "description": "Your structured thinking, process awareness, and stakeholder communication skills translate well into business analysis. Bridge the gap between business needs and technical solutions.",
+    "typical_roles": ["Business Analyst", "Requirements Analyst", "Process Improvement Analyst"],
+    "prerequisites": {"min_tech_interest": true, "min_study_hours": 5},
+    "salary_band_refs": {
+      "Business Analyst": {"min_aed": 11000, "max_aed": 16000, "source": "Cooper Fitch UAE Salary Guide 2024"},
+      "Senior Business Analyst": {"min_aed": 20000, "max_aed": 32000, "source": "Cooper Fitch UAE Salary Guide 2024"}
+    },
+    "salary_global_note": "Business analyst entry salaries are moderate but grow quickly with experience. Senior BA roles are well compensated across tech, banking, and consulting sectors globally. Consult local salary guides for your target market.",
+    "recommended_credentials": [
+      {"name": "BCS International Diploma in Business Analysis", "duration": "6-12 months", "source_url": "https://www.bcs.org/qualifications-and-certifications/certifications-for-professionals/business-analysis-certifications/"},
+      {"name": "IIBA ECBA (Entry Certificate in Business Analysis)", "duration": "21 hours professional development", "source_url": "https://www.iiba.org/business-analysis-certifications/ecba/"}
+    ],
+    "skill_questions": ["Q037", "Q035", "Q036", "Q033", "Q028"],
+    "interest_questions": ["Q042", "Q043", "Q106"],
+    "interest_match_values": {"Q106": ["Tech"]},
+    "environment_questions": ["Q047", "Q048", "Q053"],
+    "feasibility_questions": ["Q061", "Q062", "Q064", "Q065", "Q070", "Q100", "Q101"],
+    "compensation_questions": ["Q089", "Q066"],
+    "weight_interest": 0.20,
+    "weight_skill": 0.25,
+    "weight_environment": 0.10,
+    "weight_feasibility": 0.25,
+    "weight_compensation": 0.15,
+    "weight_risk": 0.05
+  },
+  {
+    "id": "P8b",
+    "name": "UX/UI Design",
+    "description": "If you have a creative eye, enjoy understanding user needs, and are willing to build a portfolio, UX/UI design offers a fulfilling tech-adjacent pivot with strong demand.",
+    "typical_roles": ["UX/UI Designer (Junior-Mid)", "UX Researcher", "Interaction Designer"],
     "prerequisites": {"min_tech_interest": true, "min_study_hours": 10},
     "salary_band_refs": {
-      "UX/UI Designer": {"min_aed": 22000, "max_aed": 34000, "source": "Cooper Fitch UAE Salary Guide 2024"},
-      "Business Analyst": {"min_aed": 11000, "max_aed": 16000, "source": "Cooper Fitch UAE Salary Guide 2024"}
+      "UX/UI Designer (Junior)": {"min_aed": 12000, "max_aed": 20000, "source": "Cooper Fitch UAE Salary Guide 2024"},
+      "UX/UI Designer (Mid)": {"min_aed": 22000, "max_aed": 34000, "source": "Cooper Fitch UAE Salary Guide 2024"}
     },
+    "salary_global_note": "Junior UX roles start at moderate salaries but mid-level designers are well compensated, especially in tech hubs. Portfolio quality matters more than credentials in this field. Consult local salary guides for your target market.",
     "recommended_credentials": [
       {"name": "Google UX Professional Certificate (Coursera)", "duration": "~6 months @ 10 hrs/week", "source_url": "https://www.coursera.org/professional-certificates/google-ux-design"},
-      {"name": "Google Digital Marketing & E-commerce (Coursera)", "duration": "~6 months @ 10 hrs/week", "source_url": "https://www.coursera.org/professional-certificates/google-digital-marketing-ecommerce"}
+      {"name": "Interaction Design Foundation Membership", "duration": "Self-paced courses", "source_url": "https://www.interaction-design.org/"}
     ],
     "skill_questions": ["Q037", "Q035", "Q036", "Q042", "Q044"],
     "interest_questions": ["Q042", "Q043", "Q106"],
     "interest_match_values": {"Q106": ["Tech"]},
     "environment_questions": ["Q047", "Q048", "Q053"],
     "feasibility_questions": ["Q061", "Q062", "Q064", "Q065", "Q070", "Q100", "Q101"],
-    "compensation_questions": ["Q089", "Q066"]
+    "compensation_questions": ["Q089", "Q066"],
+    "weight_interest": 0.25,
+    "weight_skill": 0.20,
+    "weight_environment": 0.15,
+    "weight_feasibility": 0.25,
+    "weight_compensation": 0.10,
+    "weight_risk": 0.05
+  },
+  {
+    "id": "P9",
+    "name": "Hospitality & Luxury Service Management",
+    "description": "The most common natural transition for cabin crew globally. Your service delivery, presentation, and guest management skills transfer directly into hotel operations, cruise lines, luxury retail, and VIP services.",
+    "typical_roles": ["Hotel Operations Coordinator", "Guest Relations Manager", "Cruise Ship Guest Services", "Luxury Retail Manager", "VIP Services Coordinator"],
+    "prerequisites": {},
+    "salary_band_refs": {
+      "Guest Relations / Front Office": {"min_aed": 10000, "max_aed": 18000, "source": "Cooper Fitch UAE Salary Guide 2024"},
+      "Hotel Operations Manager": {"min_aed": 20000, "max_aed": 35000, "source": "Cooper Fitch UAE Salary Guide 2024"}
+    },
+    "salary_global_note": "Entry-level hospitality salaries are modest but rise significantly with management responsibility, especially in luxury brands. Tips and service charges add to compensation in many markets. Consult local salary guides for your target market.",
+    "recommended_credentials": [
+      {"name": "AHLEI Certified Hospitality Supervisor (CHS)", "duration": "Self-study + exam", "source_url": "https://www.ahlei.org/certification/"},
+      {"name": "EHL Hospitality Management Certificate (online)", "duration": "3-6 months", "source_url": "https://www.ehl.edu/en/online-certificates"}
+    ],
+    "skill_questions": ["Q027", "Q028", "Q029", "Q030", "Q034"],
+    "interest_questions": ["Q017", "Q051", "Q106"],
+    "interest_match_values": {"Q106": ["CX", "Hospitality"]},
+    "environment_questions": ["Q047", "Q048", "Q049", "Q050", "Q051"],
+    "feasibility_questions": ["Q061", "Q062", "Q064", "Q065", "Q071"],
+    "compensation_questions": ["Q089", "Q066"],
+    "weight_interest": 0.30,
+    "weight_skill": 0.15,
+    "weight_environment": 0.20,
+    "weight_feasibility": 0.15,
+    "weight_compensation": 0.15,
+    "weight_risk": 0.05
+  },
+  {
+    "id": "P10",
+    "name": "Corporate & Private Aviation (Ground-Side)",
+    "description": "Stay close to aviation without flying. Ground operations, VIP passenger handling, private jet coordination, and charter operations leverage your direct experience. Lowest credential barrier of all pathways. Operators include NetJets, VistaJet, Luxaviation, DC Aviation, and Jetex.",
+    "typical_roles": ["VIP Passenger Handler", "FBO Coordinator", "Private Jet Charter Coordinator", "Airline Ground Training Specialist", "Corporate Aviation Operations"],
+    "prerequisites": {},
+    "salary_band_refs": {
+      "FBO / VIP Handler": {"min_aed": 12000, "max_aed": 20000, "source": "Cooper Fitch UAE Salary Guide 2024"},
+      "Charter Operations Coordinator": {"min_aed": 18000, "max_aed": 30000, "source": "Cooper Fitch UAE Salary Guide 2024"}
+    },
+    "salary_global_note": "Private aviation ground roles pay moderately at entry but senior coordination and management roles are well compensated, with operators in UAE, Europe, and US paying premiums. Consult local salary guides for your target market.",
+    "recommended_credentials": [],
+    "skill_questions": ["Q027", "Q033", "Q035", "Q036", "Q031"],
+    "interest_questions": ["Q016", "Q017", "Q106"],
+    "interest_match_values": {"Q106": ["Operations", "Aviation"]},
+    "environment_questions": ["Q047", "Q048", "Q049", "Q052"],
+    "feasibility_questions": ["Q061", "Q062", "Q064", "Q065"],
+    "compensation_questions": ["Q089", "Q066"],
+    "weight_interest": 0.25,
+    "weight_skill": 0.25,
+    "weight_environment": 0.15,
+    "weight_feasibility": 0.15,
+    "weight_compensation": 0.15,
+    "weight_risk": 0.05
+  },
+  {
+    "id": "P11",
+    "name": "Healthcare (Non-Clinical Coordination)",
+    "description": "Your first aid background, service skills, and calm-under-pressure demeanour make a credible entry case for healthcare coordination roles. No clinical credential needed — patient experience, healthcare admin, and clinic coordination roles value your transferable skills. Relevant in UAE, UK, Canada, and Australia markets.",
+    "typical_roles": ["Patient Experience Coordinator", "Healthcare Administrator", "Medical Reception Manager", "Clinic Coordinator"],
+    "prerequisites": {},
+    "salary_band_refs": {
+      "Patient Experience Coordinator": {"min_aed": 12000, "max_aed": 20000, "source": "Cooper Fitch UAE Salary Guide 2024"},
+      "Healthcare Administrator": {"min_aed": 18000, "max_aed": 28000, "source": "Cooper Fitch UAE Salary Guide 2024"}
+    },
+    "salary_global_note": "Non-clinical healthcare coordination salaries are mid-range, with higher pay in private healthcare and hospital systems. UK NHS and Australian public health systems have structured pay bands. Consult local salary guides for your target market.",
+    "recommended_credentials": [
+      {"name": "Patient Experience Certificate (The Beryl Institute)", "duration": "Self-paced online", "source_url": "https://www.theberylinstitute.org/"},
+      {"name": "Certified Medical Administrative Assistant (NHA)", "duration": "Self-study + exam", "source_url": "https://www.nhanow.com/certifications/medical-administrative-assistant"}
+    ],
+    "skill_questions": ["Q027", "Q028", "Q029", "Q032", "Q030"],
+    "interest_questions": ["Q017", "Q018", "Q106"],
+    "interest_match_values": {"Q106": ["Healthcare", "CX"]},
+    "environment_questions": ["Q047", "Q048", "Q049", "Q050"],
+    "feasibility_questions": ["Q061", "Q062", "Q064", "Q065", "Q071"],
+    "compensation_questions": ["Q089", "Q066"],
+    "weight_interest": 0.25,
+    "weight_skill": 0.20,
+    "weight_environment": 0.15,
+    "weight_feasibility": 0.20,
+    "weight_compensation": 0.15,
+    "weight_risk": 0.05
+  },
+  {
+    "id": "P12",
+    "name": "Sales & Business Development",
+    "description": "B2B and B2C sales roles, account management, and business development. Your communication, persuasion, and relationship-building skills from cabin crew service translate into high-earning potential roles with commission structures.",
+    "typical_roles": ["Business Development Executive", "Account Manager", "Sales Executive", "Key Account Manager"],
+    "prerequisites": {},
+    "salary_band_refs": {
+      "Sales Executive": {"min_aed": 12000, "max_aed": 20000, "source": "Cooper Fitch UAE Salary Guide 2024"},
+      "Business Development Manager": {"min_aed": 22000, "max_aed": 40000, "source": "Cooper Fitch UAE Salary Guide 2024"}
+    },
+    "salary_global_note": "Base salaries are moderate but total compensation with commission can be significantly higher — often 30-50% above base. High performers in B2B sales earn upper-range incomes across all markets. Consult local salary guides for your target market.",
+    "recommended_credentials": [
+      {"name": "HubSpot Sales Software Certification", "duration": "Self-paced / ~5 hours", "source_url": "https://academy.hubspot.com/courses/sales-software"},
+      {"name": "Certified Professional Sales Person (CPSP)", "duration": "Self-paced online", "source_url": "https://www.nasp.com/certified-professional-sales-person/"}
+    ],
+    "skill_questions": ["Q027", "Q028", "Q029", "Q030", "Q036"],
+    "interest_questions": ["Q051", "Q018", "Q106"],
+    "interest_match_values": {"Q106": ["Sales", "CX"]},
+    "environment_questions": ["Q047", "Q048", "Q049", "Q051"],
+    "feasibility_questions": ["Q061", "Q062", "Q064", "Q065"],
+    "compensation_questions": ["Q089", "Q066"],
+    "weight_interest": 0.20,
+    "weight_skill": 0.15,
+    "weight_environment": 0.10,
+    "weight_feasibility": 0.15,
+    "weight_compensation": 0.20,
+    "weight_risk": 0.20
+  },
+  {
+    "id": "P13",
+    "name": "Entrepreneurship & Freelancing",
+    "description": "Launch your own freelance consulting, independent training business, coaching practice, or service business. Enabled by UAE free zone visas or equivalent structures in other markets. Requires high autonomy, risk tolerance, and self-direction.",
+    "typical_roles": ["Freelance Consultant", "Independent Trainer", "Coaching Practitioner", "Service Business Founder"],
+    "prerequisites": {},
+    "salary_band_refs": {
+      "Freelance Trainer / Consultant": {"min_aed": 8000, "max_aed": 50000, "source": "Market estimate — highly variable"},
+      "Coaching Practitioner": {"min_aed": 10000, "max_aed": 35000, "source": "Market estimate — highly variable"}
+    },
+    "salary_global_note": "Income is highly variable and dependent on business development, niche, and market. First-year income is typically lower than employment. Successful freelancers and business owners can significantly exceed salaried equivalents. Consult local business setup guides for your target market.",
+    "recommended_credentials": [
+      {"name": "ICF Associate Certified Coach (ACC)", "duration": "60+ hours coach training + 100 hrs experience", "source_url": "https://coachingfederation.org/credentials-and-standards/acc"},
+      {"name": "UAE Freezone Trade Licence", "duration": "1-2 weeks setup", "source_url": "https://www.ifza.com/"}
+    ],
+    "skill_questions": ["Q028", "Q029", "Q033", "Q036", "Q037"],
+    "interest_questions": ["Q019", "Q056", "Q106"],
+    "interest_match_values": {"Q106": ["Entrepreneurship", "L&D"]},
+    "environment_questions": ["Q047", "Q048", "Q053"],
+    "feasibility_questions": ["Q061", "Q062", "Q064", "Q065", "Q070"],
+    "compensation_questions": ["Q089", "Q066"],
+    "weight_interest": 0.20,
+    "weight_skill": 0.10,
+    "weight_environment": 0.05,
+    "weight_feasibility": 0.20,
+    "weight_compensation": 0.10,
+    "weight_risk": 0.35
+  },
+  {
+    "id": "P14",
+    "name": "Education, Coaching & Mentoring",
+    "description": "International school teaching, academic coordination, life coaching, career coaching, and corporate facilitation. Distinct from L&D (P2) — this pathway is more interpersonal, developmental, and relationship-driven rather than corporate-structured.",
+    "typical_roles": ["International School Teacher / TA", "Academic Coordinator", "Life Coach", "Career Coach", "Corporate Facilitator"],
+    "prerequisites": {},
+    "salary_band_refs": {
+      "Teaching Assistant / Coordinator": {"min_aed": 8000, "max_aed": 14000, "source": "Cooper Fitch UAE Salary Guide 2024"},
+      "International School Teacher": {"min_aed": 14000, "max_aed": 24000, "source": "Cooper Fitch UAE Salary Guide 2024"},
+      "Career / Life Coach": {"min_aed": 12000, "max_aed": 30000, "source": "Market estimate — experience dependent"}
+    },
+    "salary_global_note": "Teaching and coaching salaries vary widely by market and setting. International schools in Gulf states and Asia offer tax-free packages with housing. Coaching income depends on client base and specialisation. Consult local salary guides for your target market.",
+    "recommended_credentials": [
+      {"name": "CELTA (Cambridge Certificate in Teaching English)", "duration": "4-5 weeks intensive", "source_url": "https://www.cambridgeenglish.org/teaching-english/teaching-qualifications/celta/"},
+      {"name": "ICF Associate Certified Coach (ACC)", "duration": "60+ hours coach training + 100 hrs experience", "source_url": "https://coachingfederation.org/credentials-and-standards/acc"},
+      {"name": "PGCE / Teaching Qualification", "duration": "1 year full-time", "source_url": "https://getintoteaching.education.gov.uk/"}
+    ],
+    "skill_questions": ["Q028", "Q029", "Q034", "Q033", "Q030"],
+    "interest_questions": ["Q034", "Q019", "Q106"],
+    "interest_match_values": {"Q106": ["Education", "L&D"]},
+    "environment_questions": ["Q047", "Q048", "Q049", "Q050"],
+    "feasibility_questions": ["Q061", "Q062", "Q064", "Q065", "Q070"],
+    "compensation_questions": ["Q089", "Q066"],
+    "weight_interest": 0.30,
+    "weight_skill": 0.20,
+    "weight_environment": 0.15,
+    "weight_feasibility": 0.15,
+    "weight_compensation": 0.15,
+    "weight_risk": 0.05
   }
 ]
