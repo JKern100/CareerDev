@@ -343,10 +343,10 @@ export default function QuestionnairePage() {
       <div className="container" style={{ textAlign: "center", marginTop: "4rem" }}>
         <h1>Questionnaire Complete</h1>
         <p className="text-muted mb-3">
-          You&apos;ve answered all the questions. Ready to see your career pathways?
+          You&apos;ve answered all the questions. Let&apos;s start with a summary of your profile.
         </p>
         <button className="btn btn-primary" onClick={handleComplete}>
-          Generate My Career Report
+          View My Profile Summary
         </button>
       </div>
     );
@@ -409,7 +409,7 @@ export default function QuestionnairePage() {
           {isLastModule && (
             <button className="btn btn-primary" onClick={() => { setMilestone(null); setComplete(true); }}
               style={{ padding: "0.75rem 2rem" }}>
-              Generate My Career Report
+              View My Profile Summary
             </button>
           )}
         </div>
