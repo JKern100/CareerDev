@@ -202,6 +202,7 @@ export interface PathwayResult {
   raw_score: number;
   typical_roles: string[];
   salary_band_refs: Record<string, { min_aed: number; max_aed: number; source: string }> | null;
+  salary_global_note: string | null;
   recommended_credentials: { name: string; duration: string; source_url: string }[] | null;
   gate_flags: string[] | null;
   top_evidence_signals: string[] | null;

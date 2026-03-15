@@ -10,16 +10,17 @@ from app.database import Base
 class Pathway(Base):
     __tablename__ = "pathways"
 
-    id: Mapped[str] = mapped_column(String(10), primary_key=True)  # P1-P8
+    id: Mapped[str] = mapped_column(String(10), primary_key=True)  # P1-P14
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     description: Mapped[str] = mapped_column(Text)
     prerequisites: Mapped[dict | None] = mapped_column(JSON)
     typical_roles: Mapped[list] = mapped_column(JSON, default=list)
     salary_band_refs: Mapped[dict | None] = mapped_column(JSON)  # {min_aed, max_aed, source, date}
+    salary_global_note: Mapped[str | None] = mapped_column(Text, nullable=True)
     recommended_credentials: Mapped[list | None] = mapped_column(JSON)
     country_pack: Mapped[str] = mapped_column(String(10), default="UAE")
 
-    # Scoring weights (can be customized per pathway)
+    # Scoring weights (customised per pathway — must sum to 1.0)
     weight_interest: Mapped[float] = mapped_column(Float, default=0.25)
     weight_skill: Mapped[float] = mapped_column(Float, default=0.25)
     weight_environment: Mapped[float] = mapped_column(Float, default=0.10)

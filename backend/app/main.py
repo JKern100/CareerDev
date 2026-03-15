@@ -93,6 +93,7 @@ async def _seed_pathways():
                 prerequisites=pw.get("prerequisites"),
                 typical_roles=pw.get("typical_roles", []),
                 salary_band_refs=pw.get("salary_band_refs"),
+                salary_global_note=pw.get("salary_global_note"),
                 recommended_credentials=pw.get("recommended_credentials"),
                 weight_interest=pw.get("weight_interest", 0.25),
                 weight_skill=pw.get("weight_skill", 0.25),

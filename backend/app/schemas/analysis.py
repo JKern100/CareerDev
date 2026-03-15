@@ -18,6 +18,7 @@ class PathwayScoreOut(BaseModel):
     risk_score: float
     typical_roles: list[str]
     salary_band_refs: dict | None
+    salary_global_note: str | None = None
     recommended_credentials: list[dict] | None
     gate_flags: list[str] | None
     top_evidence_signals: list[str] | None
