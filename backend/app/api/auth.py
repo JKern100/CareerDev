@@ -37,7 +37,13 @@ async def register(data: UserRegister, db: AsyncSession = Depends(get_db)):
 
     # Send verification email
     token = create_email_verification_token(user.email)
-    await send_verification_email(user.email, token)
+    email_sent = await send_verification_email(user.email, token)
+
+    if not email_sent:
+        # Auto-verify if email delivery isn't available
+        user.email_verified = True
+        await db.commit()
+        await db.refresh(user)
 
     return user
 
@@ -76,7 +82,11 @@ async def resend_verification(data: ResendVerificationRequest, db: AsyncSession 
     user = result.scalar_one_or_none()
     if user and not user.email_verified:
         token = create_email_verification_token(user.email)
-        await send_verification_email(user.email, token)
+        email_sent = await send_verification_email(user.email, token)
+        if not email_sent:
+            # Auto-verify if email delivery isn't available
+            user.email_verified = True
+            await db.commit()
     return {"detail": "If that email is registered and unverified, a verification link has been sent."}
 
 
