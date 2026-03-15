@@ -178,7 +178,7 @@ from app.api import auth, questionnaire, analysis, privacy, admin, scheduling
 app = FastAPI(
     title=settings.APP_NAME,
     description="AI Career-Advice App for Flight Crew",
-    version="0.1.0",
+    version="0.2.0",
     lifespan=lifespan,
 )
 

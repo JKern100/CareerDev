@@ -1,3 +1,5 @@
+export const APP_VERSION = "V.02";
+
 const API_BASE = "/api";
 
 function getToken(): string | null {

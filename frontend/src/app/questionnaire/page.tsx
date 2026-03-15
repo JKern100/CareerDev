@@ -10,6 +10,7 @@ import {
   getProgress,
   QuestionSet,
   ModuleStatus,
+  APP_VERSION,
 } from "@/lib/api";
 import QuestionField from "@/components/QuestionField";
 import AppHeader from "@/components/AppHeader";
@@ -494,7 +495,7 @@ export default function QuestionnairePage() {
     <AppHeader />
     <div className="container">
       {/* Version tag */}
-      <p className="text-sm text-muted" style={{ textAlign: "right", marginBottom: "0.25rem" }}>V.01</p>
+      <p className="text-sm text-muted" style={{ textAlign: "right", marginBottom: "0.25rem" }}>{APP_VERSION}</p>
 
       {/* Module header */}
       <div className="flex justify-between items-center mb-1">
