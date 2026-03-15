@@ -55,3 +55,4 @@ class CareerAnalysisOut(BaseModel):
     markdown_report: str
     model_name: str
     created_at: datetime
+    can_regenerate: bool = False

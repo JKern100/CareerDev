@@ -40,6 +40,9 @@ class User(Base):
     consent_anonymized: Mapped[bool] = mapped_column(Boolean, default=False)
     consent_advisor_access: Mapped[bool] = mapped_column(Boolean, default=False)
 
+    # Report regeneration (admin-controlled)
+    can_regenerate: Mapped[bool] = mapped_column(Boolean, default=False)
+
     # Questionnaire progress
     questionnaire_completed: Mapped[bool] = mapped_column(Boolean, default=False)
     current_module: Mapped[str | None] = mapped_column(String(10))

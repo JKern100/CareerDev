@@ -31,6 +31,7 @@ class AdminUserOut(BaseModel):
     role: str
     questionnaire_completed: bool
     current_module: str | None
+    can_regenerate: bool
     answers_count: int
     reports_count: int
     created_at: datetime
@@ -40,6 +41,7 @@ class AdminUserUpdate(BaseModel):
     role: str | None = None
     full_name: str | None = None
     questionnaire_completed: bool | None = None
+    can_regenerate: bool | None = None
     new_password: str | None = None
 
 
@@ -185,6 +187,7 @@ async def list_users(
             role=u.role.value if hasattr(u.role, 'value') else u.role,
             questionnaire_completed=u.questionnaire_completed,
             current_module=u.current_module,
+            can_regenerate=u.can_regenerate,
             answers_count=answers_count,
             reports_count=reports_count,
             created_at=u.created_at,
@@ -217,6 +220,7 @@ async def get_user(
         role=u.role.value if hasattr(u.role, 'value') else u.role,
         questionnaire_completed=u.questionnaire_completed,
         current_module=u.current_module,
+        can_regenerate=u.can_regenerate,
         answers_count=answers_count,
         reports_count=reports_count,
         created_at=u.created_at,
@@ -244,6 +248,8 @@ async def update_user(
         u.full_name = data.full_name
     if data.questionnaire_completed is not None:
         u.questionnaire_completed = data.questionnaire_completed
+    if data.can_regenerate is not None:
+        u.can_regenerate = data.can_regenerate
     if data.new_password is not None:
         u.hashed_password = hash_password(data.new_password)
 

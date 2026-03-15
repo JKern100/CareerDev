@@ -515,6 +515,19 @@ export default function AdminPage() {
     }
   }
 
+  async function handleToggleRegenerate(userId: string, enable: boolean) {
+    try {
+      await updateAdminUser(userId, { can_regenerate: enable });
+      setActionMsg(enable ? "Report regeneration enabled" : "Report regeneration disabled");
+      await loadUsers();
+      if (selectedUser && selectedUser.id === userId) {
+        setSelectedUser({ ...selectedUser, can_regenerate: enable });
+      }
+    } catch (err: unknown) {
+      setActionMsg(err instanceof Error ? err.message : "Failed");
+    }
+  }
+
   async function handleDeleteUser(userId: string, email: string) {
     if (!confirm(`Delete user ${email}? This removes all their data.`)) return;
     try {
@@ -736,6 +749,16 @@ export default function AdminPage() {
                         Reset Questionnaire
                       </button>
                     )}
+                    <button
+                      style={{
+                        ...styles.btnOutline,
+                        borderColor: selectedUser.can_regenerate ? "#059669" : "#6b7280",
+                        color: selectedUser.can_regenerate ? "#34d399" : "#9ca3af",
+                      }}
+                      onClick={() => handleToggleRegenerate(selectedUser.id, !selectedUser.can_regenerate)}
+                    >
+                      {selectedUser.can_regenerate ? "Regeneration: ON" : "Allow Regeneration"}
+                    </button>
                     <button
                       style={{ ...styles.btnOutline, borderColor: "#2563eb", color: "#60a5fa" }}
                       onClick={() => handleImpersonate(selectedUser.id, selectedUser.email)}
