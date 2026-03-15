@@ -1,7 +1,7 @@
 """Career analysis service.
 
 Builds the AI system prompt from resource files, formats user answers,
-calls the Claude API, and returns a Markdown career transition report.
+calls the Gemini API, and returns a Markdown career transition report.
 """
 
 import json
@@ -309,34 +309,36 @@ def check_completion_gate(answers: dict) -> tuple[bool, str]:
 
 
 async def call_analysis_api(system_prompt: str, user_message: str) -> str:
-    """Call the Claude API to generate the career analysis report.
+    """Call the Gemini API to generate the career analysis report.
 
     Returns the Markdown report text.
     """
     try:
-        import anthropic
+        import google.generativeai as genai
     except ImportError:
         raise RuntimeError(
-            "The 'anthropic' package is required for AI analysis. "
-            "Install it with: pip install anthropic"
+            "The 'google-generativeai' package is required for AI analysis. "
+            "Install it with: pip install google-generativeai"
         )
 
     api_key = settings.LLM_API_KEY
     if not api_key:
         raise RuntimeError(
             "LLM_API_KEY is not configured. Set the LLM_API_KEY environment variable "
-            "to your Anthropic API key."
+            "to your Gemini API key."
         )
 
     model = settings.LLM_MODEL
-    client = anthropic.Anthropic(api_key=api_key)
-
-    message = client.messages.create(
-        model=model,
-        max_tokens=5000,
-        temperature=0.4,
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_message}],
+    genai.configure(api_key=api_key)
+    gemini = genai.GenerativeModel(
+        model_name=model,
+        system_instruction=system_prompt,
+        generation_config=genai.types.GenerationConfig(
+            max_output_tokens=5000,
+            temperature=0.4,
+        ),
     )
 
-    return message.content[0].text
+    response = gemini.generate_content(user_message)
+
+    return response.text

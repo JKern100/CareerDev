@@ -28,9 +28,9 @@ class Settings(BaseSettings):
     SMTP_FROM_EMAIL: str = "noreply@careerdev.app"
     FRONTEND_URL: str = "http://localhost:3000"
 
-    # LLM / RAG settings (placeholder)
+    # LLM / RAG settings
     LLM_API_KEY: str = ""
-    LLM_MODEL: str = "claude-sonnet-4-6"
+    LLM_MODEL: str = "gemini-2.0-flash"
     EMBEDDING_MODEL: str = "text-embedding-3-small"
 
     @property
