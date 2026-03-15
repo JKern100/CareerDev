@@ -30,7 +30,7 @@ class Settings(BaseSettings):
 
     # LLM / RAG settings
     LLM_API_KEY: str = ""
-    LLM_MODEL: str = "gemini-2.0-flash"
+    LLM_MODEL: str = "gemini-2.5-flash"
     EMBEDDING_MODEL: str = "text-embedding-3-small"
 
     @property

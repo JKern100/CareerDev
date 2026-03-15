@@ -270,7 +270,7 @@ async def generate_summary_with_ai(answers: dict, user_name: str | None = None, 
     try:
         genai.configure(api_key=api_key)
         gemini = genai.GenerativeModel(
-            model_name="gemini-2.0-flash",
+            model_name="gemini-2.5-flash",
             generation_config=genai.types.GenerationConfig(
                 max_output_tokens=2000,
             ),
