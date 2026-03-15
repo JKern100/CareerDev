@@ -8,6 +8,7 @@ import {
   submitAnswers,
   completeQuestionnaire,
   getProgress,
+  Question,
   QuestionSet,
   ModuleStatus,
   APP_VERSION,
@@ -102,6 +103,7 @@ export default function QuestionnairePage() {
   const [milestone, setMilestone] = useState<{ module: string; heading: string; message: string; nextTeaser: string } | null>(null);
   const [celebration, setCelebration] = useState<string | null>(null);
   const [prevProgress, setPrevProgress] = useState<number>(0);
+  const [unansweredQuestions, setUnansweredQuestions] = useState<Question[]>([]);
 
   const loadProgress = useCallback(async () => {
     try {
@@ -225,6 +227,7 @@ export default function QuestionnairePage() {
     setSubmitting(true);
     setError("");
     setSaveMessage("");
+    setUnansweredQuestions([]);
 
     // Check required fields
     const unanswered = questionSet.questions.filter((q) => {
@@ -234,9 +237,10 @@ export default function QuestionnairePage() {
     });
 
     if (unanswered.length > 0) {
+      setUnansweredQuestions(unanswered);
       setError(
         `${unanswered.length} required question${unanswered.length > 1 ? "s" : ""} still need${unanswered.length === 1 ? "s" : ""} an answer. ` +
-        `You can use "Save Progress" to save what you have so far, or complete the remaining questions to continue.`
+        `You can use "Save Progress" to save what you have so far, or click a question below to jump to it.`
       );
       setSubmitting(false);
       return;
@@ -587,6 +591,24 @@ export default function QuestionnairePage() {
           lineHeight: 1.5,
         }}>
           {error}
+          {unansweredQuestions.length > 0 && (
+            <ul style={{ margin: "0.5rem 0 0 0", paddingLeft: "1.25rem" }}>
+              {unansweredQuestions.map((q) => (
+                <li key={q.question_id}>
+                  <a
+                    href={`#q-${q.question_id}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById(`q-${q.question_id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }}
+                    style={{ color: "#92400e", textDecoration: "underline", cursor: "pointer" }}
+                  >
+                    {q.prompt}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 

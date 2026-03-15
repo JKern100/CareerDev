@@ -1,6 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import pkg from "../../package.json";
+import { APP_VERSION } from "@/lib/api";
 
 export const metadata: Metadata = {
   title: "CareerDev — Flight Crew Career Transition",
@@ -26,7 +26,7 @@ export default function RootLayout({
             marginTop: "2rem",
           }}
         >
-          V{pkg.version}
+          {APP_VERSION}
         </footer>
       </body>
     </html>
