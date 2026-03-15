@@ -150,3 +150,17 @@ h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.25rem; }
   from { transform: translateY(-100%); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
+
+/* Markdown report styling */
+.markdown-report h1 { font-size: 1.75rem; font-weight: 700; margin: 1.5rem 0 0.75rem; }
+.markdown-report h2 { font-size: 1.35rem; font-weight: 600; margin: 1.25rem 0 0.5rem; color: var(--primary); }
+.markdown-report h3 { font-size: 1.1rem; font-weight: 600; margin: 1rem 0 0.4rem; }
+.markdown-report p { margin: 0.5rem 0; line-height: 1.7; }
+.markdown-report ul, .markdown-report ol { padding-left: 1.5rem; margin: 0.5rem 0; }
+.markdown-report li { margin: 0.3rem 0; line-height: 1.6; }
+.markdown-report table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+.markdown-report th { background: #f3f4f6; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); font-weight: 600; }
+.markdown-report td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); }
+.markdown-report hr { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+.markdown-report strong { font-weight: 600; }
+.markdown-report a { color: var(--primary); text-decoration: underline; }

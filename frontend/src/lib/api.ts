@@ -213,6 +213,16 @@ export async function getResults() {
   return request<PathwayResult[]>("/analysis/results");
 }
 
+export interface CareerAnalysis {
+  markdown_report: string;
+  model_name: string;
+  created_at: string;
+}
+
+export async function getCareerReport() {
+  return request<CareerAnalysis>("/results");
+}
+
 // Admin
 export interface AdminUser {
   id: string;

@@ -48,3 +48,10 @@ class ReportOut(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class CareerAnalysisOut(BaseModel):
+    """Response for GET /results — the AI-generated Markdown report."""
+    markdown_report: str
+    model_name: str
+    created_at: datetime
