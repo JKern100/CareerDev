@@ -334,7 +334,7 @@ async def call_analysis_api(system_prompt: str, user_message: str) -> str:
         model_name=model,
         system_instruction=system_prompt,
         generation_config=genai.types.GenerationConfig(
-            max_output_tokens=5000,
+            max_output_tokens=15000,
             temperature=0.4,
         ),
     )
