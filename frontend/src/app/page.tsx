@@ -131,6 +131,18 @@ export default function Home() {
 
         <p
           style={{
+            fontSize: "0.95rem",
+            color: "#60a5fa",
+            fontWeight: 500,
+            letterSpacing: "0.05em",
+            marginBottom: "1rem",
+          }}
+        >
+          Created by crew, for crew
+        </p>
+
+        <p
+          style={{
             fontSize: "1.15rem",
             color: "#94a3b8",
             maxWidth: "600px",
