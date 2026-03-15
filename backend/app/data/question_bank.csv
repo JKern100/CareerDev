@@ -4,7 +4,7 @@ Q002,A,What passport(s) do you hold?,multi_select,true,"[""UAE"",""UK"",""USA"",
 Q003,A,What currency should we use for salary and budget questions?,single_select,true,"[""AED"",""USD"",""GBP"",""EUR"",""CAD"",""AUD"",""INR"",""PHP"",""ZAR"",""Other""]",,,,"[""baseline"",""currency""]"
 Q004,A,What outcomes do you want from this app?,multi_select,true,"[""Pathways"",""Salary clarity"",""Study plan"",""Relocation plan"",""Entrepreneurship"",""Advisor coaching""]",,,,"[""baseline"",""goals""]"
 Q005,A,Do you consent to processing your career data to generate recommendations?,single_select,true,"[""Yes"",""No""]",,,"{""No"": ""block""}","[""consent""]"
-Q006,A,Do you want anonymized data to improve the product?,single_select,false,"[""Yes"",""No""]",,,,"[""consent""]"
+Q006,A,May we use your responses (anonymized and non-identifiable) to help improve this product?,single_select,false,"[""Yes"",""No""]",,,,"[""consent""]"
 Q007,A,Preferred language for your report,single_select,true,"[""English"",""Arabic"",""Russian"",""Ukrainian"",""Other""]",,,,"[""preference""]"
 Q008,A,Preferred communication style,single_select,true,"[""Direct"",""Detailed"",""Motivational"",""Minimal""]",,,,"[""preference""]"
 Q009,A,How urgent is change? (0=no urgency; 10=must change now),slider_0_10,true,,0,10,,"[""urgency""]"
