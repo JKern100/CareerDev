@@ -18,6 +18,75 @@ type AnswerMap = Record<string, { value: string | number | string[]; confidence:
 
 const MODULE_ORDER = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
+// Encouraging messages shown after completing each module
+const MODULE_MILESTONES: Record<string, { heading: string; message: string; nextTeaser: string }> = {
+  A: {
+    heading: "Baseline locked in",
+    message: "We know where you are and what you're looking for. That's the foundation everything else builds on.",
+    nextTeaser: "Next: your aviation experience — what energises you, what drains you, and why you're considering a change.",
+  },
+  B: {
+    heading: "Your aviation story is captured",
+    message: "We now understand your experience, what you enjoy, what's wearing you down, and why you're exploring a change.",
+    nextTeaser: "Next: let's map out the skills you've built — many transfer directly into new careers.",
+  },
+  C: {
+    heading: "Skills profile built",
+    message: "Your transferable skills are clearer than you think. The evidence you shared will help us match you to roles that value exactly what you bring.",
+    nextTeaser: "Next: what kind of work environment and lifestyle actually suits you?",
+  },
+  D: {
+    heading: "Work style mapped",
+    message: "We now know what kind of environment you thrive in — and what to steer you away from.",
+    nextTeaser: "Next: the practical stuff — finances, visa, constraints. This is what makes your plan realistic.",
+  },
+  E: {
+    heading: "Constraints understood",
+    message: "Knowing your real boundaries means we can build a plan that actually works — not just one that sounds good on paper.",
+    nextTeaser: "Next: where in the world do you want to be?",
+  },
+  F: {
+    heading: "Location preferences set",
+    message: "Geography shapes opportunity. We'll factor your location preferences into every recommendation.",
+    nextTeaser: "Next: let's talk money — what you need, what you want, and what's realistic.",
+  },
+  G: {
+    heading: "Financial picture clear",
+    message: "Salary expectations, obligations, and trade-offs — we have what we need to model realistic compensation scenarios.",
+    nextTeaser: "Almost done! Last module: your learning preferences and career family interests.",
+  },
+  H: {
+    heading: "All modules complete!",
+    message: "You've given us everything we need to build your personalised career transition plan. This is a serious step — well done.",
+    nextTeaser: "",
+  },
+};
+
+// Average seconds per question type (rough estimates for time calculation)
+const SECONDS_PER_QUESTION: Record<string, number> = {
+  single_select: 8,
+  multi_select: 12,
+  likert_1_5: 6,
+  slider_0_10: 6,
+  numeric: 8,
+  text_short: 20,
+  text_long: 60,
+  file_upload: 15,
+};
+
+function estimateMinutesRemaining(modules: ModuleStatus[]): number {
+  // Count unanswered questions across all incomplete modules
+  let totalSeconds = 0;
+  for (const m of modules) {
+    const remaining = m.total_questions - m.answered_questions;
+    if (remaining > 0) {
+      // Use an average of 12 seconds per question as a rough estimate
+      totalSeconds += remaining * 12;
+    }
+  }
+  return Math.max(1, Math.ceil(totalSeconds / 60));
+}
+
 export default function QuestionnairePage() {
   const router = useRouter();
   const [questionSet, setQuestionSet] = useState<QuestionSet | null>(null);
@@ -29,11 +98,15 @@ export default function QuestionnairePage() {
   const [complete, setComplete] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
+  const [milestone, setMilestone] = useState<{ module: string; heading: string; message: string; nextTeaser: string } | null>(null);
+  const [celebration, setCelebration] = useState<string | null>(null);
+  const [prevProgress, setPrevProgress] = useState<number>(0);
 
   const loadProgress = useCallback(async () => {
     try {
       const progress = await getProgress();
       setModules(progress.modules);
+      setPrevProgress(progress.progress_pct);
     } catch {
       // Non-critical; progress tabs will just not update
     }
@@ -179,13 +252,46 @@ export default function QuestionnairePage() {
 
       const result = await submitAnswers(payload);
 
+      // Check for progress milestone celebrations (25%, 50%, 75%)
+      const newProgress = result.questionnaire_complete ? 1 : (questionSet.progress || 0);
+      await loadProgress();
+
+      // Calculate actual overall progress from updated modules
+      const updatedProgress = await getProgress();
+      const overallPct = updatedProgress.progress_pct;
+
+      const thresholds = [
+        { pct: 75, msg: "75% done — the finish line is in sight!" },
+        { pct: 50, msg: "Halfway there! Your profile is really taking shape." },
+        { pct: 25, msg: "Great start — 25% complete. You're building momentum!" },
+      ];
+      for (const t of thresholds) {
+        if (prevProgress < t.pct && overallPct >= t.pct) {
+          setCelebration(t.msg);
+          setTimeout(() => setCelebration(null), 5000);
+          break;
+        }
+      }
+      setPrevProgress(overallPct);
+      setModules(updatedProgress.modules);
+
       if (result.questionnaire_complete) {
-        setComplete(true);
+        const ms = MODULE_MILESTONES["H"];
+        if (ms) {
+          setMilestone({ module: "H", ...ms });
+        } else {
+          setComplete(true);
+        }
       } else if (result.next_module) {
-        // Load the next module directly using the response
-        await loadQuestions(result.next_module);
+        // Show milestone message for the just-completed module
+        const completedModule = questionSet.module;
+        const ms = MODULE_MILESTONES[completedModule];
+        if (ms && result.next_module !== completedModule) {
+          setMilestone({ module: completedModule, ...ms });
+        } else {
+          await loadQuestions(result.next_module);
+        }
       } else {
-        // Fallback: reload via /next
         await loadQuestions();
       }
       window.scrollTo(0, 0);
@@ -241,12 +347,91 @@ export default function QuestionnairePage() {
     );
   }
 
+  // Milestone interstitial — shown after completing a module
+  if (milestone) {
+    const isLastModule = milestone.module === "H";
+    return (
+      <>
+      <AppHeader />
+      <div className="container" style={{ textAlign: "center", marginTop: "4rem", maxWidth: "560px" }}>
+        <div style={{
+          width: "64px", height: "64px", borderRadius: "50%",
+          background: isLastModule ? "#dbeafe" : "#d1fae5",
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          fontSize: "1.75rem", marginBottom: "1.5rem",
+        }}>
+          {isLastModule ? "\u{1F389}" : "\u2713"}
+        </div>
+        <h1 style={{ fontSize: "1.5rem", marginBottom: "0.75rem" }}>{milestone.heading}</h1>
+        <p style={{ color: "var(--muted)", lineHeight: 1.7, fontSize: "0.95rem", marginBottom: "1rem" }}>
+          {milestone.message}
+        </p>
+        {milestone.nextTeaser && (
+          <p style={{
+            color: "#475569", fontSize: "0.875rem", lineHeight: 1.6,
+            background: "#f8fafc", borderRadius: "10px",
+            padding: "1rem 1.25rem", marginBottom: "1.5rem", textAlign: "left",
+          }}>
+            {milestone.nextTeaser}
+          </p>
+        )}
+        {/* Time estimate */}
+        {modules.length > 0 && (
+          <p style={{ color: "var(--muted)", fontSize: "0.8rem", marginBottom: "1.25rem" }}>
+            About {estimateMinutesRemaining(modules)} min remaining
+          </p>
+        )}
+        <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center" }}>
+          {!isLastModule && (
+            <button
+              className="btn btn-primary"
+              onClick={async () => {
+                const nextIdx = MODULE_ORDER.indexOf(milestone.module) + 1;
+                const nextModule = nextIdx < MODULE_ORDER.length ? MODULE_ORDER[nextIdx] : undefined;
+                setMilestone(null);
+                if (nextModule) {
+                  await loadQuestions(nextModule);
+                } else {
+                  setComplete(true);
+                }
+                window.scrollTo(0, 0);
+              }}
+              style={{ padding: "0.75rem 2rem" }}
+            >
+              Continue
+            </button>
+          )}
+          {isLastModule && (
+            <button className="btn btn-primary" onClick={() => { setMilestone(null); setComplete(true); }}
+              style={{ padding: "0.75rem 2rem" }}>
+              Generate My Career Report
+            </button>
+          )}
+        </div>
+      </div>
+      </>
+    );
+  }
+
   if (!questionSet) return null;
 
   const currentModuleIdx = MODULE_ORDER.indexOf(questionSet.module);
+  const minutesLeft = modules.length > 0 ? estimateMinutesRemaining(modules) : null;
 
   return (
     <>
+    {/* Progress celebration banner */}
+    {celebration && (
+      <div style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 999,
+        background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+        color: "white", textAlign: "center",
+        padding: "0.875rem 1rem", fontSize: "0.95rem", fontWeight: 600,
+        animation: "slideDown 0.4s ease-out",
+      }}>
+        {celebration}
+      </div>
+    )}
     {/* First-login welcome modal */}
     {showWelcome && (
       <div style={{
@@ -321,6 +506,11 @@ export default function QuestionnairePage() {
         <p className="text-sm">
           {questionSet.answered_questions}/{questionSet.total_questions} answered
           {" "}({Math.round(questionSet.progress * 100)}% complete)
+          {minutesLeft !== null && (
+            <span style={{ color: "var(--muted)", marginLeft: "0.5rem" }}>
+              &middot; ~{minutesLeft} min left
+            </span>
+          )}
         </p>
       </div>
 
