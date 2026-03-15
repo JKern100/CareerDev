@@ -1,19 +1,28 @@
+import logging
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.user import User
 from app.models.questionnaire import Answer
 from app.models.pathway import PathwayScore
-from app.models.report import Report
+from app.models.report import Report, AnalysisReport
 from app.config import settings
-from app.schemas.analysis import PathwayScoreOut, AnalysisRunOut, ReportOut, SummaryOut
+from app.schemas.analysis import PathwayScoreOut, AnalysisRunOut, ReportOut, SummaryOut, CareerAnalysisOut
 from app.services.scoring import score_pathways
 from app.services.summary import generate_summary_with_ai, generate_summary_without_ai
+from app.services.career_analysis import (
+    build_system_prompt,
+    build_user_message,
+    check_completion_gate,
+    call_analysis_api,
+)
 from app.api.deps import get_current_user
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/analysis", tags=["analysis"])
 
@@ -98,9 +107,19 @@ async def run_analysis(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Run the deterministic scoring engine on user's answers."""
+    """Run the full analysis pipeline: completion gate, AI call, and store results.
+
+    Step 1: Check questionnaire_completed flag and completion gate (all required answered).
+    Step 2: Build system prompt (cached) and user message.
+    Step 3: Call Claude API for Markdown report.
+    Step 4: Store the report (overwrite if exists).
+    """
+    # --- Pre-checks ---
     if not user.questionnaire_completed:
-        raise HTTPException(status_code=400, detail="Complete the questionnaire before running analysis")
+        raise HTTPException(
+            status_code=400,
+            detail="Complete the questionnaire before running analysis.",
+        )
 
     # Load user answers
     result = await db.execute(select(Answer).where(Answer.user_id == user.id))
@@ -115,14 +134,42 @@ async def run_analysis(
         for a in answers_raw
     }
 
-    # Run scoring
-    try:
-        scored = score_pathways(answers)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Scoring engine error: {str(e)}")
+    # Step 1 — Completion gate
+    gate_passed, gate_error = check_completion_gate(answers)
+    if not gate_passed:
+        raise HTTPException(status_code=400, detail=gate_error)
 
+    # Step 2 — Build the AI call
+    system_prompt = build_system_prompt()
+    user_message = build_user_message(answers, user.full_name, user.updated_at)
+
+    # Step 3 — Call the Claude API
+    model_name = settings.LLM_MODEL
     try:
-        # Delete old scores for this user before inserting new ones
+        markdown_report = await call_analysis_api(system_prompt, user_message)
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        logger.exception("AI analysis call failed")
+        raise HTTPException(status_code=500, detail=f"Analysis generation failed: {type(e).__name__}: {str(e)}")
+
+    # Step 4 — Store the result (overwrite if exists)
+    try:
+        # Delete any existing analysis report for this user
+        await db.execute(
+            delete(AnalysisReport).where(AnalysisReport.user_id == user.id)
+        )
+
+        analysis_report = AnalysisReport(
+            user_id=user.id,
+            markdown_report=markdown_report,
+            model_name=model_name,
+        )
+        db.add(analysis_report)
+
+        # Also run the deterministic scoring engine and persist scores
+        scored = score_pathways(answers)
+
         old_scores = await db.execute(
             select(PathwayScore).where(PathwayScore.user_id == user.id)
         )
@@ -130,7 +177,6 @@ async def run_analysis(
             await db.delete(old)
         await db.flush()
 
-        # Persist scores
         for sp in scored:
             ps = PathwayScore(
                 user_id=user.id,
@@ -150,8 +196,9 @@ async def run_analysis(
             )
             db.add(ps)
 
-        # Create report
+        # Create a Report record too for backwards compatibility
         report_data = {
+            "type": "career_analysis",
             "top_pathways": [
                 {
                     "rank": i + 1,
@@ -184,6 +231,7 @@ async def run_analysis(
 
     except Exception as e:
         await db.rollback()
+        logger.exception("Failed to save analysis results")
         raise HTTPException(status_code=500, detail=f"Failed to save results: {type(e).__name__}: {str(e)}")
 
 

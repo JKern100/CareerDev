@@ -204,7 +204,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-from app.api import auth, questionnaire, analysis, privacy, admin, scheduling
+from app.api import auth, questionnaire, analysis, privacy, admin, scheduling, results
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -227,6 +227,7 @@ app.include_router(analysis.router)
 app.include_router(privacy.router)
 app.include_router(admin.router)
 app.include_router(scheduling.router)
+app.include_router(results.router)
 
 
 @app.get("/health")
