@@ -35,7 +35,7 @@ async function request<T>(
 
 // Auth
 export async function register(email: string, password: string, fullName?: string) {
-  return request<{ id: string; email: string }>("/auth/register", {
+  return request<{ id: string; email: string; email_verified: boolean }>("/auth/register", {
     method: "POST",
     body: JSON.stringify({ email, password, full_name: fullName }),
   });

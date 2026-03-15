@@ -11,6 +11,30 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 
+async def _send_email(msg: MIMEMultipart) -> bool:
+    """Send an email via SMTP. Returns True on success, False on failure."""
+    if not settings.SMTP_HOST:
+        logger.warning("SMTP not configured — email not sent. To: %s", msg["To"])
+        return False
+
+    try:
+        # Port 465 uses implicit SSL; port 587 uses STARTTLS
+        use_tls = settings.SMTP_PORT == 465
+        await aiosmtplib.send(
+            msg,
+            hostname=settings.SMTP_HOST,
+            port=settings.SMTP_PORT,
+            username=settings.SMTP_USER,
+            password=settings.SMTP_PASSWORD,
+            use_tls=use_tls,
+            start_tls=not use_tls,
+        )
+        return True
+    except Exception:
+        logger.exception("Failed to send email to %s", msg["To"])
+        return False
+
+
 async def send_verification_email(to_email: str, token: str) -> bool:
     """Send an email verification link. Returns True on success."""
     verify_url = f"{settings.FRONTEND_URL}/verify-email?token={token}"
@@ -39,23 +63,7 @@ async def send_verification_email(to_email: str, token: str) -> bool:
     msg.attach(MIMEText(f"Verify your email: {verify_url}", "plain"))
     msg.attach(MIMEText(html, "html"))
 
-    if not settings.SMTP_HOST:
-        logger.warning("SMTP not configured. Verification link for %s: %s", to_email, verify_url)
-        return True
-
-    try:
-        await aiosmtplib.send(
-            msg,
-            hostname=settings.SMTP_HOST,
-            port=settings.SMTP_PORT,
-            username=settings.SMTP_USER,
-            password=settings.SMTP_PASSWORD,
-            start_tls=True,
-        )
-        return True
-    except Exception:
-        logger.exception("Failed to send verification email to %s", to_email)
-        return False
+    return await _send_email(msg)
 
 
 async def send_reset_email(to_email: str, reset_token: str) -> bool:
@@ -87,21 +95,4 @@ async def send_reset_email(to_email: str, reset_token: str) -> bool:
     msg.attach(MIMEText(f"Reset your password: {reset_url}", "plain"))
     msg.attach(MIMEText(html, "html"))
 
-    if not settings.SMTP_HOST:
-        # No SMTP configured — log the link for development
-        logger.warning("SMTP not configured. Reset link for %s: %s", to_email, reset_url)
-        return True
-
-    try:
-        await aiosmtplib.send(
-            msg,
-            hostname=settings.SMTP_HOST,
-            port=settings.SMTP_PORT,
-            username=settings.SMTP_USER,
-            password=settings.SMTP_PASSWORD,
-            start_tls=True,
-        )
-        return True
-    except Exception:
-        logger.exception("Failed to send reset email to %s", to_email)
-        return False
+    return await _send_email(msg)

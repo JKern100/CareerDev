@@ -10,6 +10,7 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [registered, setRegistered] = useState(false);
+  const [autoVerified, setAutoVerified] = useState(false);
   const [resending, setResending] = useState(false);
   const [resendMsg, setResendMsg] = useState("");
 
@@ -18,8 +19,11 @@ export default function RegisterPage() {
     setError("");
     setLoading(true);
     try {
-      await register(email, password, fullName || undefined);
+      const result = await register(email, password, fullName || undefined);
       setRegistered(true);
+      if (result.email_verified) {
+        setAutoVerified(true);
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
@@ -41,6 +45,29 @@ export default function RegisterPage() {
   }
 
   if (registered) {
+    if (autoVerified) {
+      return (
+        <div className="container" style={{ maxWidth: "460px", textAlign: "center" }}>
+          <div style={{ marginTop: "3rem", marginBottom: "1.5rem" }}>
+            <div style={{
+              width: "64px", height: "64px", borderRadius: "50%",
+              background: "#d1fae5", display: "inline-flex",
+              alignItems: "center", justifyContent: "center", fontSize: "1.75rem",
+            }}>
+              &#10003;
+            </div>
+          </div>
+          <h1>Account created</h1>
+          <p className="text-muted" style={{ marginTop: "0.5rem", lineHeight: 1.7 }}>
+            Your account is ready. Sign in to start your career assessment.
+          </p>
+          <a href="/login" className="btn btn-primary" style={{ marginTop: "1.5rem", display: "inline-flex" }}>
+            Sign in
+          </a>
+        </div>
+      );
+    }
+
     return (
       <div className="container" style={{ maxWidth: "460px", textAlign: "center" }}>
         <div style={{ marginTop: "3rem", marginBottom: "1.5rem" }}>
