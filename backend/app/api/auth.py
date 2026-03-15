@@ -15,6 +15,7 @@ from app.services.auth import (
     create_email_verification_token, decode_email_verification_token,
 )
 from app.services.email import send_reset_email, send_verification_email
+from app.config import settings
 from app.api.deps import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -98,7 +99,12 @@ async def login(data: UserLogin, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     if not user.email_verified and user.role == "user":
-        raise HTTPException(status_code=403, detail="Please verify your email before signing in. Check your inbox for a verification link.")
+        if not settings.SMTP_HOST:
+            # No email delivery available — auto-verify so users aren't stuck
+            user.email_verified = True
+            await db.commit()
+        else:
+            raise HTTPException(status_code=403, detail="Please verify your email before signing in. Check your inbox for a verification link.")
 
     # Track first login
     is_first_login = not user.has_logged_in
@@ -120,10 +126,14 @@ async def forgot_password(data: ForgotPasswordRequest, db: AsyncSession = Depend
     # Always return success to avoid leaking which emails exist
     result = await db.execute(select(User).where(User.email == data.email))
     user = result.scalar_one_or_none()
+    email_sent = False
     if user:
         token = create_reset_token(user.email)
-        await send_reset_email(user.email, token)
-    return {"detail": "If that email is registered, a reset link has been sent."}
+        email_sent = await send_reset_email(user.email, token)
+    return {
+        "detail": "If that email is registered, a reset link has been sent.",
+        "email_sent": email_sent,
+    }
 
 
 @router.post("/reset-password")
