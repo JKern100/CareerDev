@@ -79,7 +79,7 @@ export async function getMe() {
 }
 
 export async function forgotPassword(email: string) {
-  return request<{ detail: string }>("/auth/forgot-password", {
+  return request<{ detail: string; email_sent: boolean }>("/auth/forgot-password", {
     method: "POST",
     body: JSON.stringify({ email }),
   });

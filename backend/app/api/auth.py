@@ -120,10 +120,14 @@ async def forgot_password(data: ForgotPasswordRequest, db: AsyncSession = Depend
     # Always return success to avoid leaking which emails exist
     result = await db.execute(select(User).where(User.email == data.email))
     user = result.scalar_one_or_none()
+    email_sent = False
     if user:
         token = create_reset_token(user.email)
-        await send_reset_email(user.email, token)
-    return {"detail": "If that email is registered, a reset link has been sent."}
+        email_sent = await send_reset_email(user.email, token)
+    return {
+        "detail": "If that email is registered, a reset link has been sent.",
+        "email_sent": email_sent,
+    }
 
 
 @router.post("/reset-password")
