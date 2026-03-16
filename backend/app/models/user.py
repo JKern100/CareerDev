@@ -35,6 +35,10 @@ class User(Base):
     # First-login tracking
     has_logged_in: Mapped[bool] = mapped_column(Boolean, default=False)
 
+    # Login timestamps
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    login_count: Mapped[int] = mapped_column(default=0)
+
     # Consent
     consent_processing: Mapped[bool] = mapped_column(Boolean, default=False)
     consent_anonymized: Mapped[bool] = mapped_column(Boolean, default=False)

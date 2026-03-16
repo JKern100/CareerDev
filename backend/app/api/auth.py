@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import select
@@ -17,6 +19,7 @@ from app.services.auth import (
 from app.services.email import send_reset_email, send_verification_email
 from app.config import settings
 from app.api.deps import get_current_user
+from app.services.activity import log_activity
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -110,7 +113,12 @@ async def login(data: UserLogin, db: AsyncSession = Depends(get_db)):
     is_first_login = not user.has_logged_in
     if is_first_login:
         user.has_logged_in = True
-        await db.commit()
+
+    # Track login time and count
+    user.last_login_at = datetime.utcnow()
+    user.login_count = (user.login_count or 0) + 1
+    await log_activity(db, user, "login")
+    await db.commit()
 
     token = create_access_token({"sub": str(user.id)})
     return TokenResponse(access_token=token, is_first_login=is_first_login)

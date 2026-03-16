@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   getMe,
   getAdminStats,
@@ -14,17 +16,21 @@ import {
   deleteAdminQuestion,
   reorderAdminQuestion,
   getUserAnswers,
+  getUserReport,
+  getActivityLog,
   impersonateUser,
   DashboardStats,
   AdminUser,
   AdminQuestion,
+  AdminAnalysisReport,
+  ActivityEvent,
   UserAnswer,
   QUESTION_TYPES,
   MODULES,
   MODULE_LABELS,
 } from "@/lib/api";
 
-type Tab = "dashboard" | "users" | "questions";
+type Tab = "dashboard" | "users" | "questions" | "activity";
 
 /* ── Help Content ─────────────────────────────────────────────────────── */
 
@@ -56,6 +62,19 @@ const HELP_CONTENT: Record<Tab, { title: string; sections: { heading: string; bo
       {
         heading: "Actions",
         body: `- **Change Role**: Select a new role from the dropdown.\n- **Reset Questionnaire**: Clears their completion flag so they can retake it.\n- **View as User**: Opens the app as that user (impersonation). Your admin session is preserved.\n- **Delete User**: Permanently removes the user and all their answers, reports, and pathway scores. This cannot be undone.`,
+      },
+    ],
+  },
+  activity: {
+    title: "Activity Log Help",
+    sections: [
+      {
+        heading: "Overview",
+        body: "The activity log tracks key user actions: logins, questionnaire completions, and report generation. Use the filters to narrow results by role, action type, or time window.",
+      },
+      {
+        heading: "Filters",
+        body: `- **Role**: Filter by user role (user, advisor, admin, auditor).\n- **Action**: Filter by action type (login, questionnaire_completed, report_generated).\n- **Days**: Show events from the last N days (default: 30).`,
       },
     ],
   },
@@ -399,11 +418,22 @@ export default function AdminPage() {
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [userAnswers, setUserAnswers] = useState<UserAnswer[]>([]);
   const [userSearch, setUserSearch] = useState("");
+  const [userRoleFilter, setUserRoleFilter] = useState("");
 
   // Questions
   const [questions, setQuestions] = useState<AdminQuestion[]>([]);
   const [questionFilter, setQuestionFilter] = useState("");
   const [moduleFilter, setModuleFilter] = useState<string>("all");
+
+  // Activity
+  const [activity, setActivity] = useState<ActivityEvent[]>([]);
+  const [activityRoleFilter, setActivityRoleFilter] = useState("");
+  const [activityActionFilter, setActivityActionFilter] = useState("");
+  const [activityDays, setActivityDays] = useState(30);
+
+  // Report viewer
+  const [viewingReport, setViewingReport] = useState<AdminAnalysisReport | null>(null);
+  const [reportLoading, setReportLoading] = useState(false);
 
   // Modals
   const [showHelp, setShowHelp] = useState(false);
@@ -475,23 +505,55 @@ export default function AdminPage() {
     }
   }, []);
 
+  async function loadActivity(role?: string, action?: string, days?: number) {
+    setLoading(true);
+    try {
+      const events = await getActivityLog({
+        role: role || undefined,
+        action: action || undefined,
+        days: days || 30,
+      });
+      setActivity(events);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to load activity");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleTabChange(t: Tab) {
     setTab(t);
     setError("");
     setActionMsg("");
     setSelectedUser(null);
+    setViewingReport(null);
     if (t === "dashboard") await loadDashboard();
     if (t === "users") await loadUsers();
     if (t === "questions") await loadQuestions();
+    if (t === "activity") await loadActivity();
   }
 
   async function handleViewAnswers(user: AdminUser) {
     setSelectedUser(user);
+    setViewingReport(null);
     try {
       const a = await getUserAnswers(user.id);
       setUserAnswers(a);
     } catch {
       setUserAnswers([]);
+    }
+  }
+
+  async function handleViewReport(userId: string) {
+    setReportLoading(true);
+    try {
+      const report = await getUserReport(userId);
+      setViewingReport(report);
+    } catch (err: unknown) {
+      setActionMsg(err instanceof Error ? err.message : "No report found");
+      setViewingReport(null);
+    } finally {
+      setReportLoading(false);
     }
   }
 
@@ -586,11 +648,13 @@ export default function AdminPage() {
     }
   }
 
-  const filteredUsers = users.filter(
-    (u) =>
+  const filteredUsers = users.filter((u) => {
+    const matchesSearch =
       u.email.toLowerCase().includes(userSearch.toLowerCase()) ||
-      (u.full_name || "").toLowerCase().includes(userSearch.toLowerCase())
-  );
+      (u.full_name || "").toLowerCase().includes(userSearch.toLowerCase());
+    const matchesRole = !userRoleFilter || u.role === userRoleFilter;
+    return matchesSearch && matchesRole;
+  });
 
   const filteredQuestions = questions.filter((q) => {
     const matchesText =
@@ -658,7 +722,7 @@ export default function AdminPage() {
 
       {/* Tabs */}
       <div style={styles.tabs}>
-        {(["dashboard", "users", "questions"] as Tab[]).map((t) => (
+        {(["dashboard", "users", "activity", "questions"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => handleTabChange(t)}
@@ -667,7 +731,7 @@ export default function AdminPage() {
               ...(tab === t ? styles.tabActive : {}),
             }}
           >
-            {t === "dashboard" ? "Dashboard" : t === "users" ? "Users" : "Questions"}
+            {t === "dashboard" ? "Dashboard" : t === "users" ? "Users" : t === "activity" ? "Activity" : "Questions"}
           </button>
         ))}
       </div>
@@ -708,6 +772,17 @@ export default function AdminPage() {
                 <button style={styles.helpLink} onClick={() => setShowHelp(true)}>
                   Help
                 </button>
+                <select
+                  style={{ ...styles.select, width: "auto" }}
+                  value={userRoleFilter}
+                  onChange={(e) => setUserRoleFilter(e.target.value)}
+                >
+                  <option value="">All Roles</option>
+                  <option value="user">user</option>
+                  <option value="advisor">advisor</option>
+                  <option value="admin">admin</option>
+                  <option value="auditor">auditor</option>
+                </select>
                 <input
                   placeholder="Search by email or name..."
                   value={userSearch}
@@ -731,6 +806,10 @@ export default function AdminPage() {
                     <span style={styles.badge}>Reports: {selectedUser.reports_count}</span>
                     <span style={styles.badge}>
                       Questionnaire: {selectedUser.questionnaire_completed ? "Done" : `Module ${selectedUser.current_module || "A"}`}
+                    </span>
+                    <span style={styles.badge}>Logins: {selectedUser.login_count}</span>
+                    <span style={styles.badge}>
+                      Last login: {selectedUser.last_login_at ? new Date(selectedUser.last_login_at).toLocaleString() : "Never"}
                     </span>
                   </div>
                   <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
@@ -759,6 +838,15 @@ export default function AdminPage() {
                     >
                       {selectedUser.can_regenerate ? "Regeneration: ON" : "Allow Regeneration"}
                     </button>
+                    {selectedUser.has_analysis_report && (
+                      <button
+                        style={{ ...styles.btnOutline, borderColor: "#8b5cf6", color: "#a78bfa" }}
+                        onClick={() => handleViewReport(selectedUser.id)}
+                        disabled={reportLoading}
+                      >
+                        {reportLoading ? "Loading..." : "View Report"}
+                      </button>
+                    )}
                     <button
                       style={{ ...styles.btnOutline, borderColor: "#2563eb", color: "#60a5fa" }}
                       onClick={() => handleImpersonate(selectedUser.id, selectedUser.email)}
@@ -769,6 +857,41 @@ export default function AdminPage() {
                       Delete User
                     </button>
                   </div>
+
+                  {/* Report Viewer */}
+                  {viewingReport && (
+                    <div style={{ marginBottom: "1.5rem" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+                        <h4>Career Analysis Report</h4>
+                        <button
+                          style={{ ...styles.btnSmall, fontSize: "0.75rem" }}
+                          onClick={() => setViewingReport(null)}
+                        >
+                          Close
+                        </button>
+                      </div>
+                      <div style={{
+                        background: "#fff",
+                        color: "#171717",
+                        borderRadius: "8px",
+                        padding: "1.25rem",
+                        maxHeight: "500px",
+                        overflowY: "auto",
+                        fontSize: "0.88rem",
+                        lineHeight: "1.7",
+                      }}>
+                        <div className="markdown-report">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {viewingReport.markdown_report}
+                          </ReactMarkdown>
+                        </div>
+                        <hr style={{ margin: "1rem 0 0.5rem", borderColor: "#e5e7eb" }} />
+                        <p style={{ fontSize: "0.75rem", color: "#6b7280", textAlign: "center" }}>
+                          Generated {new Date(viewingReport.created_at).toLocaleString()} — Model: {viewingReport.model_name}
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   <h4 style={{ marginBottom: "0.5rem" }}>Answers ({userAnswers.length})</h4>
                   {userAnswers.length === 0 ? (
@@ -809,6 +932,7 @@ export default function AdminPage() {
                       <th style={styles.th}>Role</th>
                       <th style={styles.th}>Status</th>
                       <th style={styles.th}>Answers</th>
+                      <th style={styles.th}>Last Login</th>
                       <th style={styles.th}>Joined</th>
                       <th style={styles.th}>Actions</th>
                     </tr>
@@ -835,12 +959,120 @@ export default function AdminPage() {
                           )}
                         </td>
                         <td style={styles.td}>{u.answers_count}</td>
+                        <td style={styles.td}>{u.last_login_at ? new Date(u.last_login_at).toLocaleDateString() : "\u2014"}</td>
                         <td style={styles.td}>{new Date(u.created_at).toLocaleDateString()}</td>
                         <td style={styles.td}>
                           <button style={styles.btnSmall} onClick={() => handleViewAnswers(u)}>
                             View
                           </button>
                         </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Activity ── */}
+        {tab === "activity" && (
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "0.5rem" }}>
+              <h2 style={styles.h2}>Activity Log ({activity.length})</h2>
+              <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+                <button style={styles.helpLink} onClick={() => setShowHelp(true)}>
+                  Help
+                </button>
+                <select
+                  style={{ ...styles.select, width: "auto" }}
+                  value={activityRoleFilter}
+                  onChange={(e) => {
+                    setActivityRoleFilter(e.target.value);
+                    loadActivity(e.target.value, activityActionFilter, activityDays);
+                  }}
+                >
+                  <option value="">All Roles</option>
+                  <option value="user">user</option>
+                  <option value="advisor">advisor</option>
+                  <option value="admin">admin</option>
+                  <option value="auditor">auditor</option>
+                </select>
+                <select
+                  style={{ ...styles.select, width: "auto" }}
+                  value={activityActionFilter}
+                  onChange={(e) => {
+                    setActivityActionFilter(e.target.value);
+                    loadActivity(activityRoleFilter, e.target.value, activityDays);
+                  }}
+                >
+                  <option value="">All Actions</option>
+                  <option value="login">login</option>
+                  <option value="questionnaire_completed">questionnaire_completed</option>
+                  <option value="report_generated">report_generated</option>
+                </select>
+                <select
+                  style={{ ...styles.select, width: "auto" }}
+                  value={activityDays}
+                  onChange={(e) => {
+                    const d = Number(e.target.value);
+                    setActivityDays(d);
+                    loadActivity(activityRoleFilter, activityActionFilter, d);
+                  }}
+                >
+                  <option value={7}>Last 7 days</option>
+                  <option value={30}>Last 30 days</option>
+                  <option value={90}>Last 90 days</option>
+                  <option value={365}>Last year</option>
+                </select>
+              </div>
+            </div>
+
+            {activity.length === 0 ? (
+              <p style={{ ...styles.muted, textAlign: "center", padding: "2rem" }}>
+                No activity events found for the selected filters.
+              </p>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr>
+                      <th style={styles.th}>Time</th>
+                      <th style={styles.th}>User</th>
+                      <th style={styles.th}>Role</th>
+                      <th style={styles.th}>Action</th>
+                      <th style={styles.th}>Detail</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activity.map((e) => (
+                      <tr key={e.id}>
+                        <td style={{ ...styles.td, whiteSpace: "nowrap" }}>
+                          {new Date(e.created_at).toLocaleString()}
+                        </td>
+                        <td style={styles.td}>{e.user_email}</td>
+                        <td style={styles.td}>
+                          <span style={{
+                            ...styles.roleBadge,
+                            background: e.user_role === "admin" ? "#fef3c7" : e.user_role === "advisor" ? "#dbeafe" : "#f3f4f6",
+                            color: e.user_role === "admin" ? "#92400e" : e.user_role === "advisor" ? "#1e40af" : "#374151",
+                          }}>
+                            {e.user_role}
+                          </span>
+                        </td>
+                        <td style={styles.td}>
+                          <span style={{
+                            padding: "0.2rem 0.5rem",
+                            borderRadius: "4px",
+                            fontSize: "0.75rem",
+                            fontFamily: "monospace",
+                            background: e.action === "login" ? "rgba(34,197,94,0.15)" : e.action === "report_generated" ? "rgba(139,92,246,0.15)" : "rgba(59,130,246,0.15)",
+                            color: e.action === "login" ? "#4ade80" : e.action === "report_generated" ? "#a78bfa" : "#60a5fa",
+                          }}>
+                            {e.action}
+                          </span>
+                        </td>
+                        <td style={styles.td}>{e.detail || "\u2014"}</td>
                       </tr>
                     ))}
                   </tbody>

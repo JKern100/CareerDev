@@ -21,6 +21,7 @@ from app.services.career_analysis import (
     call_analysis_api,
 )
 from app.api.deps import get_current_user
+from app.services.activity import log_activity
 
 logger = logging.getLogger(__name__)
 
@@ -238,6 +239,7 @@ async def run_analysis(
         # Reset can_regenerate flag after successful regeneration
         user.can_regenerate = False
 
+        await log_activity(db, user, "report_generated", f"Model: {model_name}")
         await db.commit()
         await db.refresh(report)
 

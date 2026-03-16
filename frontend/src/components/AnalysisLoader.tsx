@@ -25,11 +25,13 @@ export default function AnalysisLoader() {
   useEffect(() => {
     if (activeStep >= ANALYSIS_STEPS.length) return;
 
+    // Last step stays spinning until the report actually arrives
+    const isLastStep = activeStep === ANALYSIS_STEPS.length - 1;
+    if (isLastStep) return;
+
     const timer = setTimeout(() => {
       setCompletedSteps((prev) => [...prev, activeStep]);
-      if (activeStep < ANALYSIS_STEPS.length - 1) {
-        setActiveStep((s) => s + 1);
-      }
+      setActiveStep((s) => s + 1);
     }, ANALYSIS_STEPS[activeStep].duration);
 
     return () => clearTimeout(timer);

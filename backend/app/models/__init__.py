@@ -4,6 +4,7 @@ from app.models.pathway import Pathway, PathwayScore
 from app.models.report import Report
 from app.models.advisor import Advisor, AvailabilitySlot, Booking
 from app.models.audit import AuditEvent
+from app.models.activity import ActivityEvent
 
 __all__ = [
     "User",
@@ -17,4 +18,5 @@ __all__ = [
     "AvailabilitySlot",
     "Booking",
     "AuditEvent",
+    "ActivityEvent",
 ]
