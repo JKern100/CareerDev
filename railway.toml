@@ -2,7 +2,7 @@
 builder = "dockerfile"
 
 [deploy]
-startCommand = "python -c \"import os; port=os.environ.get('PORT','8000'); import uvicorn; uvicorn.run('app.main:app',host='0.0.0.0',port=int(port))\"
+startCommand = "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
