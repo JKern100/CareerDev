@@ -6,6 +6,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { runAnalysis, getCareerReport, CareerAnalysis } from "@/lib/api";
 import AppHeader from "@/components/AppHeader";
+import AnalysisLoader from "@/components/AnalysisLoader";
 
 export default function ResultsPage() {
   const router = useRouter();
@@ -80,14 +81,13 @@ export default function ResultsPage() {
     return (
       <>
         <AppHeader />
-        <div className="container" style={{ textAlign: "center", marginTop: "4rem" }}>
-          <h2>{generating ? "Generating Your Career Report" : "Loading..."}</h2>
-          {generating && (
-            <p className="text-muted mt-2">
-              Our AI is analysing your questionnaire responses. This may take up to a minute.
-            </p>
-          )}
-        </div>
+        {generating ? (
+          <AnalysisLoader />
+        ) : (
+          <div className="container" style={{ textAlign: "center", marginTop: "4rem" }}>
+            <h2>Loading...</h2>
+          </div>
+        )}
       </>
     );
   }
