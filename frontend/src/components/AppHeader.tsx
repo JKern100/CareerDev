@@ -117,6 +117,21 @@ export default function AppHeader() {
         <span style={{ fontWeight: 600, fontSize: "1rem" }}>CareerDev</span>
       </a>
       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+        <a
+          href="/dashboard"
+          style={{
+            background: "rgba(34, 197, 94, 0.1)",
+            border: "1px solid rgba(34, 197, 94, 0.3)",
+            color: "#4ade80",
+            padding: "0.4rem 1rem",
+            borderRadius: "8px",
+            fontSize: "0.85rem",
+            textDecoration: "none",
+            cursor: "pointer",
+          }}
+        >
+          Dashboard
+        </a>
         {isAdvisor && (
           <a
             href="/advisor"
