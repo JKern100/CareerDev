@@ -639,7 +639,7 @@ export default function AdminPage() {
           <div style={styles.logo}>CD</div>
           <span style={{ fontWeight: 700, fontSize: "1.1rem" }}>Admin Panel</span>
         </div>
-        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
           <button
             style={{ ...styles.logoutBtn, borderColor: "#3b82f6", color: "#93c5fd" }}
             onClick={() => setShowHelp(true)}
@@ -702,9 +702,9 @@ export default function AdminPage() {
         {/* ── Users ── */}
         {tab === "users" && (
           <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "0.5rem" }}>
               <h2 style={styles.h2}>Users ({users.length})</h2>
-              <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+              <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap", flex: "1 1 auto", justifyContent: "flex-end" }}>
                 <button style={styles.helpLink} onClick={() => setShowHelp(true)}>
                   Help
                 </button>
@@ -725,7 +725,7 @@ export default function AdminPage() {
                 <div style={styles.card}>
                   <h3>{selectedUser.full_name || "No name"}</h3>
                   <p style={styles.muted}>{selectedUser.email}</p>
-                  <div style={{ display: "flex", gap: "1rem", margin: "1rem 0", flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", gap: "0.5rem", margin: "0.75rem 0", flexWrap: "wrap" }}>
                     <span style={styles.badge}>Role: {selectedUser.role}</span>
                     <span style={styles.badge}>Answers: {selectedUser.answers_count}</span>
                     <span style={styles.badge}>Reports: {selectedUser.reports_count}</span>
@@ -997,7 +997,8 @@ const styles: Record<string, React.CSSProperties> = {
   container: { maxWidth: "1200px", margin: "0 auto", padding: "2rem", textAlign: "center" },
   header: {
     display: "flex", justifyContent: "space-between", alignItems: "center",
-    padding: "1rem 2rem", borderBottom: "1px solid #1e293b",
+    padding: "0.75rem 1rem", borderBottom: "1px solid #1e293b",
+    flexWrap: "wrap" as const, gap: "0.5rem",
   },
   logo: {
     width: "32px", height: "32px", borderRadius: "7px", background: "#2563eb",
@@ -1010,24 +1011,25 @@ const styles: Record<string, React.CSSProperties> = {
   },
   tabs: {
     display: "flex", gap: "0", borderBottom: "1px solid #1e293b",
-    padding: "0 2rem",
+    padding: "0 1rem", overflowX: "auto" as const,
   },
   tab: {
     background: "transparent", border: "none", color: "#64748b",
-    padding: "0.75rem 1.5rem", cursor: "pointer", fontSize: "0.9rem",
+    padding: "0.75rem 1rem", cursor: "pointer", fontSize: "0.85rem",
     borderBottom: "2px solid transparent", transition: "all 0.15s",
+    whiteSpace: "nowrap" as const,
   },
   tabActive: {
     color: "#f1f5f9", borderBottomColor: "#2563eb", fontWeight: 600,
   },
-  content: { maxWidth: "1400px", margin: "0 auto", padding: "1.5rem 2rem" },
+  content: { maxWidth: "1400px", margin: "0 auto", padding: "1rem" },
   h2: { fontSize: "1.25rem", fontWeight: 700, marginBottom: "0" },
-  error: { color: "#ef4444", padding: "0.75rem 2rem", fontSize: "0.9rem" },
-  success: { color: "#22c55e", padding: "0.75rem 2rem", fontSize: "0.9rem" },
+  error: { color: "#ef4444", padding: "0.75rem 1rem", fontSize: "0.9rem" },
+  success: { color: "#22c55e", padding: "0.75rem 1rem", fontSize: "0.9rem" },
   muted: { color: "#64748b", fontSize: "0.9rem" },
   statsGrid: {
-    display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-    gap: "1rem",
+    display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
+    gap: "0.75rem",
   },
   statCard: {
     background: "rgba(255,255,255,0.03)", border: "1px solid #1e293b",
@@ -1035,11 +1037,12 @@ const styles: Record<string, React.CSSProperties> = {
   },
   card: {
     background: "rgba(255,255,255,0.03)", border: "1px solid #1e293b",
-    borderRadius: "10px", padding: "1.5rem",
+    borderRadius: "10px", padding: "1rem",
   },
   searchInput: {
     background: "#0f172a", border: "1px solid #334155", color: "#f1f5f9",
-    padding: "0.5rem 0.75rem", borderRadius: "8px", fontSize: "0.85rem", width: "220px",
+    padding: "0.5rem 0.75rem", borderRadius: "8px", fontSize: "0.85rem",
+    width: "100%", maxWidth: "220px", minWidth: "140px",
   },
   table: { width: "100%", borderCollapse: "collapse" as const, fontSize: "0.85rem" },
   th: {

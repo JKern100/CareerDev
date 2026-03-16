@@ -407,7 +407,7 @@ export default function QuestionnairePage() {
             </button>
           )}
           {isLastModule && (
-            <button className="btn btn-primary" onClick={() => { setMilestone(null); setComplete(true); }}
+            <button className="btn btn-primary" onClick={handleComplete}
               style={{ padding: "0.75rem 2rem" }}>
               View My Profile Summary
             </button>

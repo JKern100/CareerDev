@@ -94,7 +94,7 @@ export default function ResultsPage() {
     <>
       <AppHeader />
       <div className="container" style={{ maxWidth: "860px" }}>
-        <div className="card" style={{ marginTop: "2rem", padding: "2rem" }}>
+        <div className="card" style={{ marginTop: "1rem", padding: "1.25rem" }}>
           <div className="markdown-report">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {report?.markdown_report ?? ""}

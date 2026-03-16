@@ -30,7 +30,7 @@ export default function Home() {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          padding: "1.25rem 2rem",
+          padding: "1rem 1rem",
           maxWidth: "1200px",
           margin: "0 auto",
         }}
@@ -54,21 +54,24 @@ export default function Home() {
           </div>
           <span style={{ fontWeight: 600, fontSize: "1.1rem" }}>CareerDev</span>
         </div>
-        <div style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
           <a
             href="#how-it-works"
+            className="nav-link-desktop"
             style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.9rem" }}
           >
             How it works
           </a>
           <a
             href="#pathways"
+            className="nav-link-desktop"
             style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.9rem" }}
           >
             Pathways
           </a>
           <a
             href="#methodology"
+            className="nav-link-desktop"
             style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.9rem" }}
           >
             Methodology
@@ -94,7 +97,7 @@ export default function Home() {
       <section
         style={{
           textAlign: "center",
-          padding: "6rem 2rem 4rem",
+          padding: "3rem 1rem 2.5rem",
           maxWidth: "800px",
           margin: "0 auto",
         }}
@@ -229,7 +232,7 @@ export default function Home() {
       <section
         id="how-it-works"
         style={{
-          padding: "4rem 2rem",
+          padding: "3rem 1rem",
           maxWidth: "1000px",
           margin: "0 auto",
         }}
@@ -302,7 +305,7 @@ export default function Home() {
       <section
         id="pathways"
         style={{
-          padding: "4rem 2rem",
+          padding: "3rem 1rem",
           maxWidth: "1000px",
           margin: "0 auto",
         }}
@@ -389,7 +392,7 @@ export default function Home() {
       {/* Features */}
       <section
         style={{
-          padding: "4rem 2rem",
+          padding: "3rem 1rem",
           maxWidth: "1000px",
           margin: "0 auto",
         }}
@@ -456,7 +459,7 @@ export default function Home() {
       <section
         id="methodology"
         style={{
-          padding: "5rem 2rem",
+          padding: "3rem 1rem",
           maxWidth: "1000px",
           margin: "0 auto",
         }}
@@ -581,7 +584,7 @@ export default function Home() {
             background: "rgba(255,255,255,0.02)",
             border: "1px solid #1e293b",
             borderRadius: "16px",
-            padding: "2.5rem",
+            padding: "1.5rem",
             marginBottom: "2rem",
           }}
         >
@@ -702,7 +705,7 @@ export default function Home() {
       <section
         style={{
           textAlign: "center",
-          padding: "4rem 2rem 6rem",
+          padding: "3rem 1rem 4rem",
           maxWidth: "600px",
           margin: "0 auto",
         }}
