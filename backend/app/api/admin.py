@@ -13,8 +13,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.models.user import User, UserRole
 from app.models.questionnaire import Answer, Question
-from app.models.report import Report
+from app.models.report import Report, AnalysisReport
 from app.models.pathway import PathwayScore
+from app.models.activity import ActivityEvent
 from app.api.deps import get_admin_user
 from app.services.auth import hash_password, create_access_token
 from app.config import settings
@@ -34,6 +35,9 @@ class AdminUserOut(BaseModel):
     can_regenerate: bool
     answers_count: int
     reports_count: int
+    has_analysis_report: bool
+    last_login_at: datetime | None
+    login_count: int
     created_at: datetime
 
 
@@ -179,6 +183,9 @@ async def list_users(
         reports_count = (await db.execute(
             select(func.count(Report.id)).where(Report.user_id == u.id)
         )).scalar() or 0
+        has_analysis = (await db.execute(
+            select(func.count(AnalysisReport.id)).where(AnalysisReport.user_id == u.id)
+        )).scalar() or 0
 
         out.append(AdminUserOut(
             id=str(u.id),
@@ -190,6 +197,9 @@ async def list_users(
             can_regenerate=u.can_regenerate,
             answers_count=answers_count,
             reports_count=reports_count,
+            has_analysis_report=has_analysis > 0,
+            last_login_at=u.last_login_at,
+            login_count=u.login_count or 0,
             created_at=u.created_at,
         ))
     return out
@@ -212,6 +222,9 @@ async def get_user(
     reports_count = (await db.execute(
         select(func.count(Report.id)).where(Report.user_id == u.id)
     )).scalar() or 0
+    has_analysis = (await db.execute(
+        select(func.count(AnalysisReport.id)).where(AnalysisReport.user_id == u.id)
+    )).scalar() or 0
 
     return AdminUserOut(
         id=str(u.id),
@@ -223,6 +236,9 @@ async def get_user(
         can_regenerate=u.can_regenerate,
         answers_count=answers_count,
         reports_count=reports_count,
+        has_analysis_report=has_analysis > 0,
+        last_login_at=u.last_login_at,
+        login_count=u.login_count or 0,
         created_at=u.created_at,
     )
 
@@ -274,7 +290,9 @@ async def delete_user(
     # Delete related data
     await db.execute(delete(Answer).where(Answer.user_id == u.id))
     await db.execute(delete(Report).where(Report.user_id == u.id))
+    await db.execute(delete(AnalysisReport).where(AnalysisReport.user_id == u.id))
     await db.execute(delete(PathwayScore).where(PathwayScore.user_id == u.id))
+    await db.execute(delete(ActivityEvent).where(ActivityEvent.user_id == u.id))
     await db.delete(u)
     await db.commit()
     return {"detail": "User deleted"}
@@ -552,3 +570,82 @@ async def impersonate_user(
         "user_email": target.email,
         "user_name": target.full_name,
     }
+
+
+# ── User Report Viewer ──────────────────────────────────────────────
+
+class AdminAnalysisReportOut(BaseModel):
+    markdown_report: str
+    model_name: str
+    created_at: datetime
+
+
+@router.get("/users/{user_id}/report", response_model=AdminAnalysisReportOut)
+async def get_user_report(
+    user_id: str,
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get the AI-generated career analysis report for a user."""
+    result = await db.execute(
+        select(AnalysisReport)
+        .where(AnalysisReport.user_id == user_id)
+        .order_by(AnalysisReport.created_at.desc())
+    )
+    report = result.scalars().first()
+    if not report:
+        raise HTTPException(status_code=404, detail="No analysis report found for this user")
+
+    return AdminAnalysisReportOut(
+        markdown_report=report.markdown_report,
+        model_name=report.model_name,
+        created_at=report.created_at,
+    )
+
+
+# ── Activity Log ────────────────────────────────────────────────────
+
+class ActivityEventOut(BaseModel):
+    id: str
+    user_id: str
+    user_email: str
+    user_role: str
+    action: str
+    detail: str | None
+    created_at: datetime
+
+
+@router.get("/activity", response_model=list[ActivityEventOut])
+async def get_activity(
+    role: str | None = None,
+    action: str | None = None,
+    days: int = 30,
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get activity events with optional filters."""
+    cutoff = datetime.utcnow() - timedelta(days=days)
+    query = select(ActivityEvent).where(ActivityEvent.created_at >= cutoff)
+
+    if role:
+        query = query.where(ActivityEvent.user_role == role)
+    if action:
+        query = query.where(ActivityEvent.action == action)
+
+    query = query.order_by(ActivityEvent.created_at.desc()).limit(500)
+
+    result = await db.execute(query)
+    events = result.scalars().all()
+
+    return [
+        ActivityEventOut(
+            id=str(e.id),
+            user_id=str(e.user_id),
+            user_email=e.user_email,
+            user_role=e.user_role,
+            action=e.action,
+            detail=e.detail,
+            created_at=e.created_at,
+        )
+        for e in events
+    ]

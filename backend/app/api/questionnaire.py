@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.models.user import User
 from app.models.questionnaire import Answer
+from app.services.activity import log_activity
 from app.schemas.questionnaire import (
     QuestionOut,
     QuestionSetOut,
@@ -247,6 +248,7 @@ async def mark_complete(
 ):
     """Mark questionnaire as completed."""
     user.questionnaire_completed = True
+    await log_activity(db, user, "questionnaire_completed")
     await db.commit()
     return {"detail": "Questionnaire marked as complete"}
 

@@ -235,6 +235,9 @@ export interface AdminUser {
   can_regenerate: boolean;
   answers_count: number;
   reports_count: number;
+  has_analysis_report: boolean;
+  last_login_at: string | null;
+  login_count: number;
   created_at: string;
 }
 
@@ -359,6 +362,35 @@ export async function impersonateUser(userId: string) {
     `/admin/impersonate/${userId}`,
     { method: "POST" }
   );
+}
+
+export interface AdminAnalysisReport {
+  markdown_report: string;
+  model_name: string;
+  created_at: string;
+}
+
+export async function getUserReport(userId: string) {
+  return request<AdminAnalysisReport>(`/admin/users/${userId}/report`);
+}
+
+export interface ActivityEvent {
+  id: string;
+  user_id: string;
+  user_email: string;
+  user_role: string;
+  action: string;
+  detail: string | null;
+  created_at: string;
+}
+
+export async function getActivityLog(params?: { role?: string; action?: string; days?: number }) {
+  const searchParams = new URLSearchParams();
+  if (params?.role) searchParams.set("role", params.role);
+  if (params?.action) searchParams.set("action", params.action);
+  if (params?.days) searchParams.set("days", String(params.days));
+  const qs = searchParams.toString();
+  return request<ActivityEvent[]>(`/admin/activity${qs ? `?${qs}` : ""}`);
 }
 
 // Scheduling
