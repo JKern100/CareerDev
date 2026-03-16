@@ -25,7 +25,23 @@ export default function ResultsPage() {
       try {
         // Try to get existing report first
         const data = await getCareerReport();
-        setReport(data);
+
+        if (data.can_regenerate) {
+          // Admin enabled regeneration — auto-regenerate instead of showing stale report
+          setGenerating(true);
+          setLoading(false);
+          try {
+            await runAnalysis();
+            const fresh = await getCareerReport();
+            setReport(fresh);
+          } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Failed to regenerate report");
+          } finally {
+            setGenerating(false);
+          }
+        } else {
+          setReport(data);
+        }
       } catch {
         // No report yet — run analysis
         try {
