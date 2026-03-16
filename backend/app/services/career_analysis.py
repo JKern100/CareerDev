@@ -334,11 +334,20 @@ async def call_analysis_api(system_prompt: str, user_message: str) -> str:
         model_name=model,
         system_instruction=system_prompt,
         generation_config=genai.types.GenerationConfig(
-            max_output_tokens=15000,
+            max_output_tokens=65000,
             temperature=0.4,
         ),
     )
 
     response = gemini.generate_content(user_message)
+
+    # Warn if the response was truncated due to token limit
+    try:
+        finish = response.candidates[0].finish_reason
+        # finish_reason 2 == MAX_TOKENS in the Gemini API
+        if finish == 2 or str(finish) == "MAX_TOKENS":
+            logger.warning("Career analysis response was truncated (MAX_TOKENS).")
+    except (IndexError, AttributeError):
+        pass
 
     return response.text
