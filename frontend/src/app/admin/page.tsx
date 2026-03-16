@@ -711,7 +711,7 @@ export default function AdminPage() {
           >
             ? Help
           </button>
-          <a href="/questionnaire" style={{ ...styles.logoutBtn, textDecoration: "none" }}>
+          <a href="/dashboard" style={{ ...styles.logoutBtn, textDecoration: "none" }}>
             User View
           </a>
           <button style={styles.logoutBtn} onClick={() => { localStorage.removeItem("token"); localStorage.removeItem("admin_token"); localStorage.removeItem("impersonating"); router.push("/"); }}>

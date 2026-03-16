@@ -6,6 +6,7 @@ import { getMe, getSummary, getCareerReport } from "@/lib/api";
 
 interface UserState {
   fullName: string | null;
+  role: string;
   questionnaireCompleted: boolean;
   hasSummary: boolean;
   hasAnalysis: boolean;
@@ -26,10 +27,6 @@ export default function DashboardPage() {
     async function load() {
       try {
         const me = await getMe();
-        if (me.role === "admin" || me.role === "auditor") {
-          router.push("/admin");
-          return;
-        }
 
         let hasSummary = false;
         let hasAnalysis = false;
@@ -50,6 +47,7 @@ export default function DashboardPage() {
 
         setUser({
           fullName: me.full_name,
+          role: me.role,
           questionnaireCompleted: me.questionnaire_completed,
           hasSummary,
           hasAnalysis,
@@ -148,6 +146,22 @@ export default function DashboardPage() {
           <a href="/" style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.9rem" }}>
             Home
           </a>
+          {(user.role === "admin" || user.role === "auditor") && (
+            <button
+              style={{ ...styles.logoutBtn, borderColor: "#f59e0b", color: "#fbbf24" }}
+              onClick={() => router.push("/admin")}
+            >
+              Admin Panel
+            </button>
+          )}
+          {user.role === "advisor" && (
+            <button
+              style={{ ...styles.logoutBtn, borderColor: "#3b82f6", color: "#60a5fa" }}
+              onClick={() => router.push("/advisor")}
+            >
+              Advisor Dashboard
+            </button>
+          )}
           <button
             style={styles.logoutBtn}
             onClick={() => {
