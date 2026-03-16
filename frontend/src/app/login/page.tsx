@@ -38,10 +38,8 @@ export default function LoginPage() {
       const user = await getMe();
       if (user.role === "admin" || user.role === "auditor") {
         router.push("/admin");
-      } else if (user.questionnaire_completed) {
-        router.push("/results");
       } else {
-        router.push("/questionnaire");
+        router.push("/dashboard");
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Login failed";
