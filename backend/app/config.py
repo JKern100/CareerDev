@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     # Password reset
     RESET_TOKEN_EXPIRE_MINUTES: int = 30
 
+    # Google OAuth
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+
     # Email (SMTP)
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587

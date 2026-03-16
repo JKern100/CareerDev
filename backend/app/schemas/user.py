@@ -22,6 +22,7 @@ class UserResponse(BaseModel):
     country_pack: str
     language: str
     email_verified: bool
+    auth_provider: str = "local"
     questionnaire_completed: bool
     can_regenerate: bool
     current_module: str | None
