@@ -15,7 +15,7 @@ export default function Home() {
     getMe()
       .then((user) => {
         setIsLoggedIn(true);
-        setDashboardPath(user.questionnaire_completed ? "/summary" : "/questionnaire");
+        setDashboardPath("/dashboard");
       })
       .catch(() => {
         localStorage.removeItem("token");
