@@ -1,15 +1,7 @@
 [build]
-builder = "nixpacks"
-
-[build.nixpacks]
-providers = ["python"]
-aptPkgs = ["libpq-dev"]
-
-installCmd = "pip install -r requirements.txt"
-buildCmd = "echo 'Build complete'"
+builder = "dockerfile"
 
 [deploy]
-startCommand = "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
