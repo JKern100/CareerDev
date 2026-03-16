@@ -5,12 +5,11 @@ builder = "nixpacks"
 providers = ["python"]
 aptPkgs = ["libpq-dev"]
 
-# Install dependencies from the backend directory
-installCmd = "pip install -r backend/requirements.txt"
+installCmd = "pip install -r requirements.txt"
 buildCmd = "echo 'Build complete'"
 
 [deploy]
-startCommand = "cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+startCommand = "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
