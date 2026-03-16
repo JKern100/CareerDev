@@ -50,11 +50,13 @@ export default function AppHeader() {
           style={{
             background: "#1e40af",
             color: "white",
-            padding: "0.5rem 2rem",
+            padding: "0.5rem 1rem",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            fontSize: "0.85rem",
+            fontSize: "0.8rem",
+            flexWrap: "wrap",
+            gap: "0.5rem",
           }}
         >
           <span>Viewing as: <strong>{impersonating}</strong></span>
@@ -79,9 +81,11 @@ export default function AppHeader() {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        padding: "1rem 2rem",
+        padding: "0.75rem 1rem",
         borderBottom: "1px solid var(--border)",
-        marginBottom: "1.5rem",
+        marginBottom: "1rem",
+        flexWrap: "wrap",
+        gap: "0.5rem",
       }}
     >
       <a
@@ -112,7 +116,7 @@ export default function AppHeader() {
         </div>
         <span style={{ fontWeight: 600, fontSize: "1rem" }}>CareerDev</span>
       </a>
-      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
         {isAdvisor && (
           <a
             href="/advisor"

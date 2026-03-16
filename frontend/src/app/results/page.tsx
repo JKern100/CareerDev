@@ -25,7 +25,23 @@ export default function ResultsPage() {
       try {
         // Try to get existing report first
         const data = await getCareerReport();
-        setReport(data);
+
+        if (data.can_regenerate) {
+          // Admin enabled regeneration — auto-regenerate instead of showing stale report
+          setGenerating(true);
+          setLoading(false);
+          try {
+            await runAnalysis();
+            const fresh = await getCareerReport();
+            setReport(fresh);
+          } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Failed to regenerate report");
+          } finally {
+            setGenerating(false);
+          }
+        } else {
+          setReport(data);
+        }
       } catch {
         // No report yet — run analysis
         try {
@@ -94,7 +110,7 @@ export default function ResultsPage() {
     <>
       <AppHeader />
       <div className="container" style={{ maxWidth: "860px" }}>
-        <div className="card" style={{ marginTop: "2rem", padding: "2rem" }}>
+        <div className="card" style={{ marginTop: "1rem", padding: "1.25rem" }}>
           <div className="markdown-report">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {report?.markdown_report ?? ""}
