@@ -155,7 +155,7 @@ export default function QuestionnairePage() {
           } else if (q.question_type === "numeric") {
             defaultValue = q.min_val ?? 0;
           }
-          initial[q.question_id] = { value: defaultValue, confidence: 50 };
+          initial[q.question_id] = { value: defaultValue, confidence: 100 };
         }
       }
       setAnswers(initial);
@@ -564,7 +564,7 @@ export default function QuestionnairePage() {
             key={q.question_id}
             question={q}
             value={answers[q.question_id]?.value ?? ""}
-            confidence={answers[q.question_id]?.confidence ?? 50}
+            confidence={answers[q.question_id]?.confidence ?? 100}
             onChange={(val) =>
               setAnswers((prev) => ({
                 ...prev,
