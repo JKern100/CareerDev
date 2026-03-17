@@ -37,6 +37,24 @@ async def generate_summary(
     if not user.questionnaire_completed:
         raise HTTPException(status_code=400, detail="Complete the questionnaire first")
 
+    # Check if user already has a summary and needs permission to regenerate
+    existing = await db.execute(
+        select(Report).where(Report.user_id == user.id)
+    )
+    existing_summaries = [
+        r for r in existing.scalars().all()
+        if isinstance(r.report_json, dict) and r.report_json.get("type") == "summary"
+    ]
+    if existing_summaries and not user.can_regenerate_summary:
+        raise HTTPException(
+            status_code=403,
+            detail="Profile summary regeneration is not enabled. Please contact your administrator.",
+        )
+
+    # Reset the flag after use
+    if user.can_regenerate_summary:
+        user.can_regenerate_summary = False
+
     # Load user answers
     result = await db.execute(select(Answer).where(Answer.user_id == user.id))
     answers_raw = result.scalars().all()

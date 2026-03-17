@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { generateSummary, getSummary, SummaryReport, APP_VERSION } from "@/lib/api";
+import { generateSummary, getSummary, getMe, SummaryReport, APP_VERSION } from "@/lib/api";
 import AppHeader from "@/components/AppHeader";
 import FlowerSpinner from "@/components/FlowerSpinner";
 import ReactMarkdown from "react-markdown";
@@ -11,6 +11,7 @@ import remarkGfm from "remark-gfm";
 export default function SummaryPage() {
   const router = useRouter();
   const [summary, setSummary] = useState<SummaryReport | null>(null);
+  const [canRegenerate, setCanRegenerate] = useState(false);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
@@ -24,9 +25,30 @@ export default function SummaryPage() {
 
     async function load() {
       try {
+        // Check user's regeneration permission
+        const me = await getMe();
+        setCanRegenerate(me.can_regenerate_summary);
+
         // Try to get existing summary
         const data = await getSummary();
-        setSummary(data);
+
+        if (me.can_regenerate_summary) {
+          // Admin enabled regeneration — auto-regenerate
+          setGenerating(true);
+          setLoading(false);
+          try {
+            const fresh = await generateSummary();
+            setSummary(fresh);
+            setCanRegenerate(false); // Flag is reset after use
+          } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Failed to regenerate summary");
+            setSummary(data); // Fall back to existing
+          } finally {
+            setGenerating(false);
+          }
+        } else {
+          setSummary(data);
+        }
       } catch {
         // No summary yet — generate one
         setGenerating(true);
@@ -184,13 +206,15 @@ export default function SummaryPage() {
         <button className="btn btn-outline" onClick={() => router.push("/questionnaire")}>
           Back to Questionnaire
         </button>
-        <button
-          className="btn btn-outline"
-          onClick={handleRegenerate}
-          disabled={generating}
-        >
-          {generating ? "Regenerating..." : "Regenerate Summary"}
-        </button>
+        {canRegenerate && (
+          <button
+            className="btn btn-outline"
+            onClick={handleRegenerate}
+            disabled={generating}
+          >
+            {generating ? "Regenerating..." : "Regenerate Summary"}
+          </button>
+        )}
       </div>
 
       <p

@@ -234,6 +234,7 @@ export interface AdminUser {
   questionnaire_completed: boolean;
   current_module: string | null;
   can_regenerate: boolean;
+  can_regenerate_summary: boolean;
   answers_count: number;
   reports_count: number;
   has_analysis_report: boolean;
@@ -373,13 +374,6 @@ export interface AdminAnalysisReport {
 
 export async function getUserReport(userId: string) {
   return request<AdminAnalysisReport>(`/admin/users/${userId}/report`);
-}
-
-export async function regenerateUserSummary(userId: string) {
-  return request<{ detail: string; generated_with_ai: boolean }>(
-    `/admin/users/${userId}/regenerate-summary`,
-    { method: "POST" }
-  );
 }
 
 export interface ActivityEvent {
