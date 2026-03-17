@@ -75,6 +75,7 @@ export async function getMe() {
     role: string;
     questionnaire_completed: boolean;
     current_module: string | null;
+    can_regenerate_summary: boolean;
   }>("/auth/me");
 }
 
