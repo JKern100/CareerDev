@@ -272,7 +272,7 @@ async def generate_summary_with_ai(answers: dict, user_name: str | None = None, 
         gemini = genai.GenerativeModel(
             model_name="gemini-2.5-flash",
             generation_config=genai.types.GenerationConfig(
-                max_output_tokens=4096,
+                max_output_tokens=8000,
             ),
         )
         response = gemini.generate_content(prompt)
