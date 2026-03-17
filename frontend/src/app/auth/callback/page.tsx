@@ -1,12 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getMe } from "@/lib/api";
 
 const API_BASE = "/api";
 
 export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="container" style={{ maxWidth: "400px", textAlign: "center" }}>
+        <h1 style={{ marginTop: "3rem" }}>Signing you in...</h1>
+        <p className="text-muted" style={{ marginTop: "0.5rem" }}>Please wait while we complete your Google sign-in.</p>
+      </div>
+    }>
+      <AuthCallbackContent />
+    </Suspense>
+  );
+}
+
+function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState("");
