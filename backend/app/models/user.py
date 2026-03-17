@@ -21,8 +21,12 @@ class User(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
-    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    hashed_password: Mapped[str | None] = mapped_column(String(255), nullable=True)
     full_name: Mapped[str | None] = mapped_column(String(255))
+
+    # OAuth
+    auth_provider: Mapped[str] = mapped_column(String(20), default="local")
+    google_id: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
     role: Mapped[UserRole] = mapped_column(SAEnum(UserRole, native_enum=False), default=UserRole.USER, nullable=False)
 
     # Profile fields

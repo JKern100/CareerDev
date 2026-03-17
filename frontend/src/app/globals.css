@@ -371,3 +371,20 @@ h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.25rem; }
   50% { opacity: 1; }
   100% { opacity: 0; }
 }
+
+/* ── Flower Spinner ───────────────────────────────────── */
+.flower-spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  animation: flowerSpin 2.5s linear infinite;
+}
+
+.flower-spinner-pulse {
+  animation: flowerSpin 2.5s linear infinite, loaderPulse 2s ease-in-out infinite;
+}
+
+@keyframes flowerSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

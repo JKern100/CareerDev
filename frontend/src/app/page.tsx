@@ -36,22 +36,7 @@ export default function Home() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <div
-            style={{
-              width: "36px",
-              height: "36px",
-              borderRadius: "8px",
-              background: "#2563eb",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: 700,
-              fontSize: "0.8rem",
-              color: "white",
-            }}
-          >
-            CD
-          </div>
+          <img src="/logo.svg" alt="CareerDev" width={36} height={36} />
           <span style={{ fontWeight: 600, fontSize: "1.1rem" }}>CareerDev</span>
         </div>
         <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
@@ -102,6 +87,9 @@ export default function Home() {
           margin: "0 auto",
         }}
       >
+        <div style={{ marginBottom: "1.5rem" }}>
+          <img src="/logo.svg" alt="CareerDev" width={72} height={72} />
+        </div>
         <div
           style={{
             display: "inline-block",

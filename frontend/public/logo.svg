@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="darkPetal" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1565C0"/>
+      <stop offset="100%" stop-color="#0D47A1"/>
+    </linearGradient>
+    <linearGradient id="lightPetal" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4FC3F7"/>
+      <stop offset="100%" stop-color="#29B6F6"/>
+    </linearGradient>
+    <radialGradient id="centerGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFD54F"/>
+      <stop offset="100%" stop-color="#FFC107"/>
+    </radialGradient>
+  </defs>
+  <g transform="translate(100,100)">
+    <!-- Dark blue petals (5, every 72 degrees) -->
+    <ellipse rx="18" ry="48" transform="rotate(0) translate(0,-42)" fill="url(#darkPetal)"/>
+    <ellipse rx="18" ry="48" transform="rotate(72) translate(0,-42)" fill="url(#darkPetal)"/>
+    <ellipse rx="18" ry="48" transform="rotate(144) translate(0,-42)" fill="url(#darkPetal)"/>
+    <ellipse rx="18" ry="48" transform="rotate(216) translate(0,-42)" fill="url(#darkPetal)"/>
+    <ellipse rx="18" ry="48" transform="rotate(288) translate(0,-42)" fill="url(#darkPetal)"/>
+    <!-- Light blue petals (5, offset 36 degrees) -->
+    <ellipse rx="14" ry="40" transform="rotate(36) translate(0,-38)" fill="url(#lightPetal)"/>
+    <ellipse rx="14" ry="40" transform="rotate(108) translate(0,-38)" fill="url(#lightPetal)"/>
+    <ellipse rx="14" ry="40" transform="rotate(180) translate(0,-38)" fill="url(#lightPetal)"/>
+    <ellipse rx="14" ry="40" transform="rotate(252) translate(0,-38)" fill="url(#lightPetal)"/>
+    <ellipse rx="14" ry="40" transform="rotate(324) translate(0,-38)" fill="url(#lightPetal)"/>
+    <!-- Center sun -->
+    <circle r="18" fill="url(#centerGrad)"/>
+    <!-- Sun dots/rays -->
+    <circle r="3" cx="0" cy="-23" fill="#F9A825"/>
+    <circle r="3" cx="21.9" cy="-7.1" fill="#F9A825"/>
+    <circle r="3" cx="13.5" cy="18.6" fill="#F9A825"/>
+    <circle r="3" cx="-13.5" cy="18.6" fill="#F9A825"/>
+    <circle r="3" cx="-21.9" cy="-7.1" fill="#F9A825"/>
+    <circle r="2.5" cx="11" cy="-20.2" fill="#F9A825"/>
+    <circle r="2.5" cx="22.1" cy="5.8" fill="#F9A825"/>
+    <circle r="2.5" cx="0" cy="23" fill="#F9A825"/>
+    <circle r="2.5" cx="-22.1" cy="5.8" fill="#F9A825"/>
+    <circle r="2.5" cx="-11" cy="-20.2" fill="#F9A825"/>
+  </g>
+</svg>
