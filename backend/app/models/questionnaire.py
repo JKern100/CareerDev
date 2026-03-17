@@ -30,7 +30,7 @@ class Answer(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"), nullable=False)
     question_id: Mapped[str] = mapped_column(String(10), ForeignKey("questions.id"), nullable=False)
     value_json: Mapped[dict] = mapped_column(JSON, nullable=False)  # the actual answer
-    confidence: Mapped[int] = mapped_column(Integer, default=50)  # 0-100
+    confidence: Mapped[int] = mapped_column(Integer, default=100)  # 0-100
     evidence_refs: Mapped[list | None] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

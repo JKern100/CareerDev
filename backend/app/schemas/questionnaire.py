@@ -19,7 +19,7 @@ class QuestionOut(BaseModel):
 class ExistingAnswerOut(BaseModel):
     question_id: str
     value: str | int | float | list[str] | None = None
-    confidence: int = 50
+    confidence: int = 100
 
 
 class QuestionSetOut(BaseModel):
@@ -35,7 +35,7 @@ class QuestionSetOut(BaseModel):
 class AnswerIn(BaseModel):
     question_id: str
     value: str | int | float | list[str]
-    confidence: int = 50  # 0-100
+    confidence: int = 100  # 0-100
 
 
 class AnswerBatchIn(BaseModel):

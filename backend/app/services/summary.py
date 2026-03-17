@@ -52,7 +52,7 @@ def _format_answers_for_prompt(answers: dict) -> str:
         else:
             value_str = str(value)
 
-        confidence = ans_data.get("confidence", 50)
+        confidence = ans_data.get("confidence", 100)
         conf_label = "low" if confidence < 30 else "moderate" if confidence < 70 else "high"
 
         sections[module_label].append(

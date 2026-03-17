@@ -247,9 +247,9 @@ def _compute_confidence_factor(answers: dict, relevant_question_ids: list[str]) 
     confidences = []
     for qid in relevant_question_ids:
         if qid in answers:
-            conf = answers[qid].get("confidence", 50)
+            conf = answers[qid].get("confidence", 100)
             confidences.append(conf / 100.0)
-    return sum(confidences) / len(confidences) if confidences else 0.5
+    return sum(confidences) / len(confidences) if confidences else 1.0
 
 
 def _identify_evidence_signals(pathway: dict, answers: dict) -> list[str]:
@@ -287,7 +287,7 @@ def _identify_risks(pathway: dict, answers: dict, gate_flags: list[str]) -> list
     )
     low_conf_count = sum(
         1 for qid in all_qs
-        if qid in answers and answers[qid].get("confidence", 50) < 30
+        if qid in answers and answers[qid].get("confidence", 100) < 30
     )
     if low_conf_count > 2:
         risks.append(f"{low_conf_count} answers have low confidence — advisor clarification recommended")
