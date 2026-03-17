@@ -85,6 +85,7 @@ def _build_question_out(q) -> QuestionOut:
         min_val=q.min_val,
         max_val=q.max_val,
         tags=q.tags_json,
+        help_text=q.help_text,
     )
 
 

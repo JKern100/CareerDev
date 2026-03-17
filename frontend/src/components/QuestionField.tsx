@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Question } from "@/lib/api";
 
 interface Props {
@@ -17,6 +18,7 @@ export default function QuestionField({
   onChange,
   onConfidenceChange,
 }: Props) {
+  const [showHelp, setShowHelp] = useState(false);
   const renderInput = () => {
     switch (question.question_type) {
       case "single_select":
@@ -184,7 +186,31 @@ export default function QuestionField({
         <p style={{ fontWeight: 500 }}>
           {question.prompt}
           {question.required && <span style={{ color: "var(--error)" }}> *</span>}
+          {question.help_text && (
+            <button
+              type="button"
+              onClick={() => setShowHelp(!showHelp)}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "var(--primary)",
+                fontSize: "0.85rem",
+                marginLeft: "0.5rem",
+                padding: 0,
+                textDecoration: "underline",
+                fontWeight: 400,
+              }}
+            >
+              {showHelp ? "hide help" : "why?"}
+            </button>
+          )}
         </p>
+        {showHelp && question.help_text && (
+          <p className="text-sm text-muted" style={{ marginTop: "0.375rem", lineHeight: 1.5 }}>
+            {question.help_text}
+          </p>
+        )}
       </div>
 
       {renderInput()}
