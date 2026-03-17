@@ -19,7 +19,6 @@ from app.models.activity import ActivityEvent
 from app.api.deps import get_admin_user
 from app.services.auth import hash_password, create_access_token
 from app.config import settings
-from app.services.summary import generate_summary_with_ai, generate_summary_without_ai
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -34,6 +33,7 @@ class AdminUserOut(BaseModel):
     questionnaire_completed: bool
     current_module: str | None
     can_regenerate: bool
+    can_regenerate_summary: bool
     answers_count: int
     reports_count: int
     has_analysis_report: bool
@@ -47,6 +47,7 @@ class AdminUserUpdate(BaseModel):
     full_name: str | None = None
     questionnaire_completed: bool | None = None
     can_regenerate: bool | None = None
+    can_regenerate_summary: bool | None = None
     new_password: str | None = None
 
 
@@ -196,6 +197,7 @@ async def list_users(
             questionnaire_completed=u.questionnaire_completed,
             current_module=u.current_module,
             can_regenerate=u.can_regenerate,
+            can_regenerate_summary=u.can_regenerate_summary,
             answers_count=answers_count,
             reports_count=reports_count,
             has_analysis_report=has_analysis > 0,
@@ -235,6 +237,7 @@ async def get_user(
         questionnaire_completed=u.questionnaire_completed,
         current_module=u.current_module,
         can_regenerate=u.can_regenerate,
+        can_regenerate_summary=u.can_regenerate_summary,
         answers_count=answers_count,
         reports_count=reports_count,
         has_analysis_report=has_analysis > 0,
@@ -267,6 +270,8 @@ async def update_user(
         u.questionnaire_completed = data.questionnaire_completed
     if data.can_regenerate is not None:
         u.can_regenerate = data.can_regenerate
+    if data.can_regenerate_summary is not None:
+        u.can_regenerate_summary = data.can_regenerate_summary
     if data.new_password is not None:
         u.hashed_password = hash_password(data.new_password)
 
@@ -602,55 +607,6 @@ async def get_user_report(
         model_name=report.model_name,
         created_at=report.created_at,
     )
-
-
-# ── Regenerate Profile Summary ────────────────────────────────────────
-
-@router.post("/users/{user_id}/regenerate-summary")
-async def regenerate_user_summary(
-    user_id: str,
-    admin: User = Depends(get_admin_user),
-    db: AsyncSession = Depends(get_db),
-):
-    """Regenerate the profile summary for a user."""
-    result = await db.execute(select(User).where(User.id == user_id))
-    u = result.scalar_one_or_none()
-    if not u:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    if not u.questionnaire_completed:
-        raise HTTPException(status_code=400, detail="User has not completed the questionnaire")
-
-    # Load user answers
-    ans_result = await db.execute(select(Answer).where(Answer.user_id == u.id))
-    answers_raw = ans_result.scalars().all()
-    answers = {
-        a.question_id: {
-            "value": a.value_json.get("value") if a.value_json else None,
-            "confidence": a.confidence,
-        }
-        for a in answers_raw
-    }
-
-    # Generate the narrative
-    api_key = settings.LLM_API_KEY
-    if api_key:
-        summary_text = await generate_summary_with_ai(answers, u.full_name, api_key)
-        used_ai = True
-    else:
-        summary_text = generate_summary_without_ai(answers, u.full_name)
-        used_ai = False
-
-    # Store in a report record
-    report = Report(
-        user_id=u.id,
-        report_json={"type": "summary", "text": summary_text, "generated_with_ai": used_ai},
-        status="complete",
-    )
-    db.add(report)
-    await db.commit()
-
-    return {"detail": "Profile summary regenerated", "generated_with_ai": used_ai}
 
 
 # ── Activity Log ────────────────────────────────────────────────────

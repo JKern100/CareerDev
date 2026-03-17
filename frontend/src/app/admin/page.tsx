@@ -28,7 +28,6 @@ import {
   QUESTION_TYPES,
   MODULES,
   MODULE_LABELS,
-  regenerateUserSummary,
 } from "@/lib/api";
 
 type Tab = "dashboard" | "users" | "questions" | "activity";
@@ -591,13 +590,16 @@ export default function AdminPage() {
     }
   }
 
-  async function handleRegenerateSummary(userId: string) {
+  async function handleToggleRegenerateSummary(userId: string, enable: boolean) {
     try {
-      setActionMsg("Regenerating profile summary...");
-      const result = await regenerateUserSummary(userId);
-      setActionMsg(result.detail + (result.generated_with_ai ? " (AI)" : " (template)"));
+      await updateAdminUser(userId, { can_regenerate_summary: enable });
+      setActionMsg(enable ? "Profile regen enabled" : "Profile regen disabled");
+      await loadUsers();
+      if (selectedUser && selectedUser.id === userId) {
+        setSelectedUser({ ...selectedUser, can_regenerate_summary: enable });
+      }
     } catch (err: unknown) {
-      setActionMsg(err instanceof Error ? err.message : "Failed to regenerate summary");
+      setActionMsg(err instanceof Error ? err.message : "Failed");
     }
   }
 
@@ -842,12 +844,22 @@ export default function AdminPage() {
                     <button
                       style={{
                         ...styles.btnOutline,
+                        borderColor: selectedUser.can_regenerate_summary ? "#059669" : "#6b7280",
+                        color: selectedUser.can_regenerate_summary ? "#34d399" : "#9ca3af",
+                      }}
+                      onClick={() => handleToggleRegenerateSummary(selectedUser.id, !selectedUser.can_regenerate_summary)}
+                    >
+                      {selectedUser.can_regenerate_summary ? "Profile Regen: ON" : "Profile Regen: OFF"}
+                    </button>
+                    <button
+                      style={{
+                        ...styles.btnOutline,
                         borderColor: selectedUser.can_regenerate ? "#059669" : "#6b7280",
                         color: selectedUser.can_regenerate ? "#34d399" : "#9ca3af",
                       }}
                       onClick={() => handleToggleRegenerate(selectedUser.id, !selectedUser.can_regenerate)}
                     >
-                      {selectedUser.can_regenerate ? "Regeneration: ON" : "Allow Regeneration"}
+                      {selectedUser.can_regenerate ? "Analysis Regen: ON" : "Analysis Regen: OFF"}
                     </button>
                     {selectedUser.has_analysis_report && (
                       <button
@@ -856,14 +868,6 @@ export default function AdminPage() {
                         disabled={reportLoading}
                       >
                         {reportLoading ? "Loading..." : "View Report"}
-                      </button>
-                    )}
-                    {selectedUser.questionnaire_completed && (
-                      <button
-                        style={{ ...styles.btnOutline, borderColor: "#f59e0b", color: "#fbbf24" }}
-                        onClick={() => handleRegenerateSummary(selectedUser.id)}
-                      >
-                        Regen Summary
                       </button>
                     )}
                     <button

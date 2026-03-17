@@ -50,6 +50,7 @@ class User(Base):
 
     # Report regeneration (admin-controlled)
     can_regenerate: Mapped[bool] = mapped_column(Boolean, default=False)
+    can_regenerate_summary: Mapped[bool] = mapped_column(Boolean, default=False)
 
     # Questionnaire progress
     questionnaire_completed: Mapped[bool] = mapped_column(Boolean, default=False)
