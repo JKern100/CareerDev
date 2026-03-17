@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { register, resendVerification } from "@/lib/api";
+import FlowerSpinner from "@/components/FlowerSpinner";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -110,8 +111,8 @@ export default function RegisterPage() {
   return (
     <div className="container" style={{ maxWidth: "400px" }}>
       <div style={{ textAlign: "center", marginTop: "2rem" }}>
-        <img src="/logo.svg" alt="CareerDev" width={48} height={48} style={{ marginBottom: "0.75rem" }} />
-        <h1>Create Account</h1>
+        <FlowerSpinner size={48} />
+        <h1 style={{ marginTop: "0.75rem" }}>Create Account</h1>
         <p className="text-muted text-sm mb-3">
           Start your career transition journey
         </p>

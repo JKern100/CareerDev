@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { login, getMe, resendVerification } from "@/lib/api";
+import FlowerSpinner from "@/components/FlowerSpinner";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -55,8 +56,8 @@ export default function LoginPage() {
   return (
     <div className="container" style={{ maxWidth: "400px" }}>
       <div style={{ textAlign: "center", marginTop: "2rem" }}>
-        <img src="/logo.svg" alt="CareerDev" width={48} height={48} style={{ marginBottom: "0.75rem" }} />
-        <h1>Sign In</h1>
+        <FlowerSpinner size={48} />
+        <h1 style={{ marginTop: "0.75rem" }}>Sign In</h1>
         <p className="text-muted text-sm mb-3">
           Continue your career journey
         </p>
