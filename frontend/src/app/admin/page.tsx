@@ -621,7 +621,7 @@ export default function AdminPage() {
       localStorage.setItem("admin_token", adminToken || "");
       localStorage.setItem("token", result.access_token);
       localStorage.setItem("impersonating", email);
-      router.push("/questionnaire");
+      router.push("/dashboard");
     } catch (err: unknown) {
       setActionMsg(err instanceof Error ? err.message : "Failed to impersonate");
     }

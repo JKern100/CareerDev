@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { generateSummary, getSummary, SummaryReport, APP_VERSION } from "@/lib/api";
 import AppHeader from "@/components/AppHeader";
 import FlowerSpinner from "@/components/FlowerSpinner";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export default function SummaryPage() {
   const router = useRouter();
@@ -101,72 +103,18 @@ export default function SummaryPage() {
         A personalized reflection based on your questionnaire responses.
       </p>
 
-      {/* Render the summary as formatted text */}
+      {/* Render the summary as formatted markdown */}
       <div
+        className="markdown-report"
         style={{
           lineHeight: 1.8,
           fontSize: "1rem",
           color: "var(--foreground)",
         }}
       >
-        {summary.summary_text.split("\n\n").map((paragraph, i) => {
-          // Check if it's a heading (starts with **)
-          if (paragraph.startsWith("**") && paragraph.indexOf("**", 2) > 2) {
-            const headingEnd = paragraph.indexOf("**", 2);
-            const heading = paragraph.slice(2, headingEnd);
-            const rest = paragraph.slice(headingEnd + 2).trim();
-            return (
-              <div key={i} style={{ marginBottom: "1.5rem" }}>
-                <h2
-                  style={{
-                    fontSize: "1.2rem",
-                    fontWeight: 600,
-                    color: "var(--primary)",
-                    marginBottom: "0.5rem",
-                    marginTop: i > 0 ? "2rem" : "0",
-                  }}
-                >
-                  {heading}
-                </h2>
-                {rest && <p style={{ marginBottom: "0.75rem" }}>{rest}</p>}
-              </div>
-            );
-          }
-
-          // Check if it contains numbered items (teaser questions)
-          if (/^\d+\.\s/.test(paragraph.trim())) {
-            const items = paragraph.trim().split(/\n/).filter(Boolean);
-            return (
-              <ol
-                key={i}
-                style={{
-                  paddingLeft: "1.5rem",
-                  marginBottom: "1.5rem",
-                  listStyleType: "decimal",
-                }}
-              >
-                {items.map((item, j) => (
-                  <li
-                    key={j}
-                    style={{
-                      marginBottom: "0.5rem",
-                      color: "var(--primary)",
-                      fontWeight: 500,
-                    }}
-                  >
-                    {item.replace(/^\d+\.\s*/, "")}
-                  </li>
-                ))}
-              </ol>
-            );
-          }
-
-          return (
-            <p key={i} style={{ marginBottom: "1rem" }}>
-              {paragraph}
-            </p>
-          );
-        })}
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          {summary.summary_text}
+        </ReactMarkdown>
       </div>
 
       {/* Action buttons */}
