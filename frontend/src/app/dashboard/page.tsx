@@ -29,29 +29,18 @@ export default function DashboardPage() {
       try {
         const me = await getMe();
 
-        let hasSummary = false;
-        let hasAnalysis = false;
-
-        try {
-          await getSummary();
-          hasSummary = true;
-        } catch {
-          /* no summary yet */
-        }
-
-        try {
-          await getCareerReport();
-          hasAnalysis = true;
-        } catch {
-          /* no analysis yet */
-        }
+        // Load summary and analysis checks in parallel to avoid slow sequential calls
+        const [summaryResult, analysisResult] = await Promise.allSettled([
+          getSummary(),
+          getCareerReport(),
+        ]);
 
         setUser({
           fullName: me.full_name,
           role: me.role,
           questionnaireCompleted: me.questionnaire_completed,
-          hasSummary,
-          hasAnalysis,
+          hasSummary: summaryResult.status === "fulfilled",
+          hasAnalysis: analysisResult.status === "fulfilled",
         });
       } catch {
         router.push("/login");
