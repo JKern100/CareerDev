@@ -28,6 +28,7 @@ import {
   QUESTION_TYPES,
   MODULES,
   MODULE_LABELS,
+  regenerateUserSummary,
 } from "@/lib/api";
 
 type Tab = "dashboard" | "users" | "questions" | "activity";
@@ -590,6 +591,16 @@ export default function AdminPage() {
     }
   }
 
+  async function handleRegenerateSummary(userId: string) {
+    try {
+      setActionMsg("Regenerating profile summary...");
+      const result = await regenerateUserSummary(userId);
+      setActionMsg(result.detail + (result.generated_with_ai ? " (AI)" : " (template)"));
+    } catch (err: unknown) {
+      setActionMsg(err instanceof Error ? err.message : "Failed to regenerate summary");
+    }
+  }
+
   async function handleDeleteUser(userId: string, email: string) {
     if (!confirm(`Delete user ${email}? This removes all their data.`)) return;
     try {
@@ -845,6 +856,14 @@ export default function AdminPage() {
                         disabled={reportLoading}
                       >
                         {reportLoading ? "Loading..." : "View Report"}
+                      </button>
+                    )}
+                    {selectedUser.questionnaire_completed && (
+                      <button
+                        style={{ ...styles.btnOutline, borderColor: "#f59e0b", color: "#fbbf24" }}
+                        onClick={() => handleRegenerateSummary(selectedUser.id)}
+                      >
+                        Regen Summary
                       </button>
                     )}
                     <button

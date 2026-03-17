@@ -375,6 +375,13 @@ export async function getUserReport(userId: string) {
   return request<AdminAnalysisReport>(`/admin/users/${userId}/report`);
 }
 
+export async function regenerateUserSummary(userId: string) {
+  return request<{ detail: string; generated_with_ai: boolean }>(
+    `/admin/users/${userId}/regenerate-summary`,
+    { method: "POST" }
+  );
+}
+
 export interface ActivityEvent {
   id: string;
   user_id: string;

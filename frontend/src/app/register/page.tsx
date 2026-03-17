@@ -109,10 +109,13 @@ export default function RegisterPage() {
 
   return (
     <div className="container" style={{ maxWidth: "400px" }}>
-      <h1 style={{ textAlign: "center", marginTop: "2rem" }}>Create Account</h1>
-      <p className="text-muted text-sm mb-3" style={{ textAlign: "center" }}>
-        Start your career transition journey
-      </p>
+      <div style={{ textAlign: "center", marginTop: "2rem" }}>
+        <img src="/logo.svg" alt="CareerDev" width={48} height={48} style={{ marginBottom: "0.75rem" }} />
+        <h1>Create Account</h1>
+        <p className="text-muted text-sm mb-3">
+          Start your career transition journey
+        </p>
+      </div>
 
       <form onSubmit={handleSubmit} className="card flex flex-col gap-1">
         <div>
