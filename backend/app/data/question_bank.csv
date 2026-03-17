@@ -1,120 +1,120 @@
-question_id,module,prompt,type,required,options_json,min,max,route_if_json,tags_json
-Q001,A,What country are you currently based in?,single_select,true,"[""UAE"",""UK"",""USA"",""Canada"",""Australia"",""Germany"",""France"",""India"",""Philippines"",""South Africa"",""Other Europe"",""Other Asia"",""Other""]",,,,"[""baseline"",""location""]"
-Q002,A,What passport(s) do you hold?,multi_select,true,"[""UAE"",""UK"",""USA"",""Canadian"",""Australian"",""EU member state"",""Indian"",""Filipino"",""South African"",""Other GCC"",""Other""]",,,,"[""baseline"",""nationality"",""work_rights""]"
-Q003,A,What currency should we use for salary and budget questions?,single_select,true,"[""AED"",""USD"",""GBP"",""EUR"",""CAD"",""AUD"",""INR"",""PHP"",""ZAR"",""Other""]",,,,"[""baseline"",""currency""]"
-Q004,A,What outcomes do you want from this app?,multi_select,true,"[""Pathways"",""Salary clarity"",""Study plan"",""Relocation plan"",""Entrepreneurship"",""Advisor coaching""]",,,,"[""baseline"",""goals""]"
-Q005,A,Do you consent to processing your career data to generate recommendations?,single_select,true,"[""Yes"",""No""]",,,"{""No"": ""block""}","[""consent""]"
-Q006,A,May we use your responses (anonymized and non-identifiable) to help improve this product?,single_select,false,"[""Yes"",""No""]",,,,"[""consent""]"
-Q007,A,Preferred language for your report,single_select,true,"[""English"",""Arabic"",""Russian"",""Ukrainian"",""Other""]",,,,"[""preference""]"
-Q008,A,Preferred communication style,single_select,true,"[""Direct"",""Detailed"",""Motivational"",""Minimal""]",,,,"[""preference""]"
-Q009,A,How urgent is change? (0=no urgency; 10=must change now),slider_0_10,true,,0,10,,"[""urgency""]"
-Q010,A,"What would make this experience a ""win"" for you in the next 30 days?",text_short,true,,,,,
-Q011,B,Years as cabin crew (total),numeric,true,,0,50,,"[""experience"",""aviation""]"
-Q012,B,Current employer type,single_select,true,"[""GCC legacy carrier"",""Low-cost carrier"",""Charter"",""Other""]",,,,"[""aviation"",""employer""]"
-Q013,B,Aircraft experience,multi_select,true,"[""A380"",""B777"",""Narrow-body"",""Other""]",,,,"[""aviation"",""experience""]"
-Q014,B,Cabin roles held,multi_select,true,"[""Economy"",""Business"",""First"",""Senior"",""Lead"",""Purser-like duties""]",,,,"[""aviation"",""seniority""]"
-Q015,B,Special duties held,multi_select,false,"[""Trainer support"",""Safety rep"",""Service excellence"",""Onboarding buddy"",""Language speaker"",""Documentation""]",,,,"[""aviation"",""specialties""]"
-Q016,B,Enjoyment: safety/security responsibilities,likert_1_5,true,,1,5,,"[""enjoyment"",""safety""]"
-Q017,B,Enjoyment: service/hospitality delivery,likert_1_5,true,,1,5,,"[""enjoyment"",""service""]"
-Q018,B,Enjoyment: conflict resolution/de-escalation,likert_1_5,true,,1,5,,"[""enjoyment"",""conflict""]"
-Q019,B,Enjoyment: teamwork/leading on board,likert_1_5,true,,1,5,,"[""enjoyment"",""leadership""]"
-Q020,B,Enjoyment: strict compliance/checklists,likert_1_5,true,,1,5,,"[""enjoyment"",""compliance""]"
-Q021,B,Drain: irregular sleep/roster,likert_1_5,true,,1,5,,"[""drain"",""lifestyle""]"
-Q022,B,"Drain: emotional labor (""politeness mask"")",likert_1_5,true,,1,5,,"[""drain"",""emotional""]"
-Q023,B,Drain: physical load,likert_1_5,true,,1,5,,"[""drain"",""physical""]"
-Q024,B,"Peak moment onboard: describe a situation where you felt most effective",text_long,true,,,,,
-Q025,B,Hard moment onboard: describe a situation you never want again,text_long,true,,,,,
-Q026,B,Burnout risk (0 low; 10 high),slider_0_10,true,,0,10,,"[""burnout"",""urgency""]"
-Q109,B,What is your primary reason for exploring a career change?,single_select,true,"[""Career growth ceiling"",""Burnout/wellbeing"",""Medical/health"",""Redundancy or contract ending"",""Financial"",""Family/lifestyle"",""Curiosity"",""Other""]",,,,"[""motivation"",""change_driver""]"
-Q110,B,"Estimate your total monthly compensation including all allowances (housing, transport, flying pay)",numeric,true,,0,500000,,"[""compensation"",""current_total""]"
-Q111,B,What aspects of your aviation career do you most want to keep in your next role?,multi_select,true,"[""Travel"",""Team environment"",""Clear procedures"",""Helping people"",""Prestige"",""Variety"",""Physical activity"",""Other""]",,,,"[""preference"",""preserve""]"
-Q027,C,Public-facing service orientation,likert_1_5,true,,1,5,,"[""skill"",""service""]"
-Q028,C,Speaking & communication,likert_1_5,true,,1,5,,"[""skill"",""communication""]"
-Q029,C,Active listening & empathy,likert_1_5,true,,1,5,,"[""skill"",""empathy""]"
-Q030,C,Conflict resolution/negotiation,likert_1_5,true,,1,5,,"[""skill"",""conflict""]"
-Q031,C,Compliance & standards evaluation,likert_1_5,true,,1,5,,"[""skill"",""compliance""]"
-Q032,C,Crisis response under pressure,likert_1_5,true,,1,5,,"[""skill"",""crisis""]"
-Q033,C,Team coordination and briefing,likert_1_5,true,,1,5,,"[""skill"",""teamwork""]"
-Q034,C,Training/instructing others,likert_1_5,true,,1,5,"{""gte_3"": ""trigger_training_module""}","[""skill"",""training""]"
-Q035,C,Documentation/report writing,likert_1_5,true,,1,5,,"[""skill"",""documentation""]"
-Q036,C,"Operational planning (timing, flow, prioritization)",likert_1_5,true,,1,5,,"[""skill"",""operations""]"
-Q037,C,"Data handling (tracking, spreadsheets, checklists)",likert_1_5,true,,1,5,,"[""skill"",""data""]"
-Q038,C,Evidence: describe a time you enforced safety rules with a resistant passenger/colleague,text_long,true,,,,,"[""evidence"",""safety""]"
-Q039,C,Evidence: describe a time you coached or trained someone (new joiner or peer),text_long,true,,,,,"[""evidence"",""training""]"
-Q040,C,Evidence: describe a time you improved a process or reduced errors,text_long,true,,,,,"[""evidence"",""improvement""]"
-Q041,C,"Upload any proof (commendation email, certificate, KPI screenshot)",file_upload,false,,,,,"[""evidence"",""upload""]"
-Q042,C,Comfort with computers,single_select,true,"[""Low"",""Medium"",""High""]",,,,"[""skill"",""tech""]"
-Q043,C,Tools you use regularly,multi_select,false,"[""Excel"",""PowerPoint"",""LMS"",""Scheduling apps"",""Other""]",,,,"[""skill"",""tools""]"
-Q044,C,"Confidence in ""career change learning"" capacity",slider_0_10,true,,0,10,,"[""readiness"",""learning""]"
-Q045,C,What do colleagues rely on you for most?,text_short,true,,,,,"[""strengths""]"
-Q046,C,What would a colleague say is your biggest development area?,text_short,true,,,,,"[""weaknesses"",""self_awareness""]"
-Q112,C,"In your senior/lead roles, approximately how many people were you responsible for coordinating?",single_select,true,"[""None"",""1-3"",""4-10"",""11-25"",""25+""]",,,,"[""skill"",""leadership_scope""]"
-Q113,C,Roughly how many nationalities have you regularly worked alongside?,single_select,true,"[""Under 5"",""5-15"",""15-30"",""30+""]",,,,"[""skill"",""cross_cultural""]"
-Q047,D,"Preferred environment",multi_select,true,"[""Structured"",""Fast-changing"",""Creative"",""Analytical"",""Mission-driven"",""Luxury/service""]",,,,"[""preference"",""environment""]"
-Q048,D,Preferred work mode,single_select,true,"[""Onsite"",""Hybrid"",""Remote""]",,,,"[""preference"",""work_mode""]"
-Q049,D,Preferred schedule,single_select,true,"[""Monday-Friday"",""Shift work"",""Flexible""]",,,,"[""preference"",""schedule""]"
-Q050,D,Preference for teamwork vs independent work,likert_1_5,true,,1,5,,"[""preference"",""teamwork""]"
-Q051,D,Preference for public interaction vs back-office,likert_1_5,true,,1,5,,"[""preference"",""interaction""]"
-Q052,D,Tolerance for repetitive tasks,likert_1_5,true,,1,5,,"[""preference"",""repetition""]"
-Q053,D,Tolerance for ambiguity,likert_1_5,true,,1,5,,"[""preference"",""ambiguity""]"
-Q054,D,Leadership aspiration,single_select,true,"[""Individual contributor"",""Manager"",""Senior leader"",""Unsure""]",,,,"[""preference"",""leadership""]"
-Q055,D,Feedback style preference,single_select,true,"[""Direct"",""Coaching"",""Structured""]",,,,"[""preference"",""feedback""]"
-Q056,D,"Desire for project ownership (0 low; 10 high)",slider_0_10,true,,0,10,,"[""preference"",""ownership""]"
-Q057,D,Non-negotiables (top 3),text_short,true,,,,,"[""constraint"",""non_negotiable""]"
-Q058,D,"Must avoid" conditions (top 3),text_short,true,,,,,"[""constraint"",""avoid""]"
-Q059,D,Values most important to you,multi_select,true,"[""Stability"",""Income growth"",""Mission"",""Autonomy"",""Prestige"",""Learning"",""Family time""]",,,,"[""values""]"
-Q060,D,Risk tolerance (0 low; 10 high),slider_0_10,true,,0,10,,"[""preference"",""risk""]"
-Q114,D,"After a long day of dealing with people, you typically feel...",single_select,true,"[""Energised — I enjoy it"",""Drained — I need recovery time"",""It depends on the situation""]",,,,"[""preference"",""energy_source""]"
-Q115,D,"In 5 years, what does a successful life look like for you?",text_short,true,,,,,"[""aspiration"",""life_vision""]"
-Q116,E,What country are you originally from?,single_select,true,"[""UAE"",""UK"",""USA"",""Canada"",""Australia"",""Germany"",""France"",""India"",""Philippines"",""South Africa"",""Other Europe"",""Other Asia"",""Other""]",,,,"[""feasibility"",""origin"",""work_rights""]"
-Q061,E,What is your current work authorisation status in your country of residence?,single_select,true,"[""Employer-sponsored visa"",""Permanent residency"",""Citizen"",""Family/spouse visa"",""Self-sponsored visa"",""Student visa"",""Not sure""]",,,,"[""feasibility"",""visa""]"
-Q062,E,Will you need employer sponsorship for your next role?,single_select,true,"[""Yes"",""No"",""Not sure""]",,,,"[""feasibility"",""visa""]"
-Q063,E,Are you willing to change employer in your current country?,single_select,true,"[""Yes"",""No"",""Maybe""]",,,,"[""feasibility"",""mobility""]"
-Q064,E,Notice period in current contract (days),numeric,true,,0,365,,"[""feasibility"",""notice""]"
-Q065,E,Savings runway (months),numeric,true,,0,120,,"[""feasibility"",""financial""]"
-Q066,E,Minimum monthly cash needed (in your chosen currency),numeric,true,,0,999999,,"[""feasibility"",""financial""]"
-Q067,E,Do you receive employer accommodation now?,single_select,true,"[""Yes"",""No""]",,,,"[""feasibility"",""benefits""]"
-Q068,E,Dependents to support?,single_select,true,"[""Yes"",""No""]",,,,"[""feasibility"",""dependents""]"
-Q069,E,Any mobility constraints (family/health)?,single_select,true,"[""Yes"",""No""]",,,,"[""feasibility"",""constraints""]"
-Q070,E,Willingness to pause income to study,single_select,true,"[""No"",""Up to 1 month"",""Up to 3 months"",""6+ months""]",,,,"[""feasibility"",""study""]"
-Q071,E,Willingness to start at entry level in a new field,single_select,true,"[""Yes"",""No"",""Maybe""]",,,,"[""feasibility"",""entry_level""]"
-Q072,E,Health constraints affecting role choice,single_select,true,"[""None"",""Some""]",,,,"[""feasibility"",""health""]"
-Q073,E,Document readiness,multi_select,true,"[""Degree documents"",""Passport validity"",""Certificates"",""References""]",,,,"[""feasibility"",""documents""]"
-Q074,E,Are you open to working in special economic zones or specific business districts?,single_select,true,"[""Yes"",""No"",""Not sure""]",,,,"[""feasibility"",""location""]"
-Q075,E,How likely are you to stay in your current country over the next 2 years?,slider_0_10,true,,0,10,,"[""feasibility"",""retention""]"
-Q076,E,Biggest constraint you want the plan to respect,text_short,true,,,,,"[""constraint""]"
-Q077,E,Biggest trade-off you are willing to make,text_short,true,,,,,"[""tradeoff""]"
-Q078,E,Biggest trade-off you will not make,text_short,true,,,,,"[""tradeoff""]"
-Q117,E,"Do you have end-of-service gratuity or similar financial entitlements when you leave your current role?",single_select,true,"[""Yes"",""No"",""Not sure""]",,,,"[""feasibility"",""financial"",""entitlements""]"
-Q079,F,What are your preferred target cities or regions?,multi_select,true,"[""Dubai"",""Abu Dhabi"",""Other GCC"",""London"",""Other UK"",""Europe"",""North America"",""Australia/NZ"",""Asia-Pacific"",""Africa"",""Open to anything""]",,,,"[""location"",""target""]"
-Q080,F,Countries of interest later,multi_select,false,"[""EU"",""UK"",""Canada"",""Australia"",""USA"",""Other""]",,,"{""any_selected"": ""trigger_relocation_module""}","[""location"",""relocation""]"
-Q081,F,Timeline to relocate,single_select,false,"[""0-6 months"",""6-24 months"",""24+ months"",""Unsure""]",,,,"[""location"",""timeline""]"
-Q082,F,Climate preference,single_select,false,"[""Hot"",""Temperate"",""Cold"",""Doesn't matter""]",,,,"[""preference"",""climate""]"
-Q083,F,Community preference,single_select,false,"[""Expat-heavy"",""Mixed"",""Local""]",,,,"[""preference"",""community""]"
-Q084,F,Top reason you'd stay in your current country,text_short,false,,,,,"[""location"",""retention""]"
-Q085,F,Top reason you'd leave your current country,text_short,false,,,,,"[""location"",""departure""]"
-Q086,F,Willingness to learn a new language,single_select,false,"[""Yes"",""No"",""Maybe""]",,,,"[""readiness"",""language""]"
-Q087,F,Languages you speak,multi_select,true,"[""English"",""Arabic"",""Hindi"",""Urdu"",""Tagalog"",""Russian"",""French"",""Spanish"",""Mandarin"",""German"",""Portuguese"",""Japanese"",""Korean"",""Other""]",,,,"[""skill"",""language""]"
-Q088,F,Willingness to take standardized language test,slider_0_10,false,,0,10,,"[""readiness"",""language""]"
-Q089,G,Target monthly cash salary (in your chosen currency),numeric,true,,0,999999,,"[""compensation"",""target""]"
-Q090,G,Preference: higher cash vs benefits,single_select,true,"[""Cash"",""Benefits"",""Balanced""]",,,,"[""compensation"",""preference""]"
-Q091,G,"If accommodation not provided, expected monthly rent budget (in your chosen currency)",numeric,false,,0,999999,,"[""compensation"",""rent""]"
-Q092,G,Monthly debt obligations (in your chosen currency),numeric,false,,0,999999,,"[""compensation"",""debt""]"
-Q093,G,Bonus preference,single_select,true,"[""Important"",""Neutral"",""Not important""]",,,,"[""compensation"",""bonus""]"
-Q094,G,Health insurance importance,single_select,true,"[""High"",""Medium"",""Low""]",,,,"[""compensation"",""insurance""]"
-Q095,G,Willingness to accept variable pay/commission,slider_0_10,true,,0,10,,"[""compensation"",""variable_pay""]"
-Q096,G,Willingness to do second income stream,single_select,false,"[""Yes"",""No"",""Maybe""]",,,,"[""compensation"",""side_income""]"
-Q118,G,Do you send regular financial support to family in another country?,single_select,true,"[""Yes — significant"",""Yes — modest"",""No""]",,,,"[""compensation"",""remittances""]"
-Q097,H,Highest education level,single_select,true,"[""High school"",""Diploma"",""Bachelor's"",""Master's"",""Other""]",,,,"[""education"",""level""]"
-Q098,H,Field of study and what you liked/disliked,text_short,true,,,,,"[""education"",""field""]"
-Q099,H,Best learning mode,single_select,true,"[""Self-study"",""Live cohort"",""University""]",,,,"[""education"",""mode""]"
-Q100,H,Weekly hours available for study,numeric,true,,0,60,,"[""education"",""time""]"
-Q101,H,Budget for training in next 6 months (in your chosen currency),numeric,true,,0,999999,,"[""education"",""budget""]"
-Q102,H,Interest in certifications,multi_select,true,"[""PMP/PRINCE2"",""CIPD"",""NEBOSH/IOSH"",""IELTS/language tests"",""Data/analytics"",""Coaching & mentoring"",""Customer experience (CCXP)"",""UX"",""Digital marketing"",""Teaching"",""Real estate license"",""Safety"",""HR"",""Other""]",,,,"[""education"",""certifications""]"
-Q103,H,Willingness to pursue a postgraduate degree,single_select,true,"[""Yes"",""No"",""Maybe""]",,,,"[""education"",""postgrad""]"
-Q104,H,Willingness to pursue a postgraduate degree abroad,single_select,false,"[""Yes"",""No"",""Maybe""]",,,,"[""education"",""postgrad""]"
-Q105,H,When do you want to start your new role?,single_select,true,"[""Within 1 month"",""1-3 months"",""3-6 months"",""6-12 months"",""12-24 months"",""Just exploring""]",,,,"[""timeline"",""urgency""]"
-Q106,H,Preferred career families,multi_select,true,"[""L&D"",""HR"",""CX"",""Operations"",""Safety"",""Tech"",""Entrepreneurship""]",,,,"[""preference"",""career_family""]"
-Q107,H,"If I couldn't fail, I would...",text_short,true,,,,,"[""aspiration""]"
-Q108,H,What is the main thing holding you back from making a change right now?,text_short,true,,,,,"[""blocker"",""intent""]"
-Q119,H,Have you previously tried to transition out of aviation?,single_select,true,"[""No"",""Yes — didn't get far"",""Yes — tried and returned"",""Currently in progress""]",,,,"[""readiness"",""transition_history""]"
+question_id,module,prompt,type,required,options_json,min,max,route_if_json,tags_json,help_text
+Q001,A,What country are you currently based in?,single_select,true,"[""UAE"",""UK"",""USA"",""Canada"",""Australia"",""Germany"",""France"",""India"",""Philippines"",""South Africa"",""Other Europe"",""Other Asia"",""Other""]",,,,"[""baseline"",""location""]",Where you live now — this determines local job markets and salary benchmarks we show you.
+Q002,A,What passport(s) do you hold?,multi_select,true,"[""UAE"",""UK"",""USA"",""Canadian"",""Australian"",""EU member state"",""Indian"",""Filipino"",""South African"",""Other GCC"",""Other""]",,,,"[""baseline"",""nationality"",""work_rights""]",Your nationality affects which countries you can work in without sponsorship.
+Q003,A,What currency should we use for salary and budget questions?,single_select,true,"[""AED"",""USD"",""GBP"",""EUR"",""CAD"",""AUD"",""INR"",""PHP"",""ZAR"",""Other""]",,,,"[""baseline"",""currency""]",All salary and budget figures in the assessment will use this currency.
+Q004,A,What outcomes do you want from this app?,multi_select,true,"[""Pathways"",""Salary clarity"",""Study plan"",""Relocation plan"",""Entrepreneurship"",""Advisor coaching""]",,,,"[""baseline"",""goals""]",Helps us prioritize which sections of your report to focus on.
+Q005,A,Do you consent to processing your career data to generate recommendations?,single_select,true,"[""Yes"",""No""]",,,"{""No"": ""block""}","[""consent""]",We need your permission to analyze your answers and generate career recommendations. Selecting No will stop the questionnaire.
+Q006,A,May we use your responses (anonymized and non-identifiable) to help improve this product?,single_select,false,"[""Yes"",""No""]",,,,"[""consent""]",Optional. If yes we may use anonymized patterns to improve recommendations for future users. Your identity is never shared.
+Q007,A,Preferred language for your report,single_select,true,"[""English"",""Arabic"",""Russian"",""Ukrainian"",""Other""]",,,,"[""preference""]",Your final career report will be generated in this language.
+Q008,A,Preferred communication style,single_select,true,"[""Direct"",""Detailed"",""Motivational"",""Minimal""]",,,,"[""preference""]","Choose how you'd like your report written. Direct = concise and to the point. Detailed = thorough with context. Motivational = encouraging and energizing. Minimal = bullet-style, essentials only."
+Q009,A,How urgent is change? (0=no urgency; 10=must change now),slider_0_10,true,,0,10,,"[""urgency""]",This helps us understand your timeline and whether to prioritize quick-win pathways or longer-term plans.
+Q010,A,"What would make this experience a ""win"" for you in the next 30 days?",text_short,true,,,,,A concrete short-term goal helps us tailor actionable next steps in your report.
+Q011,B,Years as cabin crew (total),numeric,true,,0,50,,"[""experience"",""aviation""]",Total flying years across all airlines. This helps gauge the depth of transferable skills you've built.
+Q012,B,Current employer type,single_select,true,"[""GCC legacy carrier"",""Low-cost carrier"",""Charter"",""Other""]",,,,"[""aviation"",""employer""]",Different airline types develop different skill profiles — legacy carriers emphasize premium service while LCCs build efficiency skills.
+Q013,B,Aircraft experience,multi_select,true,"[""A380"",""B777"",""Narrow-body"",""Other""]",,,,"[""aviation"",""experience""]",Wide-body experience often signals premium service and larger team coordination skills.
+Q014,B,Cabin roles held,multi_select,true,"[""Economy"",""Business"",""First"",""Senior"",""Lead"",""Purser-like duties""]",,,,"[""aviation"",""seniority""]",Senior and lead roles demonstrate management experience that translates to many ground careers.
+Q015,B,Special duties held,multi_select,false,"[""Trainer support"",""Safety rep"",""Service excellence"",""Onboarding buddy"",""Language speaker"",""Documentation""]",,,,"[""aviation"",""specialties""]",These extras show initiative beyond your core role and open up specific career pathways like L&D or safety.
+Q016,B,Enjoyment: safety/security responsibilities,likert_1_5,true,,1,5,,"[""enjoyment"",""safety""]",1 = don't enjoy at all; 5 = love it. We match you to careers that align with what you enjoy doing.
+Q017,B,Enjoyment: service/hospitality delivery,likert_1_5,true,,1,5,,"[""enjoyment"",""service""]",1 = don't enjoy at all; 5 = love it. High scores point toward customer-facing career paths.
+Q018,B,Enjoyment: conflict resolution/de-escalation,likert_1_5,true,,1,5,,"[""enjoyment"",""conflict""]",1 = don't enjoy at all; 5 = love it. Enjoying this suggests roles in HR or people management.
+Q019,B,Enjoyment: teamwork/leading on board,likert_1_5,true,,1,5,,"[""enjoyment"",""leadership""]",1 = don't enjoy at all; 5 = love it. Leadership enjoyment opens management and coordination pathways.
+Q020,B,Enjoyment: strict compliance/checklists,likert_1_5,true,,1,5,,"[""enjoyment"",""compliance""]",1 = don't enjoy at all; 5 = love it. Enjoying structure and compliance maps well to quality assurance and audit roles.
+Q021,B,Drain: irregular sleep/roster,likert_1_5,true,,1,5,,"[""drain"",""lifestyle""]",1 = barely affects me; 5 = severely draining. Helps us understand which lifestyle factors to avoid in your next role.
+Q022,B,"Drain: emotional labor (""politeness mask"")",likert_1_5,true,,1,5,,"[""drain"",""emotional""]",1 = barely affects me; 5 = severely draining. High drain here may steer recommendations away from heavy customer-facing roles.
+Q023,B,Drain: physical load,likert_1_5,true,,1,5,,"[""drain"",""physical""]",1 = barely affects me; 5 = severely draining. Important for filtering out roles that are equally physical.
+Q024,B,"Peak moment onboard: describe a situation where you felt most effective",text_long,true,,,,,Think of a specific moment you were proud of. This reveals your natural strengths and what kind of work energizes you.
+Q025,B,Hard moment onboard: describe a situation you never want again,text_long,true,,,,,A specific difficult experience helps us understand what to steer you away from in your next career.
+Q026,B,Burnout risk (0 low; 10 high),slider_0_10,true,,0,10,,"[""burnout"",""urgency""]",Be honest — this helps us gauge how urgently you need a change and whether a phased or immediate transition is better.
+Q109,B,What is your primary reason for exploring a career change?,single_select,true,"[""Career growth ceiling"",""Burnout/wellbeing"",""Medical/health"",""Redundancy or contract ending"",""Financial"",""Family/lifestyle"",""Curiosity"",""Other""]",,,,"[""motivation"",""change_driver""]",Your main motivation shapes the type of recommendations we prioritize — stability vs growth vs wellbeing.
+Q110,B,"Estimate your total monthly compensation including all allowances (housing, transport, flying pay)",numeric,true,,0,500000,,"[""compensation"",""current_total""]",Include housing allowance and flying hours pay. This baseline helps us set realistic salary expectations for your transition.
+Q111,B,What aspects of your aviation career do you most want to keep in your next role?,multi_select,true,"[""Travel"",""Team environment"",""Clear procedures"",""Helping people"",""Prestige"",""Variety"",""Physical activity"",""Other""]",,,,"[""preference"",""preserve""]",We'll try to match you with careers that preserve the parts of flying you value most.
+Q027,C,Public-facing service orientation,likert_1_5,true,,1,5,,"[""skill"",""service""]",Rate your skill level: 1 = basic; 5 = expert. Your skill self-assessment is cross-referenced with your evidence stories.
+Q028,C,Speaking & communication,likert_1_5,true,,1,5,,"[""skill"",""communication""]",Rate your skill level: 1 = basic; 5 = expert. Strong communicators have more options in client-facing and leadership roles.
+Q029,C,Active listening & empathy,likert_1_5,true,,1,5,,"[""skill"",""empathy""]",Rate your skill level: 1 = basic; 5 = expert. Key for roles in coaching and people management.
+Q030,C,Conflict resolution/negotiation,likert_1_5,true,,1,5,,"[""skill"",""conflict""]",Rate your skill level: 1 = basic; 5 = expert. Valuable in HR and stakeholder management roles.
+Q031,C,Compliance & standards evaluation,likert_1_5,true,,1,5,,"[""skill"",""compliance""]",Rate your skill level: 1 = basic; 5 = expert. Maps to quality assurance and regulatory roles.
+Q032,C,Crisis response under pressure,likert_1_5,true,,1,5,,"[""skill"",""crisis""]",Rate your skill level: 1 = basic; 5 = expert. Valued in operations and emergency management careers.
+Q033,C,Team coordination and briefing,likert_1_5,true,,1,5,,"[""skill"",""teamwork""]",Rate your skill level: 1 = basic; 5 = expert. Important for project management and operations pathways.
+Q034,C,Training/instructing others,likert_1_5,true,,1,5,"{""gte_3"": ""trigger_training_module""}","[""skill"",""training""]",Rate your skill level: 1 = basic; 5 = expert. Scoring 3+ unlocks deeper L&D career pathway analysis.
+Q035,C,Documentation/report writing,likert_1_5,true,,1,5,,"[""skill"",""documentation""]",Rate your skill level: 1 = basic; 5 = expert. Relevant for compliance and administrative career paths.
+Q036,C,"Operational planning (timing, flow, prioritization)",likert_1_5,true,,1,5,,"[""skill"",""operations""]",Rate your skill level: 1 = basic; 5 = expert. Core skill for operations and project management roles.
+Q037,C,"Data handling (tracking, spreadsheets, checklists)",likert_1_5,true,,1,5,,"[""skill"",""data""]",Rate your skill level: 1 = basic; 5 = expert. Even basic data skills open doors in analytics-adjacent roles.
+Q038,C,Evidence: describe a time you enforced safety rules with a resistant passenger/colleague,text_long,true,,,,,"[""evidence"",""safety""]",A specific real example. This evidence strengthens your profile for compliance and safety career paths.
+Q039,C,Evidence: describe a time you coached or trained someone (new joiner or peer),text_long,true,,,,,"[""evidence"",""training""]",A specific real example. Training evidence supports L&D and people development career recommendations.
+Q040,C,Evidence: describe a time you improved a process or reduced errors,text_long,true,,,,,"[""evidence"",""improvement""]",A specific real example. Process improvement stories map to operations and continuous improvement roles.
+Q041,C,"Upload any proof (commendation email, certificate, KPI screenshot)",file_upload,false,,,,,"[""evidence"",""upload""]",Optional but valuable. Documentary evidence adds weight to your skill claims in the analysis.
+Q042,C,Comfort with computers,single_select,true,"[""Low"",""Medium"",""High""]",,,,"[""skill"",""tech""]",Your tech comfort level affects which roles and upskilling paths we recommend.
+Q043,C,Tools you use regularly,multi_select,false,"[""Excel"",""PowerPoint"",""LMS"",""Scheduling apps"",""Other""]",,,,"[""skill"",""tools""]",Knowing your current tools helps us identify transferable digital skills.
+Q044,C,"Confidence in ""career change learning"" capacity",slider_0_10,true,,0,10,,"[""readiness"",""learning""]",How confident are you that you can learn what's needed for a new career? This shapes how ambitious your study plan will be.
+Q045,C,What do colleagues rely on you for most?,text_short,true,,,,,"[""strengths""]",Your reputation among peers often reveals strengths you might underrate in a self-assessment.
+Q046,C,What would a colleague say is your biggest development area?,text_short,true,,,,,"[""weaknesses"",""self_awareness""]",Being aware of growth areas helps us recommend roles that play to your strengths while developing gaps.
+Q112,C,"In your senior/lead roles, approximately how many people were you responsible for coordinating?",single_select,true,"[""None"",""1-3"",""4-10"",""11-25"",""25+""]",,,,"[""skill"",""leadership_scope""]",Team size managed is a key signal for management-level roles outside aviation.
+Q113,C,Roughly how many nationalities have you regularly worked alongside?,single_select,true,"[""Under 5"",""5-15"",""15-30"",""30+""]",,,,"[""skill"",""cross_cultural""]",Cross-cultural experience is highly valued in international organizations and diversity-focused roles.
+Q047,D,"Preferred environment",multi_select,true,"[""Structured"",""Fast-changing"",""Creative"",""Analytical"",""Mission-driven"",""Luxury/service""]",,,,"[""preference"",""environment""]",Select all that appeal to you. We'll match careers that fit your preferred working culture.
+Q048,D,Preferred work mode,single_select,true,"[""Onsite"",""Hybrid"",""Remote""]",,,,"[""preference"",""work_mode""]",This filters career options — some paths like operations require onsite presence while others offer flexibility.
+Q049,D,Preferred schedule,single_select,true,"[""Monday-Friday"",""Shift work"",""Flexible""]",,,,"[""preference"",""schedule""]",After roster-based flying this is often a strong preference. We'll respect it in our recommendations.
+Q050,D,Preference for teamwork vs independent work,likert_1_5,true,,1,5,,"[""preference"",""teamwork""]",1 = strongly prefer working alone; 5 = strongly prefer team collaboration.
+Q051,D,Preference for public interaction vs back-office,likert_1_5,true,,1,5,,"[""preference"",""interaction""]",1 = prefer behind-the-scenes work; 5 = prefer public-facing roles. Important for matching role types.
+Q052,D,Tolerance for repetitive tasks,likert_1_5,true,,1,5,,"[""preference"",""repetition""]","1 = need constant variety; 5 = comfortable with routine. Some stable, well-paying roles involve repetition."
+Q053,D,Tolerance for ambiguity,likert_1_5,true,,1,5,,"[""preference"",""ambiguity""]",1 = need clear rules and structure; 5 = comfortable with uncertainty. Startup and entrepreneurial paths need high ambiguity tolerance.
+Q054,D,Leadership aspiration,single_select,true,"[""Individual contributor"",""Manager"",""Senior leader"",""Unsure""]",,,,"[""preference"",""leadership""]",Where you see yourself helps us target the right seniority level in career recommendations.
+Q055,D,Feedback style preference,single_select,true,"[""Direct"",""Coaching"",""Structured""]",,,,"[""preference"",""feedback""]",This shapes the culture fit aspect of your career matches.
+Q056,D,"Desire for project ownership (0 low; 10 high)",slider_0_10,true,,0,10,,"[""preference"",""ownership""]",High ownership desire suits entrepreneurial and project management paths. Low is fine — many great roles are supportive.
+Q057,D,Non-negotiables (top 3),text_short,true,,,,,"[""constraint"",""non_negotiable""]","List up to 3 things you absolutely must have in your next role (e.g. work-life balance, minimum salary, location)."
+Q058,D,"Must avoid" conditions (top 3),text_short,true,,,,,"[""constraint"",""avoid""]","List up to 3 things you refuse to accept (e.g. night shifts, long commute, toxic culture)."
+Q059,D,Values most important to you,multi_select,true,"[""Stability"",""Income growth"",""Mission"",""Autonomy"",""Prestige"",""Learning"",""Family time""]",,,,"[""values""]",Your core values help us rank career paths by cultural and personal fit — not just skills match.
+Q060,D,Risk tolerance (0 low; 10 high),slider_0_10,true,,0,10,,"[""preference"",""risk""]",Low risk = we'll prioritize stable employment paths. High risk = we'll include entrepreneurial and startup options.
+Q114,D,"After a long day of dealing with people, you typically feel...",single_select,true,"[""Energised — I enjoy it"",""Drained — I need recovery time"",""It depends on the situation""]",,,,"[""preference"",""energy_source""]",This introvert/extrovert signal helps match you to the right level of people interaction in your next role.
+Q115,D,"In 5 years, what does a successful life look like for you?",text_short,true,,,,,"[""aspiration"",""life_vision""]",Your longer-term vision helps us recommend career paths that build toward your ideal life — not just your next job.
+Q116,E,What country are you originally from?,single_select,true,"[""UAE"",""UK"",""USA"",""Canada"",""Australia"",""Germany"",""France"",""India"",""Philippines"",""South Africa"",""Other Europe"",""Other Asia"",""Other""]",,,,"[""feasibility"",""origin"",""work_rights""]",Your country of origin affects return-home options and work authorization in certain markets. Different from your current location.
+Q061,E,What is your current work authorisation status in your country of residence?,single_select,true,"[""Employer-sponsored visa"",""Permanent residency"",""Citizen"",""Family/spouse visa"",""Self-sponsored visa"",""Student visa"",""Not sure""]",,,,"[""feasibility"",""visa""]",This determines whether changing employer or industry is straightforward or requires visa/sponsorship planning.
+Q062,E,Will you need employer sponsorship for your next role?,single_select,true,"[""Yes"",""No"",""Not sure""]",,,,"[""feasibility"",""visa""]",Sponsorship requirements narrow which employers and industries are realistic options for you.
+Q063,E,Are you willing to change employer in your current country?,single_select,true,"[""Yes"",""No"",""Maybe""]",,,,"[""feasibility"",""mobility""]",Some people prefer to transition within their airline group first. This shapes our phased transition plan.
+Q064,E,Notice period in current contract (days),numeric,true,,0,365,,"[""feasibility"",""notice""]",Your notice period affects the timeline of any transition plan we recommend.
+Q065,E,Savings runway (months),numeric,true,,0,120,,"[""feasibility"",""financial""]",How many months could you sustain yourself without income? This determines whether a study break or gradual transition is feasible.
+Q066,E,Minimum monthly cash needed (in your chosen currency),numeric,true,,0,999999,,"[""feasibility"",""financial""]",The bare minimum you need to cover essential expenses. This is your financial floor — different from your salary target.
+Q067,E,Do you receive employer accommodation now?,single_select,true,"[""Yes"",""No""]",,,,"[""feasibility"",""benefits""]",Losing employer housing is a major cost factor in career transitions — especially in the GCC.
+Q068,E,Dependents to support?,single_select,true,"[""Yes"",""No""]",,,,"[""feasibility"",""dependents""]",Dependents affect your financial floor and risk capacity for career change.
+Q069,E,Any mobility constraints (family/health)?,single_select,true,"[""Yes"",""No""]",,,,"[""feasibility"",""constraints""]",Constraints like school-age children or health needs may limit relocation options.
+Q070,E,Willingness to pause income to study,single_select,true,"[""No"",""Up to 1 month"",""Up to 3 months"",""6+ months""]",,,,"[""feasibility"",""study""]",Some career paths require dedicated study time. This helps us match realistic upskilling plans.
+Q071,E,Willingness to start at entry level in a new field,single_select,true,"[""Yes"",""No"",""Maybe""]",,,,"[""feasibility"",""entry_level""]",Being open to entry-level roles significantly widens available career paths.
+Q072,E,Health constraints affecting role choice,single_select,true,"[""None"",""Some""]",,,,"[""feasibility"",""health""]",If you have health considerations we'll avoid recommending physically demanding roles.
+Q073,E,Document readiness,multi_select,true,"[""Degree documents"",""Passport validity"",""Certificates"",""References""]",,,,"[""feasibility"",""documents""]",Check all documents you have ready. Missing documents can delay applications — we'll flag any gaps.
+Q074,E,Are you open to working in special economic zones or specific business districts?,single_select,true,"[""Yes"",""No"",""Not sure""]",,,,"[""feasibility"",""location""]",Free zones and special districts sometimes have different visa rules and employer options.
+Q075,E,How likely are you to stay in your current country over the next 2 years?,slider_0_10,true,,0,10,,"[""feasibility"",""retention""]",0 = definitely leaving; 10 = definitely staying. This shapes whether we focus on local or international opportunities.
+Q076,E,Biggest constraint you want the plan to respect,text_short,true,,,,,"[""constraint""]","The single most important limitation your career plan must work around (e.g. visa expiry date, family obligation)."
+Q077,E,Biggest trade-off you are willing to make,text_short,true,,,,,"[""tradeoff""]","What you'd sacrifice for the right opportunity (e.g. lower pay, relocation, starting over)."
+Q078,E,Biggest trade-off you will not make,text_short,true,,,,,"[""tradeoff""]","Your hard boundary — the one thing you won't compromise on, no matter what."
+Q117,E,"Do you have end-of-service gratuity or similar financial entitlements when you leave your current role?",single_select,true,"[""Yes"",""No"",""Not sure""]",,,,"[""feasibility"",""financial"",""entitlements""]",Gratuity payouts can fund your transition — knowing this helps us build a realistic financial plan.
+Q079,F,What are your preferred target cities or regions?,multi_select,true,"[""Dubai"",""Abu Dhabi"",""Other GCC"",""London"",""Other UK"",""Europe"",""North America"",""Australia/NZ"",""Asia-Pacific"",""Africa"",""Open to anything""]",,,,"[""location"",""target""]",Select all locations you'd consider working in. This directly filters which job markets we analyze for you.
+Q080,F,Countries of interest later,multi_select,false,"[""EU"",""UK"",""Canada"",""Australia"",""USA"",""Other""]",,,"{""any_selected"": ""trigger_relocation_module""}","[""location"",""relocation""]",Even if not immediate — selecting countries here unlocks relocation planning in your report.
+Q081,F,Timeline to relocate,single_select,false,"[""0-6 months"",""6-24 months"",""24+ months"",""Unsure""]",,,,"[""location"",""timeline""]",Your relocation timeline affects which visa routes and preparation steps we recommend.
+Q082,F,Climate preference,single_select,false,"[""Hot"",""Temperate"",""Cold"",""Doesn't matter""]",,,,"[""preference"",""climate""]",A small factor but can make a big quality-of-life difference when choosing between similar opportunities.
+Q083,F,Community preference,single_select,false,"[""Expat-heavy"",""Mixed"",""Local""]",,,,"[""preference"",""community""]",Some people thrive in expat communities while others prefer full local integration.
+Q084,F,Top reason you'd stay in your current country,text_short,false,,,,,"[""location"",""retention""]",Understanding your anchor helps us weigh local opportunities appropriately.
+Q085,F,Top reason you'd leave your current country,text_short,false,,,,,"[""location"",""departure""]",Understanding your push factor helps us assess how seriously to explore relocation paths.
+Q086,F,Willingness to learn a new language,single_select,false,"[""Yes"",""No"",""Maybe""]",,,,"[""readiness"",""language""]",Some career paths or locations require a new language — this helps us filter realistic options.
+Q087,F,Languages you speak,multi_select,true,"[""English"",""Arabic"",""Hindi"",""Urdu"",""Tagalog"",""Russian"",""French"",""Spanish"",""Mandarin"",""German"",""Portuguese"",""Japanese"",""Korean"",""Other""]",,,,"[""skill"",""language""]",Multilingual skills are a strong asset in many industries and open up additional markets.
+Q088,F,Willingness to take standardized language test,slider_0_10,false,,0,10,,"[""readiness"",""language""]",Tests like IELTS are required for many visa and education pathways. Your willingness affects which routes we suggest.
+Q089,G,Target monthly cash salary (in your chosen currency),numeric,true,,0,999999,,"[""compensation"",""target""]",Your desired salary — not the minimum you'd accept. This is the benchmark we use to evaluate career options.
+Q090,G,Preference: higher cash vs benefits,single_select,true,"[""Cash"",""Benefits"",""Balanced""]",,,,"[""compensation"",""preference""]",Some roles offer lower cash but strong benefits (housing/insurance/education). This shapes how we compare offers.
+Q091,G,"If accommodation not provided, expected monthly rent budget (in your chosen currency)",numeric,false,,0,999999,,"[""compensation"",""rent""]",If you currently get free housing this is a major new expense to plan for in your transition.
+Q092,G,Monthly debt obligations (in your chosen currency),numeric,false,,0,999999,,"[""compensation"",""debt""]",Debt commitments affect your minimum income needs and risk capacity for career change.
+Q093,G,Bonus preference,single_select,true,"[""Important"",""Neutral"",""Not important""]",,,,"[""compensation"",""bonus""]",Some careers offer significant bonus potential while others have flat salary structures.
+Q094,G,Health insurance importance,single_select,true,"[""High"",""Medium"",""Low""]",,,,"[""compensation"",""insurance""]",In some countries health insurance is a major benefit. This helps evaluate total compensation packages.
+Q095,G,Willingness to accept variable pay/commission,slider_0_10,true,,0,10,,"[""compensation"",""variable_pay""]",0 = need guaranteed income; 10 = happy with commission-based pay. Sales and entrepreneurial paths often involve variable income.
+Q096,G,Willingness to do second income stream,single_select,false,"[""Yes"",""No"",""Maybe""]",,,,"[""compensation"",""side_income""]",A side income can ease the financial pressure of a career transition and test new directions.
+Q118,G,Do you send regular financial support to family in another country?,single_select,true,"[""Yes — significant"",""Yes — modest"",""No""]",,,,"[""compensation"",""remittances""]",Regular remittances are a fixed cost that affects your minimum income requirements and location flexibility.
+Q097,H,Highest education level,single_select,true,"[""High school"",""Diploma"",""Bachelor's"",""Master's"",""Other""]",,,,"[""education"",""level""]",Your education level determines which career paths are immediately accessible and which need additional qualifications.
+Q098,H,Field of study and what you liked/disliked,text_short,true,,,,,"[""education"",""field""]",Your academic background and interests may reveal career paths you haven't considered.
+Q099,H,Best learning mode,single_select,true,"[""Self-study"",""Live cohort"",""University""]",,,,"[""education"",""mode""]",We'll recommend training programs that match how you learn best.
+Q100,H,Weekly hours available for study,numeric,true,,0,60,,"[""education"",""time""]",Realistic study time helps us recommend courses that fit your current schedule.
+Q101,H,Budget for training in next 6 months (in your chosen currency),numeric,true,,0,999999,,"[""education"",""budget""]",Your training budget determines whether we suggest free resources or paid certifications and programs.
+Q102,H,Interest in certifications,multi_select,true,"[""PMP/PRINCE2"",""CIPD"",""NEBOSH/IOSH"",""IELTS/language tests"",""Data/analytics"",""Coaching & mentoring"",""Customer experience (CCXP)"",""UX"",""Digital marketing"",""Teaching"",""Real estate license"",""Safety"",""HR"",""Other""]",,,,"[""education"",""certifications""]",Select any that interest you. We'll tell you which ones best complement your skills and target career paths.
+Q103,H,Willingness to pursue a postgraduate degree,single_select,true,"[""Yes"",""No"",""Maybe""]",,,,"[""education"",""postgrad""]",A postgrad degree can unlock senior roles and career pivots but requires significant time and money.
+Q104,H,Willingness to pursue a postgraduate degree abroad,single_select,false,"[""Yes"",""No"",""Maybe""]",,,,"[""education"",""postgrad""]",Studying abroad can combine education with relocation — some countries offer post-study work visas.
+Q105,H,When do you want to start your new role?,single_select,true,"[""Within 1 month"",""1-3 months"",""3-6 months"",""6-12 months"",""12-24 months"",""Just exploring""]",,,,"[""timeline"",""urgency""]",Your target start date determines whether we prioritize quick-entry roles or longer preparation paths.
+Q106,H,Preferred career families,multi_select,true,"[""L&D"",""HR"",""CX"",""Operations"",""Safety"",""Tech"",""Entrepreneurship""]",,,,"[""preference"",""career_family""]",Select any career areas that interest you. We'll analyze your fit and feasibility for each.
+Q107,H,"If I couldn't fail, I would...",text_short,true,,,,,"[""aspiration""]",Dream big here — your unconstrained aspiration often reveals your truest career direction.
+Q108,H,What is the main thing holding you back from making a change right now?,text_short,true,,,,,"[""blocker"",""intent""]",Identifying your biggest blocker lets us address it directly in your action plan.
+Q119,H,Have you previously tried to transition out of aviation?,single_select,true,"[""No"",""Yes — didn't get far"",""Yes — tried and returned"",""Currently in progress""]",,,,"[""readiness"",""transition_history""]",Past attempts give us valuable context — we can learn from what didn't work before and adjust your plan.

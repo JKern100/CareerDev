@@ -70,6 +70,7 @@ class QuestionDef:
     max_val: int | None
     route_if_json: dict | None
     tags_json: list | None
+    help_text: str | None
 
 
 def load_question_bank() -> list[QuestionDef]:
@@ -118,6 +119,7 @@ def load_question_bank() -> list[QuestionDef]:
                 max_val=_safe_int(row["max"]),
                 route_if_json=route_if,
                 tags_json=tags,
+                help_text=row.get("help_text") or None,
             ))
     return questions
 

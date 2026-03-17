@@ -12,6 +12,7 @@ class QuestionOut(BaseModel):
     min_val: int | None = None
     max_val: int | None = None
     tags: list[str] | None = None
+    help_text: str | None = None
 
     model_config = {"from_attributes": True}
 

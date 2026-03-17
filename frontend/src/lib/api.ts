@@ -103,6 +103,7 @@ export interface Question {
   min_val: number | null;
   max_val: number | null;
   tags: string[] | null;
+  help_text: string | null;
 }
 
 export interface ExistingAnswer {
