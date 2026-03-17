@@ -54,10 +54,13 @@ export default function LoginPage() {
 
   return (
     <div className="container" style={{ maxWidth: "400px" }}>
-      <h1 style={{ textAlign: "center", marginTop: "2rem" }}>Sign In</h1>
-      <p className="text-muted text-sm mb-3" style={{ textAlign: "center" }}>
-        Continue your career journey
-      </p>
+      <div style={{ textAlign: "center", marginTop: "2rem" }}>
+        <img src="/logo.svg" alt="CareerDev" width={48} height={48} style={{ marginBottom: "0.75rem" }} />
+        <h1>Sign In</h1>
+        <p className="text-muted text-sm mb-3">
+          Continue your career journey
+        </p>
+      </div>
 
       <div className="card" style={{ textAlign: "center" }}>
         <button
