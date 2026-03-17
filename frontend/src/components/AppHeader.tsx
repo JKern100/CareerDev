@@ -98,22 +98,7 @@ export default function AppHeader() {
           color: "inherit",
         }}
       >
-        <div
-          style={{
-            width: "32px",
-            height: "32px",
-            borderRadius: "7px",
-            background: "#2563eb",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontWeight: 700,
-            fontSize: "0.7rem",
-            color: "white",
-          }}
-        >
-          CD
-        </div>
+        <img src="/logo.svg" alt="CareerDev" width={32} height={32} />
         <span style={{ fontWeight: 600, fontSize: "1rem" }}>CareerDev</span>
       </a>
       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>

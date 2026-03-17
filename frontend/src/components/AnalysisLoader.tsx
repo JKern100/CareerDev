@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import FlowerSpinner from "./FlowerSpinner";
 
 const ANALYSIS_STEPS = [
   { icon: "📋", label: "Parsing questionnaire responses", duration: 3000 },
@@ -66,24 +67,8 @@ export default function AnalysisLoader() {
   return (
     <div className="analysis-loader">
       <div className="analysis-loader-header">
-        <div className="analysis-loader-icon-pulse">
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-            <circle cx="24" cy="24" r="22" stroke="var(--primary)" strokeWidth="2" opacity="0.2" />
-            <circle
-              cx="24"
-              cy="24"
-              r="22"
-              stroke="var(--primary)"
-              strokeWidth="2.5"
-              strokeDasharray="138"
-              strokeDashoffset={138 - (138 * progressPct) / 100}
-              strokeLinecap="round"
-              className="analysis-progress-ring"
-            />
-            <text x="24" y="26" textAnchor="middle" dominantBaseline="middle" fontSize="14" fill="var(--primary)" fontWeight="600">
-              AI
-            </text>
-          </svg>
+        <div style={{ marginBottom: "0.75rem" }}>
+          <FlowerSpinner size={56} />
         </div>
         <h2 className="analysis-loader-title">Generating Your Career Report</h2>
         <p className="text-muted text-sm" style={{ marginTop: "0.25rem" }}>

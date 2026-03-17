@@ -15,6 +15,7 @@ import {
 } from "@/lib/api";
 import QuestionField from "@/components/QuestionField";
 import AppHeader from "@/components/AppHeader";
+import FlowerSpinner from "@/components/FlowerSpinner";
 
 type AnswerMap = Record<string, { value: string | number | string[]; confidence: number }>;
 
@@ -333,7 +334,8 @@ export default function QuestionnairePage() {
   if (loading) {
     return (
       <div className="container" style={{ textAlign: "center", marginTop: "4rem" }}>
-        <p className="text-muted">Loading questions...</p>
+        <FlowerSpinner size={48} />
+        <p className="text-muted" style={{ marginTop: "1rem" }}>Loading questions...</p>
       </div>
     );
   }

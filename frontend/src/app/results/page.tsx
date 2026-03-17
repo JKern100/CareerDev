@@ -7,6 +7,7 @@ import remarkGfm from "remark-gfm";
 import { runAnalysis, getCareerReport, CareerAnalysis } from "@/lib/api";
 import AppHeader from "@/components/AppHeader";
 import AnalysisLoader from "@/components/AnalysisLoader";
+import FlowerSpinner from "@/components/FlowerSpinner";
 
 export default function ResultsPage() {
   const router = useRouter();
@@ -85,7 +86,8 @@ export default function ResultsPage() {
           <AnalysisLoader />
         ) : (
           <div className="container" style={{ textAlign: "center", marginTop: "4rem" }}>
-            <h2>Loading...</h2>
+            <FlowerSpinner size={48} />
+            <h2 style={{ marginTop: "1rem" }}>Loading...</h2>
           </div>
         )}
       </>

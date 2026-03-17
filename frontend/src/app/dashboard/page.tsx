@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getMe, getSummary, getCareerReport } from "@/lib/api";
+import FlowerSpinner from "@/components/FlowerSpinner";
 
 interface UserState {
   fullName: string | null;
@@ -66,7 +67,7 @@ export default function DashboardPage() {
     return (
       <div style={styles.page}>
         <div style={styles.center}>
-          <p style={styles.muted}>Loading...</p>
+          <FlowerSpinner size={48} />
         </div>
       </div>
     );
@@ -139,7 +140,7 @@ export default function DashboardPage() {
       {/* Header */}
       <nav style={styles.nav}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <div style={styles.logo}>CD</div>
+          <img src="/logo.svg" alt="CareerDev" width={36} height={36} />
           <span style={{ fontWeight: 600, fontSize: "1.1rem" }}>CareerDev</span>
         </div>
         <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
@@ -285,18 +286,6 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "1rem",
     maxWidth: "1100px",
     margin: "0 auto",
-  },
-  logo: {
-    width: "36px",
-    height: "36px",
-    borderRadius: "8px",
-    background: "#2563eb",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontWeight: 700,
-    fontSize: "0.8rem",
-    color: "white",
   },
   logoutBtn: {
     background: "transparent",

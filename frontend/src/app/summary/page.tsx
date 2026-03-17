@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { generateSummary, getSummary, SummaryReport, APP_VERSION } from "@/lib/api";
 import AppHeader from "@/components/AppHeader";
+import FlowerSpinner from "@/components/FlowerSpinner";
 
 export default function SummaryPage() {
   const router = useRouter();
@@ -59,6 +60,9 @@ export default function SummaryPage() {
   if (loading || generating) {
     return (
       <div className="container" style={{ textAlign: "center", marginTop: "4rem" }}>
+        <div style={{ marginBottom: "1.5rem" }}>
+          <FlowerSpinner size={56} />
+        </div>
         <h2 style={{ marginBottom: "1rem" }}>
           {generating ? "Writing your personal summary..." : "Loading..."}
         </h2>
@@ -67,22 +71,6 @@ export default function SummaryPage() {
             ? "We're crafting a narrative based on everything you shared. This may take a moment."
             : "Retrieving your summary report..."}
         </p>
-        {generating && (
-          <div style={{ marginTop: "2rem" }}>
-            <div
-              style={{
-                width: "40px",
-                height: "40px",
-                border: "3px solid var(--border)",
-                borderTopColor: "var(--primary)",
-                borderRadius: "50%",
-                animation: "spin 1s linear infinite",
-                margin: "0 auto",
-              }}
-            />
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-          </div>
-        )}
       </div>
     );
   }
