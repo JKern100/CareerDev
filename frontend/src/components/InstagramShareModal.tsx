@@ -16,6 +16,29 @@ export default function InstagramShareModal({ pathways, open, onClose }: Instagr
   const [format, setFormat] = useState<"story" | "post">("story");
   const [sharing, setSharing] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const CAPTION = `Just discovered my top career paths beyond flying! ✈️\n\nCreated by crew for crew — find yours at career-dev.vercel.app\n\n#cabincrew #flightattendant #careerchange #crewlife #aviation #cabincrewlife #newchapter`;
+
+  const handleCopyCaption = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(CAPTION);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback for older browsers
+      const ta = document.createElement("textarea");
+      ta.value = CAPTION;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }, [CAPTION]);
 
   const handleShare = useCallback(async () => {
     setSharing(true);
@@ -199,9 +222,51 @@ export default function InstagramShareModal({ pathways, open, onClose }: Instagr
             {downloaded ? "Downloaded!" : "Download Image"}
           </button>
 
+          {/* Caption section */}
+          <div
+            style={{
+              marginTop: "8px",
+              background: "var(--bg, #f9fafb)",
+              border: "1px solid var(--border)",
+              borderRadius: "10px",
+              padding: "12px",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+              <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--fg)" }}>Caption for your post</span>
+              <button
+                onClick={handleCopyCaption}
+                style={{
+                  background: copied ? "#22c55e" : "var(--fg, #111)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "6px",
+                  padding: "4px 12px",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "background 0.15s",
+                }}
+              >
+                {copied ? "Copied!" : "Copy"}
+              </button>
+            </div>
+            <p
+              style={{
+                fontSize: "12px",
+                color: "var(--muted)",
+                lineHeight: 1.5,
+                margin: 0,
+                whiteSpace: "pre-line",
+              }}
+            >
+              {CAPTION}
+            </p>
+          </div>
+
           {!mobile && (
             <p style={{ fontSize: "12px", color: "var(--muted)", textAlign: "center", marginTop: "4px" }}>
-              Save the image, then share it on Instagram from your phone
+              Save the image, copy the caption, then share on Instagram from your phone
             </p>
           )}
         </div>
