@@ -4,17 +4,21 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { runAnalysis, getCareerReport, CareerAnalysis } from "@/lib/api";
+import { runAnalysis, getCareerReport, getResults, CareerAnalysis, PathwayResult } from "@/lib/api";
 import AppHeader from "@/components/AppHeader";
 import AnalysisLoader from "@/components/AnalysisLoader";
 import FlowerSpinner from "@/components/FlowerSpinner";
+import InstagramShareModal from "@/components/InstagramShareModal";
+import InstagramIcon from "@/components/InstagramIcon";
 
 export default function ResultsPage() {
   const router = useRouter();
   const [report, setReport] = useState<CareerAnalysis | null>(null);
+  const [pathways, setPathways] = useState<PathwayResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -36,6 +40,7 @@ export default function ResultsPage() {
             await runAnalysis();
             const fresh = await getCareerReport();
             setReport(fresh);
+            getResults().then(setPathways).catch(() => {});
           } catch (err: unknown) {
             setError(err instanceof Error ? err.message : "Failed to regenerate report");
           } finally {
@@ -43,6 +48,7 @@ export default function ResultsPage() {
           }
         } else {
           setReport(data);
+          getResults().then(setPathways).catch(() => {});
         }
       } catch {
         // No report yet — run analysis
@@ -51,6 +57,7 @@ export default function ResultsPage() {
           await runAnalysis();
           const data = await getCareerReport();
           setReport(data);
+          getResults().then(setPathways).catch(() => {});
         } catch (err: unknown) {
           setError(err instanceof Error ? err.message : "Failed to generate results");
         } finally {
@@ -126,8 +133,32 @@ export default function ResultsPage() {
           <p className="text-sm text-muted" style={{ textAlign: "center" }}>
             This report is informational only. For visa/labor decisions, consult official sources in your country.
           </p>
-          {report?.can_regenerate && (
-            <div style={{ textAlign: "center", marginTop: "1rem" }}>
+          <div style={{ display: "flex", justifyContent: "center", gap: "12px", marginTop: "1rem", flexWrap: "wrap" }}>
+            {pathways.length > 0 && (
+              <button
+                onClick={() => setShareOpen(true)}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "0.625rem 1.25rem",
+                  borderRadius: "8px",
+                  fontSize: "0.875rem",
+                  fontWeight: 500,
+                  border: "none",
+                  cursor: "pointer",
+                  color: "#fff",
+                  background: "linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)",
+                  transition: "opacity 0.15s",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+              >
+                <InstagramIcon size={18} color="#fff" />
+                Share on Instagram
+              </button>
+            )}
+            {report?.can_regenerate && (
               <button
                 className="btn btn-outline"
                 onClick={handleRegenerate}
@@ -135,10 +166,18 @@ export default function ResultsPage() {
               >
                 {generating ? "Regenerating..." : "Regenerate Report"}
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
+
+      {pathways.length > 0 && (
+        <InstagramShareModal
+          pathways={pathways}
+          open={shareOpen}
+          onClose={() => setShareOpen(false)}
+        />
+      )}
     </>
   );
 }
