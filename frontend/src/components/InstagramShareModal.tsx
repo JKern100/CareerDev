@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { PathwayResult } from "@/lib/api";
 import ShareCard from "./ShareCard";
 import InstagramIcon from "./InstagramIcon";
@@ -16,12 +16,11 @@ export default function InstagramShareModal({ pathways, open, onClose }: Instagr
   const [format, setFormat] = useState<"story" | "post">("story");
   const [sharing, setSharing] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
-  const cardRef = useRef<HTMLDivElement>(null);
 
   const handleShare = useCallback(async () => {
     setSharing(true);
     try {
-      const usedNativeShare = await shareToInstagram();
+      const usedNativeShare = await shareToInstagram(pathways, format);
       if (!usedNativeShare) {
         setDownloaded(true);
       }
@@ -30,21 +29,22 @@ export default function InstagramShareModal({ pathways, open, onClose }: Instagr
     } finally {
       setSharing(false);
     }
-  }, []);
+  }, [pathways, format]);
 
   const handleDownload = useCallback(async () => {
     setSharing(true);
     try {
-      await downloadShareImage(`careerdev-${format}.png`);
+      await downloadShareImage(pathways, format, `careerdev-${format}.png`);
       setDownloaded(true);
     } finally {
       setSharing(false);
     }
-  }, [format]);
+  }, [pathways, format]);
 
   if (!open) return null;
 
   const mobile = isMobileDevice();
+  const aspectRatio = format === "story" ? 9 / 16 : 1;
 
   return (
     <div
@@ -150,31 +150,18 @@ export default function InstagramShareModal({ pathways, open, onClose }: Instagr
           ))}
         </div>
 
-        {/* Preview */}
+        {/* Preview — canvas auto-scales via CSS */}
         <div
           style={{
             borderRadius: "12px",
             overflow: "hidden",
             marginBottom: "16px",
             border: "1px solid var(--border)",
-            height: format === "story" ? `${Math.round(1920 * 0.222)}px` : `${Math.round(1080 * 0.4)}px`,
-            position: "relative",
+            aspectRatio: String(aspectRatio),
+            background: "#0b1120",
           }}
         >
-          <div
-            ref={cardRef}
-            style={{
-              transform: format === "story" ? "scale(0.222)" : "scale(0.4)",
-              transformOrigin: "top left",
-              width: "1080px",
-              height: format === "story" ? "1920px" : "1080px",
-              position: "absolute",
-              top: 0,
-              left: 0,
-            }}
-          >
-            <ShareCard pathways={pathways} format={format} />
-          </div>
+          <ShareCard pathways={pathways} format={format} />
         </div>
 
         {/* Actions */}
