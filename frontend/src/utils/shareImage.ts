@@ -152,9 +152,33 @@ export async function renderShareCard(
   ctx.fillStyle = TEXT_DIM;
   ctx.font = `500 ${isStory ? 22 : 18}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
   ctx.letterSpacing = "3px";
-  ctx.fillText("AI-POWERED CAREER TRANSITION ADVISOR", W / 2, y + 24);
+  ctx.fillText("CAREER TRANSITION ADVISOR", W / 2, y + 24);
   ctx.letterSpacing = "0px";
-  y += isStory ? 80 : 56;
+  y += isStory ? 44 : 32;
+
+  // ── "Created by Crew for Crew" badge ──
+  const crewText = "Created by Crew for Crew";
+  ctx.font = `600 ${isStory ? 20 : 17}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  const crewW = ctx.measureText(crewText).width + 48;
+  const crewH = isStory ? 40 : 34;
+  const crewX = W / 2 - crewW / 2;
+
+  // Badge background with warm accent
+  const crewGrad = ctx.createLinearGradient(crewX, y, crewX + crewW, y);
+  crewGrad.addColorStop(0, "rgba(251,191,36,0.15)");
+  crewGrad.addColorStop(1, "rgba(245,158,11,0.15)");
+  ctx.fillStyle = crewGrad;
+  roundRect(ctx, crewX, y, crewW, crewH, crewH / 2);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(251,191,36,0.35)";
+  ctx.lineWidth = 1;
+  roundRect(ctx, crewX, y, crewW, crewH, crewH / 2);
+  ctx.stroke();
+
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#fbbf24";
+  ctx.fillText(crewText, W / 2, y + crewH / 2 + (isStory ? 7 : 6));
+  y += crewH + (isStory ? 56 : 40);
 
   // ── Divider line ──
   const divGrad = ctx.createLinearGradient(PAD + 100, 0, W - PAD - 100, 0);
@@ -168,8 +192,8 @@ export async function renderShareCard(
 
   // ── Heading ──
   ctx.fillStyle = TEXT_PRIMARY;
-  ctx.font = `700 ${isStory ? 52 : 44}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-  ctx.fillText("My Top Career Paths", W / 2, y + 44);
+  ctx.font = `700 ${isStory ? 48 : 40}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  ctx.fillText("My Next Chapter After the Galley", W / 2, y + 44);
   y += isStory ? 80 : 64;
 
   // ── Pathway cards ──
@@ -267,12 +291,11 @@ export async function renderShareCard(
   ctx.textAlign = "center";
   ctx.fillStyle = TEXT_SECONDARY;
   ctx.font = `italic 400 ${isStory ? 28 : 24}px Georgia, "Times New Roman", serif`;
-  ctx.fillText("\u201CEvery expert was once a beginner.\u201D", W / 2, y + 28);
+  ctx.fillText("\u201CYour skills go far beyond 35,000 feet.\u201D", W / 2, y + 28);
   y += isStory ? 56 : 44;
 
-  // ── CTA ──
-  // CTA pill
-  const ctaText = "Discover your path  \u2192  career-dev.vercel.app";
+  // ── CTA pill ──
+  const ctaText = "Find your path  \u2192  career-dev.vercel.app";
   ctx.font = `500 ${isStory ? 22 : 19}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
   const ctaW = ctx.measureText(ctaText).width + 60;
   const ctaH = isStory ? 52 : 44;
@@ -331,7 +354,7 @@ export async function shareToInstagram(pathways: PathwayResult[], format: "story
     await navigator.share({
       files: [file],
       title: "My CareerDev Results",
-      text: "Just discovered my top career paths with CareerDev! Here are my matches:",
+      text: "Just discovered my top career paths beyond flying! Created by crew for crew \u2708\uFE0F Check yours at career-dev.vercel.app",
     });
     return true;
   }
