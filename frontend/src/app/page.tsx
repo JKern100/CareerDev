@@ -88,7 +88,13 @@ export default function Home() {
         }}
       >
         <div style={{ marginBottom: "1.5rem" }}>
-          <img src="/logo.svg" alt="CareerDev" width={72} height={72} />
+          <img
+            src="/logo.svg"
+            alt="CareerDev"
+            width={72}
+            height={72}
+            style={{ animation: "flowerSpin 5s linear infinite" }}
+          />
         </div>
         <div
           style={{
