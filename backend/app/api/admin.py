@@ -655,3 +655,39 @@ async def get_activity(
         )
         for e in events
     ]
+
+
+@router.get("/users/{user_id}/activity", response_model=list[ActivityEventOut])
+async def get_user_activity(
+    user_id: str,
+    action: str | None = None,
+    days: int = 90,
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get activity events for a specific user."""
+    cutoff = datetime.utcnow() - timedelta(days=days)
+    query = (
+        select(ActivityEvent)
+        .where(ActivityEvent.user_id == user_id, ActivityEvent.created_at >= cutoff)
+    )
+    if action:
+        query = query.where(ActivityEvent.action == action)
+
+    query = query.order_by(ActivityEvent.created_at.asc()).limit(1000)
+
+    result = await db.execute(query)
+    events = result.scalars().all()
+
+    return [
+        ActivityEventOut(
+            id=str(e.id),
+            user_id=str(e.user_id),
+            user_email=e.user_email,
+            user_role=e.user_role,
+            action=e.action,
+            detail=e.detail,
+            created_at=e.created_at,
+        )
+        for e in events
+    ]

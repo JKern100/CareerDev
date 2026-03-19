@@ -396,6 +396,14 @@ export async function getActivityLog(params?: { role?: string; action?: string; 
   return request<ActivityEvent[]>(`/admin/activity${qs ? `?${qs}` : ""}`);
 }
 
+export async function getUserActivity(userId: string, params?: { action?: string; days?: number }) {
+  const searchParams = new URLSearchParams();
+  if (params?.action) searchParams.set("action", params.action);
+  if (params?.days) searchParams.set("days", String(params.days));
+  const qs = searchParams.toString();
+  return request<ActivityEvent[]>(`/admin/users/${userId}/activity${qs ? `?${qs}` : ""}`);
+}
+
 // Scheduling
 export interface AdvisorProfile {
   id: string;
