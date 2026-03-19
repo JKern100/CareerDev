@@ -10,6 +10,7 @@ import AnalysisLoader from "@/components/AnalysisLoader";
 import FlowerSpinner from "@/components/FlowerSpinner";
 import InstagramShareModal from "@/components/InstagramShareModal";
 import InstagramIcon from "@/components/InstagramIcon";
+import ResourcesSection from "@/components/ResourcesSection";
 
 export default function ResultsPage() {
   const router = useRouter();
@@ -169,6 +170,8 @@ export default function ResultsPage() {
             )}
           </div>
         </div>
+
+        {pathways.length > 0 && <ResourcesSection pathways={pathways} />}
       </div>
 
       {pathways.length > 0 && (
