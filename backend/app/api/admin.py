@@ -3,6 +3,7 @@
 import csv
 import io
 import json
+import uuid
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -667,9 +668,10 @@ async def get_user_activity(
 ):
     """Get activity events for a specific user."""
     cutoff = datetime.utcnow() - timedelta(days=days)
+    user_uuid = uuid.UUID(user_id)
     query = (
         select(ActivityEvent)
-        .where(ActivityEvent.user_id == user_id, ActivityEvent.created_at >= cutoff)
+        .where(ActivityEvent.user_id == user_uuid, ActivityEvent.created_at >= cutoff)
     )
     if action:
         query = query.where(ActivityEvent.action == action)
