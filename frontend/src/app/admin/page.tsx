@@ -29,6 +29,7 @@ import {
   MODULES,
   MODULE_LABELS,
 } from "@/lib/api";
+import LoginActivityChart from "@/components/LoginActivityChart";
 
 type Tab = "dashboard" | "users" | "questions" | "activity";
 
@@ -442,6 +443,7 @@ export default function AdminPage() {
 
   // Feedback
   const [actionMsg, setActionMsg] = useState("");
+  const [activityChartUser, setActivityChartUser] = useState<AdminUser | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -984,9 +986,15 @@ export default function AdminPage() {
                         <td style={styles.td}>{u.answers_count}</td>
                         <td style={styles.td}>{u.last_login_at ? new Date(u.last_login_at).toLocaleDateString() : "\u2014"}</td>
                         <td style={styles.td}>{new Date(u.created_at).toLocaleDateString()}</td>
-                        <td style={styles.td}>
+                        <td style={{ ...styles.td, display: "flex", gap: "6px" }}>
                           <button style={styles.btnSmall} onClick={() => handleViewAnswers(u)}>
                             View
+                          </button>
+                          <button
+                            style={{ ...styles.btnSmall, background: "#1e293b", color: "#94a3b8", border: "1px solid #334155" }}
+                            onClick={() => setActivityChartUser(u)}
+                          >
+                            Activity
                           </button>
                         </td>
                       </tr>
@@ -1232,6 +1240,13 @@ export default function AdminPage() {
           </div>
         )}
       </div>
+
+      {activityChartUser && (
+        <LoginActivityChart
+          user={activityChartUser}
+          onClose={() => setActivityChartUser(null)}
+        />
+      )}
     </div>
   );
 }
