@@ -347,6 +347,12 @@ export async function getUserAnswers(userId: string) {
   return request<UserAnswer[]>(`/admin/users/${userId}/answers`);
 }
 
+export async function resetUserAnswers(userId: string) {
+  return request<{ detail: string }>(`/admin/users/${userId}/answers`, {
+    method: "DELETE",
+  });
+}
+
 export async function getAdminQuestions() {
   return request<AdminQuestion[]>("/admin/questions");
 }

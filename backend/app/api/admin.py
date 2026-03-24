@@ -326,6 +326,34 @@ async def get_user_answers(
     ]
 
 
+@router.delete("/users/{user_id}/answers")
+async def reset_user_answers(
+    user_id: str,
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete all questionnaire answers for a user and reset their progress."""
+    result = await db.execute(select(User).where(User.id == user_id))
+    u = result.scalar_one_or_none()
+    if not u:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    deleted = (await db.execute(
+        select(func.count(Answer.id)).where(Answer.user_id == u.id)
+    )).scalar() or 0
+
+    await db.execute(delete(Answer).where(Answer.user_id == u.id))
+    await db.execute(delete(Report).where(Report.user_id == u.id))
+    await db.execute(delete(AnalysisReport).where(AnalysisReport.user_id == u.id))
+    await db.execute(delete(PathwayScore).where(PathwayScore.user_id == u.id))
+
+    u.questionnaire_completed = False
+    u.current_module = None
+
+    await db.commit()
+    return {"detail": f"Reset complete: {deleted} answers deleted, questionnaire progress cleared"}
+
+
 # ── Questions ────────────────────────────────────────────────────────────
 
 @router.get("/questions", response_model=list[QuestionOut])
