@@ -16,6 +16,7 @@ import {
   deleteAdminQuestion,
   reorderAdminQuestion,
   getUserAnswers,
+  resetUserAnswers,
   getUserReport,
   getActivityLog,
   impersonateUser,
@@ -617,6 +618,18 @@ export default function AdminPage() {
     }
   }
 
+  async function handleResetAnswers(userId: string, email: string) {
+    if (!confirm(`Reset all answers for ${email}? This deletes all questionnaire answers, reports, and resets their progress. This cannot be undone.`)) return;
+    try {
+      const result = await resetUserAnswers(userId);
+      setActionMsg(result.detail);
+      setSelectedUser(null);
+      await loadUsers();
+    } catch (err: unknown) {
+      setActionMsg(err instanceof Error ? err.message : "Failed to reset answers");
+    }
+  }
+
   async function handleImpersonate(userId: string, email: string) {
     if (!confirm(`Log in as ${email}? You'll be viewing the app as this user.`)) return;
     try {
@@ -877,6 +890,12 @@ export default function AdminPage() {
                       onClick={() => handleImpersonate(selectedUser.id, selectedUser.email)}
                     >
                       View as User
+                    </button>
+                    <button
+                      style={{ ...styles.btnOutline, borderColor: "#f59e0b", color: "#fbbf24" }}
+                      onClick={() => handleResetAnswers(selectedUser.id, selectedUser.email)}
+                    >
+                      Reset Answers
                     </button>
                     <button style={styles.btnDanger} onClick={() => handleDeleteUser(selectedUser.id, selectedUser.email)}>
                       Delete User
