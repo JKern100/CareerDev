@@ -340,6 +340,17 @@ export default function QuestionnairePage() {
     );
   }
 
+  if (!loading && error && !questionSet) {
+    return (
+      <div className="container" style={{ textAlign: "center", marginTop: "4rem" }}>
+        <p style={{ color: "#ef4444", marginBottom: "1rem" }}>{error}</p>
+        <button className="btn btn-primary" onClick={() => loadQuestions()}>
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
   if (complete) {
     return (
       <div className="container" style={{ textAlign: "center", marginTop: "4rem" }}>

@@ -27,6 +27,15 @@ async function request<T>(
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
+    // If token is expired/invalid, clear it and redirect to login
+    if (res.status === 401 && typeof window !== "undefined") {
+      localStorage.removeItem("token");
+      localStorage.removeItem("admin_token");
+      localStorage.removeItem("impersonating");
+      window.location.href = "/login";
+      // Throw to prevent further processing
+      throw new Error("Session expired. Redirecting to login...");
+    }
     throw new Error(body.detail || `Request failed: ${res.status}`);
   }
 
