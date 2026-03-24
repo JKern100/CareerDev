@@ -16,6 +16,7 @@ from app.schemas.questionnaire import (
     SubmitAnswersOut,
     ModuleStatusOut,
     QuestionnaireProgressOut,
+    CoreScreenOut,
 )
 from app.services.routing import (
     get_question_bank,
@@ -26,6 +27,11 @@ from app.services.routing import (
     check_consent_block,
     MODULE_LABELS,
     CORE_MODULES,
+    CORE_SCREENS,
+    CORE_QUESTION_IDS,
+    get_next_core_screen,
+    is_core_complete,
+    get_core_screen_questions,
 )
 from app.api.deps import get_current_user
 
@@ -86,6 +92,69 @@ def _build_question_out(q) -> QuestionOut:
         max_val=q.max_val,
         tags=q.tags_json,
         help_text=q.help_text,
+    )
+
+
+@router.get("/core/next", response_model=CoreScreenOut)
+async def get_next_core(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get the next core screen for the quick assessment."""
+    answered_ids = await _get_answered_ids(user.id, db)
+
+    if is_core_complete(answered_ids):
+        return CoreScreenOut(
+            screen_id="done",
+            screen_label="Complete",
+            screen_number=len(CORE_SCREENS),
+            total_screens=len(CORE_SCREENS),
+            questions=[],
+            existing_answers=[],
+            core_complete=True,
+        )
+
+    screen = get_next_core_screen(answered_ids)
+    if screen is None:
+        # Shouldn't happen if is_core_complete is false, but be safe
+        return CoreScreenOut(
+            screen_id="done",
+            screen_label="Complete",
+            screen_number=len(CORE_SCREENS),
+            total_screens=len(CORE_SCREENS),
+            questions=[],
+            existing_answers=[],
+            core_complete=True,
+        )
+
+    screen_number = CORE_SCREENS.index(screen) + 1
+    questions = get_core_screen_questions(screen)
+
+    # Get existing answers for these questions
+    qids = {q.question_id for q in questions}
+    result = await db.execute(
+        select(Answer).where(
+            Answer.user_id == user.id,
+            Answer.question_id.in_(qids),
+        )
+    )
+    existing = [
+        ExistingAnswerOut(
+            question_id=a.question_id,
+            value=a.value_json.get("value") if a.value_json else None,
+            confidence=a.confidence,
+        )
+        for a in result.scalars().all()
+    ]
+
+    return CoreScreenOut(
+        screen_id=screen["id"],
+        screen_label=screen["label"],
+        screen_number=screen_number,
+        total_screens=len(CORE_SCREENS),
+        questions=[_build_question_out(q) for q in questions],
+        existing_answers=existing,
+        core_complete=False,
     )
 
 
@@ -293,4 +362,5 @@ async def get_progress(
         current_question_id=user.current_question_id,
         progress_pct=round(len(answered_ids) / total_questions * 100, 1) if total_questions > 0 else 0,
         modules=modules_status,
+        core_complete=is_core_complete(answered_ids),
     )

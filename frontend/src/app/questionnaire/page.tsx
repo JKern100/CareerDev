@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
+  getCoreNextScreen,
   getNextQuestions,
   getModuleQuestions,
   submitAnswers,
@@ -10,6 +11,7 @@ import {
   getProgress,
   Question,
   QuestionSet,
+  CoreScreen,
   ModuleStatus,
   APP_VERSION,
 } from "@/lib/api";
@@ -21,17 +23,16 @@ type AnswerMap = Record<string, { value: string | number | string[]; confidence:
 
 const MODULE_ORDER = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
-// Encouraging messages shown after completing each module
 const MODULE_MILESTONES: Record<string, { heading: string; message: string; nextTeaser: string }> = {
   A: {
     heading: "Baseline locked in",
     message: "We know where you are and what you're looking for. That's the foundation everything else builds on.",
-    nextTeaser: "Next: your aviation experience — what energises you, what drains you, and why you're considering a change.",
+    nextTeaser: "Next: your aviation experience \u2014 what energises you, what drains you, and why you're considering a change.",
   },
   B: {
     heading: "Your aviation story is captured",
     message: "We now understand your experience, what you enjoy, what's wearing you down, and why you're exploring a change.",
-    nextTeaser: "Next: let's map out the skills you've built — many transfer directly into new careers.",
+    nextTeaser: "Next: let's map out the skills you've built \u2014 many transfer directly into new careers.",
   },
   C: {
     heading: "Skills profile built",
@@ -40,81 +41,132 @@ const MODULE_MILESTONES: Record<string, { heading: string; message: string; next
   },
   D: {
     heading: "Work style mapped",
-    message: "We now know what kind of environment you thrive in — and what to steer you away from.",
-    nextTeaser: "Next: the practical stuff — finances, visa, constraints. This is what makes your plan realistic.",
+    message: "We now know what kind of environment you thrive in \u2014 and what to steer you away from.",
+    nextTeaser: "Next: the practical stuff \u2014 finances, visa, constraints. This is what makes your plan realistic.",
   },
   E: {
     heading: "Constraints understood",
-    message: "Knowing your real boundaries means we can build a plan that actually works — not just one that sounds good on paper.",
+    message: "Knowing your real boundaries means we can build a plan that actually works \u2014 not just one that sounds good on paper.",
     nextTeaser: "Next: where in the world do you want to be?",
   },
   F: {
     heading: "Location preferences set",
     message: "Geography shapes opportunity. We'll factor your location preferences into every recommendation.",
-    nextTeaser: "Next: let's talk money — what you need, what you want, and what's realistic.",
+    nextTeaser: "Next: let's talk money \u2014 what you need, what you want, and what's realistic.",
   },
   G: {
     heading: "Financial picture clear",
-    message: "Salary expectations, obligations, and trade-offs — we have what we need to model realistic compensation scenarios.",
+    message: "Salary expectations, obligations, and trade-offs \u2014 we have what we need to model realistic compensation scenarios.",
     nextTeaser: "Almost done! Last module: your learning preferences and career family interests.",
   },
   H: {
     heading: "All modules complete!",
-    message: "You've given us everything we need to build your personalised career transition plan. This is a serious step — well done.",
+    message: "You've given us everything we need to build your personalised career transition plan. This is a serious step \u2014 well done.",
     nextTeaser: "",
   },
 };
 
-// Average seconds per question type (rough estimates for time calculation)
-const SECONDS_PER_QUESTION: Record<string, number> = {
-  single_select: 8,
-  multi_select: 12,
-  likert_1_5: 6,
-  slider_0_10: 6,
-  numeric: 8,
-  text_short: 20,
-  text_long: 60,
-  file_upload: 15,
-};
-
-function estimateMinutesRemaining(modules: ModuleStatus[]): number {
-  // Count unanswered questions across all incomplete modules
-  let totalSeconds = 0;
-  for (const m of modules) {
-    const remaining = m.total_questions - m.answered_questions;
-    if (remaining > 0) {
-      // Use an average of 12 seconds per question as a rough estimate
-      totalSeconds += remaining * 12;
-    }
-  }
-  return Math.max(1, Math.ceil(totalSeconds / 60));
-}
-
 export default function QuestionnairePage() {
   const router = useRouter();
+
+  // Phase: "core" → "core_done" → "deep_dive" → "complete"
+  const [phase, setPhase] = useState<"core" | "core_done" | "deep_dive" | "complete">("core");
+
+  // Core phase state
+  const [coreScreen, setCoreScreen] = useState<CoreScreen | null>(null);
+
+  // Deep-dive phase state (existing module-based flow)
   const [questionSet, setQuestionSet] = useState<QuestionSet | null>(null);
-  const [answers, setAnswers] = useState<AnswerMap>({});
   const [modules, setModules] = useState<ModuleStatus[]>([]);
+
+  // Shared state
+  const [answers, setAnswers] = useState<AnswerMap>({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [complete, setComplete] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [milestone, setMilestone] = useState<{ module: string; heading: string; message: string; nextTeaser: string } | null>(null);
   const [celebration, setCelebration] = useState<string | null>(null);
-  const [prevProgress, setPrevProgress] = useState<number>(0);
   const [unansweredQuestions, setUnansweredQuestions] = useState<Question[]>([]);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [prevProgress, setPrevProgress] = useState<number>(0);
 
+  // ── Core phase: load next screen ──
+  const loadCoreScreen = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const screen = await getCoreNextScreen();
+
+      if (screen.core_complete) {
+        // Check if user already viewed results (came back to refine)
+        if (localStorage.getItem("core_results_viewed") === "true") {
+          setPhase("deep_dive");
+          return; // will fall through to loadQuestions via useEffect
+        }
+        setPhase("core_done");
+        setLoading(false);
+        return;
+      }
+
+      setCoreScreen(screen);
+
+      // Initialize answers from existing + defaults
+      const existingMap = new Map<string, { value: string | number | string[]; confidence: number }>();
+      if (screen.existing_answers) {
+        for (const ea of screen.existing_answers) {
+          if (ea.value != null) {
+            existingMap.set(ea.question_id, {
+              value: ea.value as string | number | string[],
+              confidence: ea.confidence,
+            });
+          }
+        }
+      }
+
+      const initial: AnswerMap = {};
+      for (const q of screen.questions) {
+        const existing = existingMap.get(q.question_id);
+        if (existing) {
+          initial[q.question_id] = existing;
+        } else {
+          let defaultValue: string | number | string[] = "";
+          if (q.question_type === "slider_0_10") {
+            defaultValue = Math.round(((q.min_val ?? 0) + (q.max_val ?? 10)) / 2);
+          } else if (q.question_type === "likert_1_5") {
+            defaultValue = 3;
+          } else if (q.question_type === "numeric") {
+            defaultValue = q.min_val ?? 0;
+          }
+          initial[q.question_id] = { value: defaultValue, confidence: 100 };
+        }
+      }
+      setAnswers(initial);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to load questions");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // ── Deep-dive phase: load module questions ──
   const loadProgress = useCallback(async () => {
     try {
       const progress = await getProgress();
       setModules(progress.modules);
       setPrevProgress(progress.progress_pct);
+      // If core is complete and user hasn't seen results, redirect
+      if (progress.core_complete && phase === "core") {
+        if (localStorage.getItem("core_results_viewed") === "true") {
+          setPhase("deep_dive");
+        } else {
+          setPhase("core_done");
+        }
+      }
     } catch {
-      // Non-critical; progress tabs will just not update
+      // Non-critical
     }
-  }, []);
+  }, [phase]);
 
   const loadQuestions = useCallback(async (module?: string) => {
     try {
@@ -127,7 +179,7 @@ export default function QuestionnairePage() {
         qs = await getNextQuestions();
       }
       setQuestionSet(qs);
-      // Build map of existing answers from the backend
+
       const existingMap = new Map<string, { value: string | number | string[]; confidence: number }>();
       if (qs.existing_answers) {
         for (const ea of qs.existing_answers) {
@@ -140,7 +192,6 @@ export default function QuestionnairePage() {
         }
       }
 
-      // Initialize answers: use existing answers if available, else sensible defaults
       const initial: AnswerMap = {};
       for (const q of qs.questions) {
         const existing = existingMap.get(q.question_id);
@@ -162,12 +213,11 @@ export default function QuestionnairePage() {
       await loadProgress();
     } catch (err: unknown) {
       if (!module) {
-        // If /next failed (questionnaire complete or any error), fall back to module A for review
         try {
           await loadQuestions("A");
           return;
         } catch {
-          // If even module A fails, show the error
+          // fallthrough
         }
       }
       const msg = err instanceof Error ? err.message : "Failed to load questions";
@@ -177,25 +227,50 @@ export default function QuestionnairePage() {
     }
   }, [loadProgress]);
 
+  // ── Initial load ──
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
       router.push("/login");
       return;
     }
-    // Show welcome popup on first login
     if (localStorage.getItem("is_first_login") === "true") {
       setShowWelcome(true);
       localStorage.removeItem("is_first_login");
     }
-    loadQuestions();
-  }, [router, loadQuestions]);
+    // Start with core phase
+    loadCoreScreen();
+  }, [router, loadCoreScreen]);
 
-  async function handleSaveProgress() {
-    if (!questionSet) return;
+  // ── When switching to deep-dive, load module questions ──
+  useEffect(() => {
+    if (phase === "deep_dive" && !questionSet && !loading) {
+      loadQuestions();
+    }
+  }, [phase, questionSet, loading, loadQuestions]);
+
+  // ── Core submit handler ──
+  async function handleCoreSubmit() {
+    if (!coreScreen) return;
     setSubmitting(true);
     setError("");
-    setSaveMessage("");
+    setUnansweredQuestions([]);
+
+    // Check required fields
+    const unanswered = coreScreen.questions.filter((q) => {
+      if (!q.required) return false;
+      const ans = answers[q.question_id];
+      if (!ans) return true;
+      if (ans.value === "not_sure") return false; // "Not sure" counts as answered
+      return ans.value === "" || (Array.isArray(ans.value) && ans.value.length === 0);
+    });
+
+    if (unanswered.length > 0) {
+      setUnansweredQuestions(unanswered);
+      setError(`${unanswered.length} required question${unanswered.length > 1 ? "s" : ""} still need${unanswered.length === 1 ? "s" : ""} an answer.`);
+      setSubmitting(false);
+      return;
+    }
 
     try {
       const payload = Object.entries(answers)
@@ -203,26 +278,20 @@ export default function QuestionnairePage() {
         .map(([qid, a]) => ({
           question_id: qid,
           value: a.value,
-          confidence: a.confidence,
+          confidence: a.value === "not_sure" ? 50 : a.confidence,
         }));
 
-      if (payload.length === 0) {
-        setSaveMessage("Nothing to save yet — answer a few questions first.");
-        setSubmitting(false);
-        return;
-      }
-
       await submitAnswers(payload);
-      await loadProgress();
-      setSaveMessage("Progress saved! You can come back any time to finish.");
-      setTimeout(() => setSaveMessage(""), 4000);
+      await loadCoreScreen(); // Load next core screen or mark complete
+      window.scrollTo(0, 0);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to save progress");
+      setError(err instanceof Error ? err.message : "Failed to save answers");
     } finally {
       setSubmitting(false);
     }
   }
 
+  // ── Deep-dive submit handler (existing) ──
   async function handleSubmit() {
     if (!questionSet) return;
     setSubmitting(true);
@@ -230,11 +299,12 @@ export default function QuestionnairePage() {
     setSaveMessage("");
     setUnansweredQuestions([]);
 
-    // Check required fields
     const unanswered = questionSet.questions.filter((q) => {
       if (!q.required) return false;
       const ans = answers[q.question_id];
-      return !ans || ans.value === "" || (Array.isArray(ans.value) && ans.value.length === 0);
+      if (!ans) return true;
+      if (ans.value === "not_sure") return false;
+      return ans.value === "" || (Array.isArray(ans.value) && ans.value.length === 0);
     });
 
     if (unanswered.length > 0) {
@@ -253,23 +323,19 @@ export default function QuestionnairePage() {
         .map(([qid, a]) => ({
           question_id: qid,
           value: a.value,
-          confidence: a.confidence,
+          confidence: a.value === "not_sure" ? 50 : a.confidence,
         }));
 
       const result = await submitAnswers(payload);
 
-      // Check for progress milestone celebrations (25%, 50%, 75%)
-      const newProgress = result.questionnaire_complete ? 1 : (questionSet.progress || 0);
       await loadProgress();
-
-      // Calculate actual overall progress from updated modules
       const updatedProgress = await getProgress();
       const overallPct = updatedProgress.progress_pct;
 
       const thresholds = [
-        { pct: 75, msg: "75% done — the finish line is in sight!" },
+        { pct: 75, msg: "75% done \u2014 the finish line is in sight!" },
         { pct: 50, msg: "Halfway there! Your profile is really taking shape." },
-        { pct: 25, msg: "Great start — 25% complete. You're building momentum!" },
+        { pct: 25, msg: "Great start \u2014 25% complete. You're building momentum!" },
       ];
       for (const t of thresholds) {
         if (prevProgress < t.pct && overallPct >= t.pct) {
@@ -286,10 +352,9 @@ export default function QuestionnairePage() {
         if (ms) {
           setMilestone({ module: "H", ...ms });
         } else {
-          setComplete(true);
+          setPhase("complete");
         }
       } else if (result.next_module) {
-        // Show milestone message for the just-completed module
         const completedModule = questionSet.module;
         const ms = MODULE_MILESTONES[completedModule];
         if (ms && result.next_module !== completedModule) {
@@ -303,6 +368,38 @@ export default function QuestionnairePage() {
       window.scrollTo(0, 0);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to save answers");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleSaveProgress() {
+    if (!questionSet) return;
+    setSubmitting(true);
+    setError("");
+    setSaveMessage("");
+
+    try {
+      const payload = Object.entries(answers)
+        .filter(([, a]) => a.value !== "" && !(Array.isArray(a.value) && a.value.length === 0))
+        .map(([qid, a]) => ({
+          question_id: qid,
+          value: a.value,
+          confidence: a.value === "not_sure" ? 50 : a.confidence,
+        }));
+
+      if (payload.length === 0) {
+        setSaveMessage("Nothing to save yet \u2014 answer a few questions first.");
+        setSubmitting(false);
+        return;
+      }
+
+      await submitAnswers(payload);
+      await loadProgress();
+      setSaveMessage("Progress saved! You can come back any time to finish.");
+      setTimeout(() => setSaveMessage(""), 4000);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to save progress");
     } finally {
       setSubmitting(false);
     }
@@ -331,6 +428,7 @@ export default function QuestionnairePage() {
     }
   }
 
+  // ── Render: Loading ──
   if (loading) {
     return (
       <div className="container" style={{ textAlign: "center", marginTop: "4rem" }}>
@@ -340,18 +438,71 @@ export default function QuestionnairePage() {
     );
   }
 
-  if (!loading && error && !questionSet) {
+  // ── Render: Error with no questions loaded ──
+  if (!loading && error && !coreScreen && !questionSet) {
     return (
       <div className="container" style={{ textAlign: "center", marginTop: "4rem" }}>
         <p style={{ color: "#ef4444", marginBottom: "1rem" }}>{error}</p>
-        <button className="btn btn-primary" onClick={() => loadQuestions()}>
+        <button className="btn btn-primary" onClick={() => phase === "core" ? loadCoreScreen() : loadQuestions()}>
           Try Again
         </button>
       </div>
     );
   }
 
-  if (complete) {
+  // ── Render: Core done milestone ──
+  if (phase === "core_done") {
+    return (
+      <>
+        <AppHeader />
+        <div className="container" style={{ textAlign: "center", marginTop: "4rem", maxWidth: "560px" }}>
+          <div style={{
+            width: "64px", height: "64px", borderRadius: "50%",
+            background: "#dbeafe",
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            fontSize: "1.75rem", marginBottom: "1.5rem",
+          }}>
+            &#127775;
+          </div>
+          <h1 style={{ fontSize: "1.5rem", marginBottom: "0.75rem" }}>
+            Your initial results are ready!
+          </h1>
+          <p style={{ color: "var(--muted)", lineHeight: 1.7, fontSize: "0.95rem", marginBottom: "1rem" }}>
+            Based on your quick assessment, we&apos;ve matched you to career pathways.
+            You can see your results now, or keep going for more detailed recommendations.
+          </p>
+          <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
+            <button
+              className="btn btn-primary"
+              onClick={() => {
+                localStorage.setItem("core_results_viewed", "true");
+                router.push("/summary");
+              }}
+              style={{ padding: "0.75rem 2rem" }}
+            >
+              See My Results
+            </button>
+            <button
+              className="btn btn-outline"
+              onClick={() => {
+                localStorage.setItem("core_results_viewed", "true");
+                setPhase("deep_dive");
+              }}
+              style={{ padding: "0.75rem 2rem" }}
+            >
+              Keep Going for Better Results
+            </button>
+          </div>
+          <p style={{ color: "var(--muted)", fontSize: "0.8rem", marginTop: "1.5rem" }}>
+            The full questionnaire adds ~100 more questions across 8 modules for much more accurate and detailed career recommendations.
+          </p>
+        </div>
+      </>
+    );
+  }
+
+  // ── Render: Complete ──
+  if (phase === "complete") {
     return (
       <div className="container" style={{ textAlign: "center", marginTop: "4rem" }}>
         <h1>Questionnaire Complete</h1>
@@ -365,7 +516,7 @@ export default function QuestionnairePage() {
     );
   }
 
-  // Milestone interstitial — shown after completing a module
+  // ── Render: Milestone interstitial (deep-dive) ──
   if (milestone) {
     const isLastModule = milestone.module === "H";
     return (
@@ -393,12 +544,6 @@ export default function QuestionnairePage() {
             {milestone.nextTeaser}
           </p>
         )}
-        {/* Time estimate */}
-        {modules.length > 0 && (
-          <p style={{ color: "var(--muted)", fontSize: "0.8rem", marginBottom: "1.25rem" }}>
-            About {estimateMinutesRemaining(modules)} min remaining
-          </p>
-        )}
         <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center" }}>
           {!isLastModule && (
             <button
@@ -410,7 +555,7 @@ export default function QuestionnairePage() {
                 if (nextModule) {
                   await loadQuestions(nextModule);
                 } else {
-                  setComplete(true);
+                  setPhase("complete");
                 }
                 window.scrollTo(0, 0);
               }}
@@ -431,240 +576,342 @@ export default function QuestionnairePage() {
     );
   }
 
-  if (!questionSet) return null;
-
-  const currentModuleIdx = MODULE_ORDER.indexOf(questionSet.module);
-  const minutesLeft = modules.length > 0 ? estimateMinutesRemaining(modules) : null;
-
-  return (
-    <>
-    {/* Progress celebration banner */}
-    {celebration && (
-      <div style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 999,
-        background: "linear-gradient(135deg, #2563eb, #7c3aed)",
-        color: "white", textAlign: "center",
-        padding: "0.875rem 1rem", fontSize: "0.95rem", fontWeight: 600,
-        animation: "slideDown 0.4s ease-out",
-      }}>
-        {celebration}
-      </div>
-    )}
-    {/* First-login welcome modal */}
-    {showWelcome && (
-      <div style={{
-        position: "fixed", inset: 0, zIndex: 1000,
-        background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        padding: "1rem",
-      }}>
+  // ── Render: Core phase ──
+  if (phase === "core" && coreScreen) {
+    return (
+      <>
+      {showWelcome && (
         <div style={{
-          background: "white", borderRadius: "16px", maxWidth: "520px",
-          width: "100%", padding: "2.5rem 2rem", textAlign: "center",
-          boxShadow: "0 25px 50px rgba(0,0,0,0.15)",
+          position: "fixed", inset: 0, zIndex: 1000,
+          background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: "1rem",
         }}>
           <div style={{
-            width: "56px", height: "56px", borderRadius: "50%",
-            background: "#dbeafe", display: "inline-flex",
-            alignItems: "center", justifyContent: "center",
-            fontSize: "1.5rem", marginBottom: "1.25rem",
+            background: "white", borderRadius: "16px", maxWidth: "520px",
+            width: "100%", padding: "2.5rem 2rem", textAlign: "center",
+            boxShadow: "0 25px 50px rgba(0,0,0,0.15)",
           }}>
-            &#127919;
+            <div style={{
+              width: "56px", height: "56px", borderRadius: "50%",
+              background: "#dbeafe", display: "inline-flex",
+              alignItems: "center", justifyContent: "center",
+              fontSize: "1.5rem", marginBottom: "1.25rem",
+            }}>
+              &#127919;
+            </div>
+            <h1 style={{ fontSize: "1.4rem", marginBottom: "0.75rem" }}>
+              Welcome to your career assessment
+            </h1>
+            <p style={{ color: "var(--muted)", lineHeight: 1.8, fontSize: "0.925rem" }}>
+              We&apos;ll start with a <strong style={{ color: "var(--fg)" }}>quick assessment of 18 questions</strong> that takes about <strong style={{ color: "var(--fg)" }}>5 minutes</strong>. You&apos;ll get your initial career matches right away.
+            </p>
+            <div style={{
+              background: "#f8fafc", borderRadius: "10px",
+              padding: "1rem 1.25rem", margin: "1.25rem 0",
+              textAlign: "left", lineHeight: 1.75, fontSize: "0.875rem",
+              color: "#475569",
+            }}>
+              <p>
+                <span style={{ color: "var(--primary)", fontWeight: 600 }}>Quick results first.</span>{" "}
+                Answer 18 key questions and see which careers fit you.
+              </p>
+              <p style={{ marginTop: "0.5rem" }}>
+                <span style={{ color: "var(--primary)", fontWeight: 600 }}>Go deeper if you want.</span>{" "}
+                After your initial results, you can answer more questions to refine your recommendations.
+              </p>
+              <p style={{ marginTop: "0.5rem" }}>
+                <span style={{ color: "var(--primary)", fontWeight: 600 }}>Not sure? That&apos;s OK.</span>{" "}
+                You can mark any question as &quot;Not sure&quot; and move on.
+              </p>
+            </div>
+            <button
+              className="btn btn-primary"
+              onClick={() => setShowWelcome(false)}
+              style={{ padding: "0.75rem 2rem", fontSize: "0.95rem", marginTop: "0.25rem" }}
+            >
+              Let&apos;s go
+            </button>
           </div>
-          <h1 style={{ fontSize: "1.4rem", marginBottom: "0.75rem" }}>
-            Welcome to your career assessment
-          </h1>
-          <p style={{ color: "var(--muted)", lineHeight: 1.8, fontSize: "0.925rem" }}>
-            This questionnaire is the foundation of your personalised career transition plan. It covers 8 modules across about <strong style={{ color: "var(--fg)" }}>119 questions</strong> and typically takes <strong style={{ color: "var(--fg)" }}>20 &ndash; 30 minutes</strong> to complete.
+        </div>
+      )}
+      <AppHeader />
+      <div className="container">
+        <p className="text-sm text-muted" style={{ textAlign: "right", marginBottom: "0.25rem" }}>{APP_VERSION}</p>
+
+        {/* Core progress header */}
+        <div className="flex justify-between items-center mb-1">
+          <div>
+            <p className="text-sm text-muted">
+              Step {coreScreen.screen_number} of {coreScreen.total_screens}: Quick Assessment
+            </p>
+          </div>
+          <p className="text-sm text-muted">
+            ~{5 - coreScreen.screen_number + 1} min left
           </p>
+        </div>
+
+        {/* Progress bar */}
+        <div className="progress-bar mb-2">
+          <div
+            className="progress-bar-fill"
+            style={{ width: `${((coreScreen.screen_number - 1) / coreScreen.total_screens) * 100}%` }}
+          />
+        </div>
+
+        <h1 className="mb-2">{coreScreen.screen_label}</h1>
+
+        {/* Questions */}
+        <div className="flex flex-col gap-1">
+          {coreScreen.questions.map((q) => (
+            <QuestionField
+              key={q.question_id}
+              question={q}
+              value={answers[q.question_id]?.value ?? ""}
+              isNotSure={answers[q.question_id]?.value === "not_sure"}
+              onChange={(val) =>
+                setAnswers((prev) => ({
+                  ...prev,
+                  [q.question_id]: { value: val, confidence: 100 },
+                }))
+              }
+              onNotSure={() =>
+                setAnswers((prev) => ({
+                  ...prev,
+                  [q.question_id]: { value: "not_sure", confidence: 50 },
+                }))
+              }
+            />
+          ))}
+        </div>
+
+        {error && (
           <div style={{
-            background: "#f8fafc", borderRadius: "10px",
-            padding: "1rem 1.25rem", margin: "1.25rem 0",
-            textAlign: "left", lineHeight: 1.75, fontSize: "0.875rem",
-            color: "#475569",
+            color: "#92400e",
+            background: "#fef3c7",
+            border: "1px solid #f59e0b",
+            padding: "0.75rem 1rem",
+            borderRadius: "8px",
+            marginTop: "1rem",
+            fontSize: "0.875rem",
+            lineHeight: 1.5,
           }}>
-            <p style={{ fontWeight: 600, color: "var(--fg)", marginBottom: "0.375rem" }}>
-              A few things to know:
-            </p>
-            <p>
-              <span style={{ color: "var(--primary)", fontWeight: 600 }}>Be thoughtful.</span>{" "}
-              Your answers directly shape the career pathways we recommend. The more honest and considered your responses, the better your results will be.
-            </p>
-            <p style={{ marginTop: "0.5rem" }}>
-              <span style={{ color: "var(--primary)", fontWeight: 600 }}>Your progress is saved.</span>{" "}
-              You can close the browser and come back any time &mdash; you&apos;ll pick up right where you left off.
-            </p>
-            <p style={{ marginTop: "0.5rem" }}>
-              <span style={{ color: "var(--primary)", fontWeight: 600 }}>Take your time.</span>{" "}
-              If you&apos;re short on time right now, it&apos;s better to do a few modules well and return later than to rush through everything at once.
-            </p>
+            {error}
+            {unansweredQuestions.length > 0 && (
+              <ul style={{ margin: "0.5rem 0 0 0", paddingLeft: "1.25rem" }}>
+                {unansweredQuestions.map((q) => (
+                  <li key={q.question_id}>
+                    <a
+                      href={`#q-${q.question_id}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        document.getElementById(`q-${q.question_id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+                      }}
+                      style={{ color: "#92400e", textDecoration: "underline", cursor: "pointer" }}
+                    >
+                      {q.prompt}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
+        )}
+
+        {/* Navigation */}
+        <div className="mt-3" style={{ display: "flex", gap: "0.5rem" }}>
           <button
             className="btn btn-primary"
-            onClick={() => setShowWelcome(false)}
-            style={{ padding: "0.75rem 2rem", fontSize: "0.95rem", marginTop: "0.25rem" }}
+            onClick={handleCoreSubmit}
+            disabled={submitting}
+            style={{ flex: 1 }}
           >
-            I&apos;m ready &mdash; let&apos;s begin
+            {submitting ? "Saving..." : coreScreen.screen_number === coreScreen.total_screens ? "See My Results" : "Next"}
           </button>
         </div>
       </div>
-    )}
-    <AppHeader />
-    <div className="container">
-      {/* Version tag */}
-      <p className="text-sm text-muted" style={{ textAlign: "right", marginBottom: "0.25rem" }}>{APP_VERSION}</p>
+      </>
+    );
+  }
 
-      {/* Module header */}
-      <div className="flex justify-between items-center mb-1">
-        <div>
-          <p className="text-sm text-muted">
-            Module {currentModuleIdx + 1} of {MODULE_ORDER.length}
+  // ── Render: Deep-dive phase (existing module flow) ──
+  if (phase === "deep_dive" && questionSet) {
+    const currentModuleIdx = MODULE_ORDER.indexOf(questionSet.module);
+
+    return (
+      <>
+      {celebration && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, zIndex: 999,
+          background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+          color: "white", textAlign: "center",
+          padding: "0.875rem 1rem", fontSize: "0.95rem", fontWeight: 600,
+          animation: "slideDown 0.4s ease-out",
+        }}>
+          {celebration}
+        </div>
+      )}
+      <AppHeader />
+      <div className="container">
+        <p className="text-sm text-muted" style={{ textAlign: "right", marginBottom: "0.25rem" }}>{APP_VERSION}</p>
+
+        {/* Refinement banner */}
+        <div style={{
+          background: "#eff6ff",
+          border: "1px solid #bfdbfe",
+          borderRadius: "8px",
+          padding: "0.75rem 1rem",
+          marginBottom: "1rem",
+          fontSize: "0.85rem",
+          color: "#1e40af",
+        }}>
+          Refining your results. These additional questions make your career recommendations more accurate and detailed.
+        </div>
+
+        <div className="flex justify-between items-center mb-1">
+          <div>
+            <p className="text-sm text-muted">
+              Module {currentModuleIdx + 1} of {MODULE_ORDER.length}
+            </p>
+          </div>
+          <p className="text-sm">
+            {questionSet.answered_questions}/{questionSet.total_questions} answered
+            {" "}({Math.round(questionSet.progress * 100)}% complete)
           </p>
         </div>
-        <p className="text-sm">
-          {questionSet.answered_questions}/{questionSet.total_questions} answered
-          {" "}({Math.round(questionSet.progress * 100)}% complete)
-          {minutesLeft !== null && (
-            <span style={{ color: "var(--muted)", marginLeft: "0.5rem" }}>
-              &middot; ~{minutesLeft} min left
-            </span>
-          )}
-        </p>
-      </div>
 
-      {/* Progress bar */}
-      <div className="progress-bar mb-2">
-        <div
-          className="progress-bar-fill"
-          style={{ width: `${questionSet.progress * 100}%` }}
-        />
-      </div>
-
-      {/* Module tabs */}
-      {modules.length > 0 && (
-        <div style={{ display: "flex", gap: "0.25rem", overflowX: "auto", marginBottom: "1.5rem", paddingBottom: "0.5rem" }}>
-          {modules.map((m) => {
-            const isActive = m.module === questionSet.module;
-            return (
-              <button
-                key={m.module}
-                onClick={() => handleModuleClick(m.module)}
-                className="btn"
-                style={{
-                  whiteSpace: "nowrap",
-                  fontSize: "0.75rem",
-                  padding: "0.375rem 0.75rem",
-                  background: isActive ? "var(--primary)" : m.is_complete ? "#d1fae5" : "transparent",
-                  color: isActive ? "white" : m.is_complete ? "#065f46" : "var(--muted)",
-                  border: `1px solid ${isActive ? "var(--primary)" : m.is_complete ? "#059669" : "var(--border)"}`,
-                }}
-              >
-                {m.module_label} {m.answered_questions}/{m.total_questions}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      <h1 className="mb-2">{questionSet.module_label}</h1>
-
-      {/* Questions */}
-      <div className="flex flex-col gap-1">
-        {questionSet.questions.map((q) => (
-          <QuestionField
-            key={q.question_id}
-            question={q}
-            value={answers[q.question_id]?.value ?? ""}
-            confidence={answers[q.question_id]?.confidence ?? 100}
-            onChange={(val) =>
-              setAnswers((prev) => ({
-                ...prev,
-                [q.question_id]: { ...prev[q.question_id], value: val },
-              }))
-            }
-            onConfidenceChange={(conf) =>
-              setAnswers((prev) => ({
-                ...prev,
-                [q.question_id]: { ...prev[q.question_id], confidence: conf },
-              }))
-            }
+        <div className="progress-bar mb-2">
+          <div
+            className="progress-bar-fill"
+            style={{ width: `${questionSet.progress * 100}%` }}
           />
-        ))}
-      </div>
-
-      {error && (
-        <div style={{
-          color: "#92400e",
-          background: "#fef3c7",
-          border: "1px solid #f59e0b",
-          padding: "0.75rem 1rem",
-          borderRadius: "8px",
-          marginTop: "1rem",
-          fontSize: "0.875rem",
-          lineHeight: 1.5,
-        }}>
-          {error}
-          {unansweredQuestions.length > 0 && (
-            <ul style={{ margin: "0.5rem 0 0 0", paddingLeft: "1.25rem" }}>
-              {unansweredQuestions.map((q) => (
-                <li key={q.question_id}>
-                  <a
-                    href={`#q-${q.question_id}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      document.getElementById(`q-${q.question_id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-                    }}
-                    style={{ color: "#92400e", textDecoration: "underline", cursor: "pointer" }}
-                  >
-                    {q.prompt}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
         </div>
-      )}
 
-      {saveMessage && (
-        <div style={{
-          color: "#065f46",
-          background: "#d1fae5",
-          border: "1px solid #059669",
-          padding: "0.75rem 1rem",
-          borderRadius: "8px",
-          marginTop: "1rem",
-          fontSize: "0.875rem",
-          fontWeight: 500,
-        }}>
-          {saveMessage}
-        </div>
-      )}
-
-      {/* Navigation buttons */}
-      <div className="mt-3" style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-        {currentModuleIdx > 0 && (
-          <button className="btn btn-outline" onClick={handleBack} disabled={submitting}>
-            Back
-          </button>
+        {modules.length > 0 && (
+          <div style={{ display: "flex", gap: "0.25rem", overflowX: "auto", marginBottom: "1.5rem", paddingBottom: "0.5rem" }}>
+            {modules.map((m) => {
+              const isActive = m.module === questionSet.module;
+              return (
+                <button
+                  key={m.module}
+                  onClick={() => handleModuleClick(m.module)}
+                  className="btn"
+                  style={{
+                    whiteSpace: "nowrap",
+                    fontSize: "0.75rem",
+                    padding: "0.375rem 0.75rem",
+                    background: isActive ? "var(--primary)" : m.is_complete ? "#d1fae5" : "transparent",
+                    color: isActive ? "white" : m.is_complete ? "#065f46" : "var(--muted)",
+                    border: `1px solid ${isActive ? "var(--primary)" : m.is_complete ? "#059669" : "var(--border)"}`,
+                  }}
+                >
+                  {m.module_label} {m.answered_questions}/{m.total_questions}
+                </button>
+              );
+            })}
+          </div>
         )}
-        <button
-          className="btn btn-outline"
-          onClick={handleSaveProgress}
-          disabled={submitting}
-          style={{ flex: "0 0 auto" }}
-        >
-          {submitting ? "Saving..." : "Save Progress"}
-        </button>
-        <button
-          className="btn btn-primary"
-          onClick={handleSubmit}
-          disabled={submitting}
-          style={{ flex: 1 }}
-        >
-          {submitting ? "Saving..." : "Save & Next Module"}
-        </button>
+
+        <h1 className="mb-2">{questionSet.module_label}</h1>
+
+        <div className="flex flex-col gap-1">
+          {questionSet.questions.map((q) => (
+            <QuestionField
+              key={q.question_id}
+              question={q}
+              value={answers[q.question_id]?.value ?? ""}
+              isNotSure={answers[q.question_id]?.value === "not_sure"}
+              onChange={(val) =>
+                setAnswers((prev) => ({
+                  ...prev,
+                  [q.question_id]: { value: val, confidence: 100 },
+                }))
+              }
+              onNotSure={() =>
+                setAnswers((prev) => ({
+                  ...prev,
+                  [q.question_id]: { value: "not_sure", confidence: 50 },
+                }))
+              }
+            />
+          ))}
+        </div>
+
+        {error && (
+          <div style={{
+            color: "#92400e",
+            background: "#fef3c7",
+            border: "1px solid #f59e0b",
+            padding: "0.75rem 1rem",
+            borderRadius: "8px",
+            marginTop: "1rem",
+            fontSize: "0.875rem",
+            lineHeight: 1.5,
+          }}>
+            {error}
+            {unansweredQuestions.length > 0 && (
+              <ul style={{ margin: "0.5rem 0 0 0", paddingLeft: "1.25rem" }}>
+                {unansweredQuestions.map((q) => (
+                  <li key={q.question_id}>
+                    <a
+                      href={`#q-${q.question_id}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        document.getElementById(`q-${q.question_id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+                      }}
+                      style={{ color: "#92400e", textDecoration: "underline", cursor: "pointer" }}
+                    >
+                      {q.prompt}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
+        {saveMessage && (
+          <div style={{
+            color: "#065f46",
+            background: "#d1fae5",
+            border: "1px solid #059669",
+            padding: "0.75rem 1rem",
+            borderRadius: "8px",
+            marginTop: "1rem",
+            fontSize: "0.875rem",
+            fontWeight: 500,
+          }}>
+            {saveMessage}
+          </div>
+        )}
+
+        <div className="mt-3" style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          {currentModuleIdx > 0 && (
+            <button className="btn btn-outline" onClick={handleBack} disabled={submitting}>
+              Back
+            </button>
+          )}
+          <button
+            className="btn btn-outline"
+            onClick={handleSaveProgress}
+            disabled={submitting}
+            style={{ flex: "0 0 auto" }}
+          >
+            {submitting ? "Saving..." : "Save Progress"}
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={handleSubmit}
+            disabled={submitting}
+            style={{ flex: 1 }}
+          >
+            {submitting ? "Saving..." : "Save & Next Module"}
+          </button>
+        </div>
       </div>
-    </div>
-    </>
-  );
+      </>
+    );
+  }
+
+  return null;
 }

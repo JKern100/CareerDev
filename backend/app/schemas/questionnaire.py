@@ -81,3 +81,14 @@ class QuestionnaireProgressOut(BaseModel):
     current_question_id: str | None
     progress_pct: float
     modules: list[ModuleStatusOut]
+    core_complete: bool = False
+
+
+class CoreScreenOut(BaseModel):
+    screen_id: str
+    screen_label: str
+    screen_number: int  # 1-based
+    total_screens: int
+    questions: list[QuestionOut]
+    existing_answers: list[ExistingAnswerOut] = []
+    core_complete: bool = False
