@@ -351,6 +351,11 @@
     "skill_questions": ["Q027", "Q028", "Q029", "Q030", "Q036"],
     "interest_questions": ["Q051", "Q018", "Q106"],
     "interest_match_values": {"Q106": ["Sales", "CX"]},
+    "negative_signals": {
+      "Q022": {"condition": "gte", "threshold": 4, "penalty": 0.15},
+      "Q114": {"condition": "eq", "threshold": "Drained \u2014 I need recovery time", "penalty": 0.15},
+      "Q051": {"condition": "lte", "threshold": 2, "penalty": 0.20}
+    },
     "environment_questions": ["Q047", "Q048", "Q049", "Q051"],
     "feasibility_questions": ["Q061", "Q062", "Q064", "Q065"],
     "compensation_questions": ["Q089", "Q066"],
@@ -410,6 +415,64 @@
     "interest_questions": ["Q034", "Q019", "Q106"],
     "interest_match_values": {"Q106": ["Education", "L&D"]},
     "environment_questions": ["Q047", "Q048", "Q049", "Q050"],
+    "feasibility_questions": ["Q061", "Q062", "Q064", "Q065", "Q070"],
+    "compensation_questions": ["Q089", "Q066"],
+    "weight_interest": 0.30,
+    "weight_skill": 0.20,
+    "weight_environment": 0.15,
+    "weight_feasibility": 0.15,
+    "weight_compensation": 0.15,
+    "weight_risk": 0.05
+  },
+  {
+    "id": "P15",
+    "name": "Creative & Design",
+    "description": "Channel your aesthetic sensibility, attention to detail, and cultural awareness into creative careers. Photography, interior design, content creation, graphic design, and art direction roles value the presentation skills and international perspective you've developed in aviation.",
+    "typical_roles": ["Graphic Designer", "Content Creator", "Interior Designer", "Photographer", "Art Director", "Brand Identity Designer", "Visual Merchandiser"],
+    "prerequisites": {},
+    "salary_band_refs": {
+      "Graphic Designer (Junior)": {"min_aed": 8000, "max_aed": 15000, "source": "Cooper Fitch UAE Salary Guide 2024"},
+      "Art Director / Senior Designer": {"min_aed": 20000, "max_aed": 38000, "source": "Cooper Fitch UAE Salary Guide 2024"}
+    },
+    "salary_global_note": "Creative salaries vary significantly by market and specialisation. Freelance creatives can earn well above salaried equivalents. Portfolio quality matters more than credentials in most creative fields.",
+    "recommended_credentials": [
+      {"name": "Google UX Professional Certificate (Coursera)", "duration": "~6 months @ 10 hrs/week", "source_url": "https://www.coursera.org/professional-certificates/google-ux-design"},
+      {"name": "Adobe Creative Suite Certification", "duration": "Self-paced", "source_url": "https://www.adobe.com/"},
+      {"name": "Interaction Design Foundation Membership", "duration": "Self-paced courses", "source_url": "https://www.interaction-design.org/"}
+    ],
+    "skill_questions": ["Q027", "Q028", "Q035", "Q036", "Q037"],
+    "interest_questions": ["Q047", "Q056", "Q106"],
+    "interest_match_values": {"Q106": ["Creative & Design", "Tech"], "Q047": ["Creative"]},
+    "environment_questions": ["Q047", "Q048", "Q053"],
+    "feasibility_questions": ["Q061", "Q062", "Q064", "Q065", "Q070"],
+    "compensation_questions": ["Q089", "Q066"],
+    "weight_interest": 0.35,
+    "weight_skill": 0.15,
+    "weight_environment": 0.15,
+    "weight_feasibility": 0.15,
+    "weight_compensation": 0.10,
+    "weight_risk": 0.10
+  },
+  {
+    "id": "P16",
+    "name": "Media, PR & Communications",
+    "description": "Your multilingual skills, cultural awareness, poise under pressure, and ability to manage people and messaging translate well into PR, corporate communications, social media management, content strategy, and event coordination roles.",
+    "typical_roles": ["PR Coordinator", "Corporate Communications Specialist", "Social Media Manager", "Content Strategist", "Event Coordinator", "Brand Manager"],
+    "prerequisites": {},
+    "salary_band_refs": {
+      "PR / Comms Coordinator": {"min_aed": 12000, "max_aed": 20000, "source": "Cooper Fitch UAE Salary Guide 2024"},
+      "Communications Manager": {"min_aed": 22000, "max_aed": 38000, "source": "Cooper Fitch UAE Salary Guide 2024"}
+    },
+    "salary_global_note": "Media and communications salaries are mid-range at entry, with good growth into senior roles. Agency roles typically pay less initially but offer faster progression and broader experience.",
+    "recommended_credentials": [
+      {"name": "CIPR Diploma in Public Relations", "duration": "6-12 months", "source_url": "https://www.cipr.co.uk/"},
+      {"name": "HubSpot Content Marketing Certification", "duration": "Self-paced / ~6 hours", "source_url": "https://academy.hubspot.com/courses/content-marketing"},
+      {"name": "Google Digital Marketing Certificate", "duration": "~6 months @ 10 hrs/week", "source_url": "https://www.coursera.org/professional-certificates/google-digital-marketing-ecommerce"}
+    ],
+    "skill_questions": ["Q028", "Q029", "Q035", "Q033", "Q037"],
+    "interest_questions": ["Q051", "Q017", "Q106"],
+    "interest_match_values": {"Q106": ["Media & Communications", "Creative & Design"]},
+    "environment_questions": ["Q047", "Q048", "Q053"],
     "feasibility_questions": ["Q061", "Q062", "Q064", "Q065", "Q070"],
     "compensation_questions": ["Q089", "Q066"],
     "weight_interest": 0.30,

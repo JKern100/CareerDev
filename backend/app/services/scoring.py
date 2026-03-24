@@ -47,6 +47,15 @@ def load_pathways() -> list[dict]:
         return json.load(f)
 
 
+def _is_not_sure(answer: dict) -> bool:
+    """Check if the answer is a 'not sure' response."""
+    val = answer.get("value")
+    if val is None:
+        vj = answer.get("value_json", {})
+        val = vj.get("value")
+    return val == "not_sure" or val == "Not sure"
+
+
 def _extract_answer_value(answer: dict):
     """Extract the raw value from an answer dict."""
     val = answer.get("value")
@@ -59,6 +68,8 @@ def _extract_answer_value(answer: dict):
 
 def _get_likert_score(answer: dict, max_val: int = 5) -> float:
     """Normalize a likert/numeric answer to 0-1 range."""
+    if _is_not_sure(answer):
+        return 0.5  # neutral for uncertain answers
     val = _extract_answer_value(answer)
     if val is None:
         return 0.5  # neutral default
@@ -69,6 +80,8 @@ def _get_likert_score(answer: dict, max_val: int = 5) -> float:
 
 
 def _get_slider_score(answer: dict, max_val: int = 10) -> float:
+    if _is_not_sure(answer):
+        return 0.5
     val = _extract_answer_value(answer)
     if val is None:
         return 0.5
@@ -243,13 +256,55 @@ def _compute_risk_score(pathway: dict, answers: dict) -> float:
 
 
 def _compute_confidence_factor(answers: dict, relevant_question_ids: list[str]) -> float:
-    """Average confidence across relevant questions."""
+    """Average confidence across relevant questions.
+
+    'Not sure' answers carry confidence=50 which naturally dampens the score.
+    """
     confidences = []
     for qid in relevant_question_ids:
         if qid in answers:
-            conf = answers[qid].get("confidence", 100)
-            confidences.append(conf / 100.0)
+            ans = answers[qid]
+            if _is_not_sure(ans):
+                confidences.append(0.5)
+            else:
+                conf = ans.get("confidence", 100)
+                confidences.append(conf / 100.0)
     return sum(confidences) / len(confidences) if confidences else 1.0
+
+
+def _apply_negative_signals(pathway: dict, answers: dict) -> float:
+    """Apply negative signal penalties defined in the pathway.
+
+    Returns a total penalty (0.0 to ~0.5) to subtract from the raw score.
+    """
+    signals = pathway.get("negative_signals", {})
+    if not signals:
+        return 0.0
+
+    total_penalty = 0.0
+    for qid, rule in signals.items():
+        if qid not in answers:
+            continue
+        val = _extract_answer_value(answers[qid])
+        if val is None or _is_not_sure(answers[qid]):
+            continue
+
+        condition = rule.get("condition")
+        threshold = rule.get("threshold")
+        penalty = rule.get("penalty", 0.1)
+
+        try:
+            if condition == "gte" and float(val) >= float(threshold):
+                total_penalty += penalty
+            elif condition == "lte" and float(val) <= float(threshold):
+                total_penalty += penalty
+            elif condition == "eq" and str(val) == str(threshold):
+                total_penalty += penalty
+        except (ValueError, TypeError):
+            if condition == "eq" and str(val) == str(threshold):
+                total_penalty += penalty
+
+    return total_penalty
 
 
 def _identify_evidence_signals(pathway: dict, answers: dict) -> list[str]:
@@ -324,6 +379,10 @@ def score_pathways(answers: dict) -> list[ScoredPathway]:
             + pw.get("weight_compensation", 0.15) * compensation
             + pw.get("weight_risk", 0.05) * risk
         )
+
+        # Apply negative signals (e.g. explicit disinterest in sales)
+        negative_penalty = _apply_negative_signals(pw, answers)
+        raw_score = max(0.0, raw_score - negative_penalty)
 
         # Confidence adjustment
         all_question_ids = (

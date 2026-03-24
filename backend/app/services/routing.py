@@ -23,6 +23,38 @@ MODULE_LABELS = {
 
 CORE_MODULES = ["A", "B", "C", "D", "E", "F", "G", "H"]
 
+# ---------------------------------------------------------------------------
+# Progressive questionnaire: core screens (~18 questions for initial results)
+# Users answer these first, get preliminary results, then optionally deep-dive.
+# ---------------------------------------------------------------------------
+CORE_SCREENS = [
+    {
+        "id": "core_1",
+        "label": "The Basics",
+        "questions": ["Q005", "Q001", "Q109", "Q009"],
+    },
+    {
+        "id": "core_2",
+        "label": "Your Experience",
+        "questions": ["Q011", "Q017", "Q019", "Q016", "Q047"],
+    },
+    {
+        "id": "core_3",
+        "label": "Your Skills",
+        "questions": ["Q028", "Q034", "Q042", "Q054", "Q060"],
+    },
+    {
+        "id": "core_4",
+        "label": "What You Want",
+        "questions": ["Q048", "Q071", "Q089", "Q106"],
+    },
+]
+
+CORE_QUESTION_IDS: set[str] = set()
+for _screen in CORE_SCREENS:
+    CORE_QUESTION_IDS.update(_screen["questions"])
+
+
 # Conditional module triggers based on question answers
 CONDITIONAL_TRIGGERS = {
     "training_deep_dive": {
@@ -183,3 +215,27 @@ def check_consent_block(answers: dict) -> bool:
     if q005 and q005.get("value") == "No":
         return True
     return False
+
+
+# ---------------------------------------------------------------------------
+# Core-phase helpers
+# ---------------------------------------------------------------------------
+
+def get_next_core_screen(answered_ids: set[str]) -> dict | None:
+    """Return the next core screen that has unanswered questions, or None."""
+    for screen in CORE_SCREENS:
+        unanswered = [qid for qid in screen["questions"] if qid not in answered_ids]
+        if unanswered:
+            return screen
+    return None
+
+
+def is_core_complete(answered_ids: set[str]) -> bool:
+    """True when every core question has been answered."""
+    return CORE_QUESTION_IDS.issubset(answered_ids)
+
+
+def get_core_screen_questions(screen: dict) -> list["QuestionDef"]:
+    """Return QuestionDef objects for the given core screen (preserving order)."""
+    bank = {q.question_id: q for q in get_question_bank()}
+    return [bank[qid] for qid in screen["questions"] if qid in bank]

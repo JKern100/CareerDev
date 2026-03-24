@@ -1,25 +1,54 @@
 "use client";
 
-import { useState } from "react";
 import { Question } from "@/lib/api";
 
 interface Props {
   question: Question;
   value: string | number | string[];
-  confidence: number;
   onChange: (value: string | number | string[]) => void;
-  onConfidenceChange: (confidence: number) => void;
+  onNotSure?: () => void;
+  isNotSure?: boolean;
 }
 
 export default function QuestionField({
   question,
   value,
-  confidence,
   onChange,
-  onConfidenceChange,
+  onNotSure,
+  isNotSure,
 }: Props) {
-  const [showHelp, setShowHelp] = useState(false);
   const renderInput = () => {
+    if (isNotSure) {
+      return (
+        <div style={{
+          padding: "0.75rem 1rem",
+          background: "#f8fafc",
+          borderRadius: "8px",
+          border: "1px solid var(--border)",
+          color: "var(--muted)",
+          fontSize: "0.9rem",
+          fontStyle: "italic",
+        }}>
+          Marked as &quot;Not sure&quot; &mdash; we&apos;ll work with what we have.
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            style={{
+              background: "none",
+              border: "none",
+              color: "var(--primary)",
+              cursor: "pointer",
+              marginLeft: "0.5rem",
+              textDecoration: "underline",
+              fontSize: "0.85rem",
+            }}
+          >
+            Change my answer
+          </button>
+        </div>
+      );
+    }
+
     switch (question.question_type) {
       case "single_select":
         return (
@@ -186,28 +215,9 @@ export default function QuestionField({
         <p style={{ fontWeight: 500 }}>
           {question.prompt}
           {question.required && <span style={{ color: "var(--error)" }}> *</span>}
-          {question.help_text && (
-            <button
-              type="button"
-              onClick={() => setShowHelp(!showHelp)}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                color: "var(--primary)",
-                fontSize: "0.85rem",
-                marginLeft: "0.5rem",
-                padding: 0,
-                textDecoration: "underline",
-                fontWeight: 400,
-              }}
-            >
-              {showHelp ? "hide help" : "why?"}
-            </button>
-          )}
         </p>
-        {showHelp && question.help_text && (
-          <p className="text-sm text-muted" style={{ marginTop: "0.375rem", lineHeight: 1.5 }}>
+        {question.help_text && (
+          <p className="text-sm text-muted" style={{ marginTop: "0.25rem", lineHeight: 1.5 }}>
             {question.help_text}
           </p>
         )}
@@ -215,19 +225,26 @@ export default function QuestionField({
 
       {renderInput()}
 
-      <div className="mt-2">
-        <label className="text-sm text-muted">
-          Confidence: {confidence}%
-        </label>
-        <input
-          type="range"
-          min={0}
-          max={100}
-          value={confidence}
-          onChange={(e) => onConfidenceChange(parseInt(e.target.value))}
-          style={{ width: "100%", marginTop: "0.25rem" }}
-        />
-      </div>
+      {/* "Not sure" option — shown for non-consent, non-text questions */}
+      {onNotSure && !isNotSure && question.question_id !== "Q005" && (
+        <div style={{ marginTop: "0.5rem" }}>
+          <button
+            type="button"
+            onClick={onNotSure}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "var(--muted)",
+              fontSize: "0.8rem",
+              padding: "0.25rem 0",
+              textDecoration: "underline",
+            }}
+          >
+            Not sure
+          </button>
+        </div>
+      )}
     </div>
   );
 }

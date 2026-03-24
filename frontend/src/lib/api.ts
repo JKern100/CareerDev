@@ -132,6 +132,20 @@ export interface QuestionSet {
   answered_questions: number;
 }
 
+export interface CoreScreen {
+  screen_id: string;
+  screen_label: string;
+  screen_number: number;
+  total_screens: number;
+  questions: Question[];
+  existing_answers?: ExistingAnswer[];
+  core_complete: boolean;
+}
+
+export async function getCoreNextScreen() {
+  return request<CoreScreen>("/questionnaire/core/next");
+}
+
 export async function getNextQuestions() {
   return request<QuestionSet>("/questionnaire/next");
 }
@@ -176,6 +190,7 @@ export async function getProgress() {
     answered_questions: number;
     progress_pct: number;
     modules: ModuleStatus[];
+    core_complete: boolean;
   }>("/questionnaire/progress");
 }
 
