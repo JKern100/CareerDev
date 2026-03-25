@@ -99,11 +99,6 @@ export default function QuestionnairePage() {
       const screen = await getCoreNextScreen();
 
       if (screen.core_complete) {
-        // Check if user already viewed results (came back to refine)
-        if (localStorage.getItem("core_results_viewed") === "true") {
-          setPhase("deep_dive");
-          return; // will fall through to loadQuestions via useEffect
-        }
         setPhase("core_done");
         setLoading(false);
         return;
@@ -155,13 +150,8 @@ export default function QuestionnairePage() {
       const progress = await getProgress();
       setModules(progress.modules);
       setPrevProgress(progress.progress_pct);
-      // If core is complete and user hasn't seen results, redirect
       if (progress.core_complete && phase === "core") {
-        if (localStorage.getItem("core_results_viewed") === "true") {
-          setPhase("deep_dive");
-        } else {
-          setPhase("core_done");
-        }
+        setPhase("core_done");
       }
     } catch {
       // Non-critical
@@ -474,20 +464,14 @@ export default function QuestionnairePage() {
           <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
             <button
               className="btn btn-primary"
-              onClick={() => {
-                localStorage.setItem("core_results_viewed", "true");
-                router.push("/summary");
-              }}
+              onClick={() => router.push("/summary")}
               style={{ padding: "0.75rem 2rem" }}
             >
               See My Results
             </button>
             <button
               className="btn btn-outline"
-              onClick={() => {
-                localStorage.setItem("core_results_viewed", "true");
-                setPhase("deep_dive");
-              }}
+              onClick={() => setPhase("deep_dive")}
               style={{ padding: "0.75rem 2rem" }}
             >
               Keep Going for Better Results
