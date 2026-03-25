@@ -69,8 +69,8 @@ const MODULE_MILESTONES: Record<string, { heading: string; message: string; next
 export default function QuestionnairePage() {
   const router = useRouter();
 
-  // Phase: "core" → "core_done" → "deep_dive" → "complete"
-  const [phase, setPhase] = useState<"core" | "core_done" | "deep_dive" | "complete">("core");
+  // Phase: "tier1" → "tier1_done" → "tier2" → "tier2_done" → "deep_dive" → "complete"
+  const [phase, setPhase] = useState<"tier1" | "tier1_done" | "tier2" | "tier2_done" | "deep_dive" | "complete">("tier1");
 
   // Core phase state
   const [coreScreen, setCoreScreen] = useState<CoreScreen | null>(null);
@@ -91,15 +91,27 @@ export default function QuestionnairePage() {
   const [showWelcome, setShowWelcome] = useState(false);
   const [prevProgress, setPrevProgress] = useState<number>(0);
 
-  // ── Core phase: load next screen ──
+  // ── Progressive phase: load next screen (Tier 1 or Tier 2) ──
   const loadCoreScreen = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
       const screen = await getCoreNextScreen();
 
-      if (screen.core_complete) {
-        setPhase("core_done");
+      // Check tier milestones
+      if (screen.tier1_complete && (phase === "tier1")) {
+        setPhase("tier1_done");
+        setLoading(false);
+        return;
+      }
+      if (screen.tier2_complete && (phase === "tier2")) {
+        setPhase("tier2_done");
+        setLoading(false);
+        return;
+      }
+      // All progressive screens done
+      if (screen.tier1_complete && screen.tier2_complete && screen.questions.length === 0) {
+        setPhase("tier2_done");
         setLoading(false);
         return;
       }
@@ -150,8 +162,8 @@ export default function QuestionnairePage() {
       const progress = await getProgress();
       setModules(progress.modules);
       setPrevProgress(progress.progress_pct);
-      if (progress.core_complete && phase === "core") {
-        setPhase("core_done");
+      if (progress.core_complete && phase === "tier1") {
+        setPhase("tier1_done");
       }
     } catch {
       // Non-critical
@@ -433,15 +445,15 @@ export default function QuestionnairePage() {
     return (
       <div className="container" style={{ textAlign: "center", marginTop: "4rem" }}>
         <p style={{ color: "#ef4444", marginBottom: "1rem" }}>{error}</p>
-        <button className="btn btn-primary" onClick={() => phase === "core" ? loadCoreScreen() : loadQuestions()}>
+        <button className="btn btn-primary" onClick={() => (phase === "tier1" || phase === "tier2") ? loadCoreScreen() : loadQuestions()}>
           Try Again
         </button>
       </div>
     );
   }
 
-  // ── Render: Core done milestone ──
-  if (phase === "core_done") {
+  // ── Render: Tier 1 done milestone ──
+  if (phase === "tier1_done") {
     return (
       <>
         <AppHeader />
@@ -459,7 +471,7 @@ export default function QuestionnairePage() {
           </h1>
           <p style={{ color: "var(--muted)", lineHeight: 1.7, fontSize: "0.95rem", marginBottom: "1rem" }}>
             Based on your quick assessment, we&apos;ve matched you to career pathways.
-            You can see your results now, or keep going for more detailed recommendations.
+            You can see your results now, or sharpen them with ~20 more questions (~5 min).
           </p>
           <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
             <button
@@ -471,14 +483,62 @@ export default function QuestionnairePage() {
             </button>
             <button
               className="btn btn-outline"
-              onClick={() => setPhase("deep_dive")}
+              onClick={() => { setPhase("tier2"); loadCoreScreen(); }}
               style={{ padding: "0.75rem 2rem" }}
             >
-              Keep Going for Better Results
+              Sharpen My Results (~5 min)
             </button>
           </div>
           <p style={{ color: "var(--muted)", fontSize: "0.8rem", marginTop: "1.5rem" }}>
-            The full questionnaire adds ~100 more questions across 8 modules for much more accurate and detailed career recommendations.
+            The &quot;Sharpen&quot; questions cover all scoring-relevant skills, preferences, and constraints.
+            Your career rankings will be fully accurate after this step.
+          </p>
+        </div>
+      </>
+    );
+  }
+
+  // ── Render: Tier 2 done milestone ──
+  if (phase === "tier2_done") {
+    return (
+      <>
+        <AppHeader />
+        <div className="container" style={{ textAlign: "center", marginTop: "4rem", maxWidth: "560px" }}>
+          <div style={{
+            width: "64px", height: "64px", borderRadius: "50%",
+            background: "#d1fae5",
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            fontSize: "1.75rem", marginBottom: "1.5rem",
+          }}>
+            &#9989;
+          </div>
+          <h1 style={{ fontSize: "1.5rem", marginBottom: "0.75rem" }}>
+            Your results are fully scored!
+          </h1>
+          <p style={{ color: "var(--muted)", lineHeight: 1.7, fontSize: "0.95rem", marginBottom: "1rem" }}>
+            All scoring-relevant questions are answered. Your career pathway rankings
+            are now as accurate as they&apos;ll get. You can view your full results, or
+            optionally personalise your report with additional context.
+          </p>
+          <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
+            <button
+              className="btn btn-primary"
+              onClick={() => router.push("/summary")}
+              style={{ padding: "0.75rem 2rem" }}
+            >
+              See My Full Results
+            </button>
+            <button
+              className="btn btn-outline"
+              onClick={() => setPhase("deep_dive")}
+              style={{ padding: "0.75rem 2rem" }}
+            >
+              Personalise My Report
+            </button>
+          </div>
+          <p style={{ color: "var(--muted)", fontSize: "0.8rem", marginTop: "1.5rem" }}>
+            The optional deep-dive adds context about your aviation background, constraints, and aspirations
+            that makes the AI-generated narrative richer and more personalised.
           </p>
         </div>
       </>
@@ -560,8 +620,8 @@ export default function QuestionnairePage() {
     );
   }
 
-  // ── Render: Core phase ──
-  if (phase === "core" && coreScreen) {
+  // ── Render: Progressive phase (Tier 1 or Tier 2) ──
+  if ((phase === "tier1" || phase === "tier2") && coreScreen) {
     return (
       <>
       {showWelcome && (
@@ -588,7 +648,7 @@ export default function QuestionnairePage() {
               Welcome to your career assessment
             </h1>
             <p style={{ color: "var(--muted)", lineHeight: 1.8, fontSize: "0.925rem" }}>
-              We&apos;ll start with a <strong style={{ color: "var(--fg)" }}>quick assessment of 18 questions</strong> that takes about <strong style={{ color: "var(--fg)" }}>5 minutes</strong>. You&apos;ll get your initial career matches right away.
+              We&apos;ll start with <strong style={{ color: "var(--fg)" }}>18 quick questions (~5 min)</strong> to show you which careers fit. Then you decide how deep to go.
             </p>
             <div style={{
               background: "#f8fafc", borderRadius: "10px",
@@ -597,16 +657,16 @@ export default function QuestionnairePage() {
               color: "#475569",
             }}>
               <p>
-                <span style={{ color: "var(--primary)", fontWeight: 600 }}>Quick results first.</span>{" "}
-                Answer 18 key questions and see which careers fit you.
+                <span style={{ color: "var(--primary)", fontWeight: 600 }}>Step 1: Quick Match (5 min).</span>{" "}
+                18 questions to get your initial career pathway rankings.
               </p>
               <p style={{ marginTop: "0.5rem" }}>
-                <span style={{ color: "var(--primary)", fontWeight: 600 }}>Go deeper if you want.</span>{" "}
-                After your initial results, you can answer more questions to refine your recommendations.
+                <span style={{ color: "var(--primary)", fontWeight: 600 }}>Step 2: Sharpen (5 min, optional).</span>{" "}
+                20 more questions that fully score all skills, preferences, and constraints.
               </p>
               <p style={{ marginTop: "0.5rem" }}>
-                <span style={{ color: "var(--primary)", fontWeight: 600 }}>Not sure? That&apos;s OK.</span>{" "}
-                You can mark any question as &quot;Not sure&quot; and move on.
+                <span style={{ color: "var(--primary)", fontWeight: 600 }}>Step 3: Personalise (optional).</span>{" "}
+                Add background context for a richer AI-written career report.
               </p>
             </div>
             <button
@@ -627,7 +687,7 @@ export default function QuestionnairePage() {
         <div className="flex justify-between items-center mb-1">
           <div>
             <p className="text-sm text-muted">
-              Step {coreScreen.screen_number} of {coreScreen.total_screens}: Quick Assessment
+              Step {coreScreen.screen_number} of {coreScreen.total_screens}: {phase === "tier1" ? "Quick Match" : "Sharpening Results"}
             </p>
           </div>
           <p className="text-sm text-muted">
@@ -710,7 +770,7 @@ export default function QuestionnairePage() {
             disabled={submitting}
             style={{ flex: 1 }}
           >
-            {submitting ? "Saving..." : coreScreen.screen_number === coreScreen.total_screens ? "See My Results" : "Next"}
+            {submitting ? "Saving..." : (coreScreen.tier === 1 && coreScreen.screen_number === 4) ? "See My Results" : (coreScreen.tier === 2 && coreScreen.screen_number === coreScreen.total_screens) ? "See My Full Results" : "Next"}
           </button>
         </div>
       </div>

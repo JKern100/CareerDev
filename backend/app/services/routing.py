@@ -24,35 +24,79 @@ MODULE_LABELS = {
 CORE_MODULES = ["A", "B", "C", "D", "E", "F", "G", "H"]
 
 # ---------------------------------------------------------------------------
-# Progressive questionnaire: core screens (~18 questions for initial results)
-# Users answer these first, get preliminary results, then optionally deep-dive.
+# Progressive questionnaire: 3-tier system
+#
+# Tier 1 "Quick Match"   — 18 questions, ~5 min → initial pathway rankings
+# Tier 2 "Sharpen"       — 22 more questions, ~5 min → full scoring accuracy
+# Tier 3 "Personalise"   — remaining module questions (optional deep-dive)
+#
+# After Tier 2, the user has answered ALL 40 scoring-relevant questions.
+# Tier 3 adds context for the AI narrative but doesn't change rankings.
 # ---------------------------------------------------------------------------
-CORE_SCREENS = [
+
+TIER1_SCREENS = [
     {
-        "id": "core_1",
+        "id": "t1_1", "tier": 1,
         "label": "The Basics",
         "questions": ["Q005", "Q001", "Q109", "Q009"],
     },
     {
-        "id": "core_2",
+        "id": "t1_2", "tier": 1,
         "label": "Your Experience",
         "questions": ["Q011", "Q017", "Q019", "Q016", "Q047"],
     },
     {
-        "id": "core_3",
+        "id": "t1_3", "tier": 1,
         "label": "Your Skills",
         "questions": ["Q028", "Q034", "Q042", "Q054", "Q060"],
     },
     {
-        "id": "core_4",
+        "id": "t1_4", "tier": 1,
         "label": "What You Want",
         "questions": ["Q048", "Q071", "Q089", "Q106"],
     },
 ]
 
-CORE_QUESTION_IDS: set[str] = set()
-for _screen in CORE_SCREENS:
-    CORE_QUESTION_IDS.update(_screen["questions"])
+TIER2_SCREENS = [
+    {
+        "id": "t2_1", "tier": 2,
+        "label": "Your Full Skill Profile",
+        "questions": ["Q027", "Q029", "Q030", "Q033", "Q035", "Q036"],
+    },
+    {
+        "id": "t2_2", "tier": 2,
+        "label": "More Skills & Preferences",
+        "questions": ["Q031", "Q037", "Q050", "Q051", "Q053"],
+    },
+    {
+        "id": "t2_3", "tier": 2,
+        "label": "Your Work Situation",
+        "questions": ["Q061", "Q062", "Q063", "Q064", "Q065", "Q066"],
+    },
+    {
+        "id": "t2_4", "tier": 2,
+        "label": "A Few More Details",
+        "questions": ["Q018", "Q020", "Q049", "Q056", "Q070"],
+    },
+]
+
+ALL_PROGRESSIVE_SCREENS = TIER1_SCREENS + TIER2_SCREENS
+
+# Backward-compatible aliases
+CORE_SCREENS = TIER1_SCREENS
+
+TIER1_QUESTION_IDS: set[str] = set()
+for _screen in TIER1_SCREENS:
+    TIER1_QUESTION_IDS.update(_screen["questions"])
+
+TIER2_QUESTION_IDS: set[str] = set()
+for _screen in TIER2_SCREENS:
+    TIER2_QUESTION_IDS.update(_screen["questions"])
+
+ALL_PROGRESSIVE_IDS = TIER1_QUESTION_IDS | TIER2_QUESTION_IDS
+
+# Backward-compatible alias
+CORE_QUESTION_IDS = TIER1_QUESTION_IDS
 
 
 # Conditional module triggers based on question answers
@@ -218,24 +262,44 @@ def check_consent_block(answers: dict) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# Core-phase helpers
+# Progressive-phase helpers
 # ---------------------------------------------------------------------------
 
-def get_next_core_screen(answered_ids: set[str]) -> dict | None:
-    """Return the next core screen that has unanswered questions, or None."""
-    for screen in CORE_SCREENS:
+def get_next_progressive_screen(answered_ids: set[str]) -> dict | None:
+    """Return the next progressive screen (Tier 1 or 2) with unanswered Qs."""
+    for screen in ALL_PROGRESSIVE_SCREENS:
         unanswered = [qid for qid in screen["questions"] if qid not in answered_ids]
         if unanswered:
             return screen
     return None
 
 
+def is_tier1_complete(answered_ids: set[str]) -> bool:
+    return TIER1_QUESTION_IDS.issubset(answered_ids)
+
+
+def is_tier2_complete(answered_ids: set[str]) -> bool:
+    return TIER2_QUESTION_IDS.issubset(answered_ids)
+
+
+def is_all_progressive_complete(answered_ids: set[str]) -> bool:
+    return ALL_PROGRESSIVE_IDS.issubset(answered_ids)
+
+
+def get_screen_questions(screen: dict) -> list["QuestionDef"]:
+    """Return QuestionDef objects for the given screen (preserving order)."""
+    bank = {q.question_id: q for q in get_question_bank()}
+    return [bank[qid] for qid in screen["questions"] if qid in bank]
+
+
+# Backward-compatible aliases
+def get_next_core_screen(answered_ids: set[str]) -> dict | None:
+    return get_next_progressive_screen(answered_ids)
+
+
 def is_core_complete(answered_ids: set[str]) -> bool:
-    """True when every core question has been answered."""
-    return CORE_QUESTION_IDS.issubset(answered_ids)
+    return is_tier1_complete(answered_ids)
 
 
 def get_core_screen_questions(screen: dict) -> list["QuestionDef"]:
-    """Return QuestionDef objects for the given core screen (preserving order)."""
-    bank = {q.question_id: q for q in get_question_bank()}
-    return [bank[qid] for qid in screen["questions"] if qid in bank]
+    return get_screen_questions(screen)

@@ -87,8 +87,11 @@ class QuestionnaireProgressOut(BaseModel):
 class CoreScreenOut(BaseModel):
     screen_id: str
     screen_label: str
-    screen_number: int  # 1-based
+    screen_number: int  # 1-based across all progressive screens
     total_screens: int
+    tier: int = 1  # 1 or 2
+    tier1_complete: bool = False
+    tier2_complete: bool = False
     questions: list[QuestionOut]
     existing_answers: list[ExistingAnswerOut] = []
-    core_complete: bool = False
+    core_complete: bool = False  # backward compat (= tier1_complete)
