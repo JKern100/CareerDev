@@ -249,10 +249,11 @@ export default function QuestionnairePage() {
 
   // ── When switching to tier2, load next progressive screen ──
   useEffect(() => {
-    if (phase === "tier2" && !loading) {
+    if (phase === "tier2") {
       loadCoreScreen();
     }
-  }, [phase, loading, loadCoreScreen]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
 
   // ── When switching to deep-dive, load module questions ──
   useEffect(() => {
