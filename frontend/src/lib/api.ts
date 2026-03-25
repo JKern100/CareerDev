@@ -137,6 +137,9 @@ export interface CoreScreen {
   screen_label: string;
   screen_number: number;
   total_screens: number;
+  tier: number;
+  tier1_complete: boolean;
+  tier2_complete: boolean;
   questions: Question[];
   existing_answers?: ExistingAnswer[];
   core_complete: boolean;

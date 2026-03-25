@@ -27,11 +27,12 @@ from app.services.routing import (
     check_consent_block,
     MODULE_LABELS,
     CORE_MODULES,
-    CORE_SCREENS,
-    CORE_QUESTION_IDS,
-    get_next_core_screen,
-    is_core_complete,
-    get_core_screen_questions,
+    ALL_PROGRESSIVE_SCREENS,
+    get_next_progressive_screen,
+    is_tier1_complete,
+    is_tier2_complete,
+    is_all_progressive_complete,
+    get_screen_questions,
 )
 from app.api.deps import get_current_user
 
@@ -100,37 +101,44 @@ async def get_next_core(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get the next core screen for the quick assessment."""
+    """Get the next progressive screen (Tier 1 or Tier 2)."""
     answered_ids = await _get_answered_ids(user.id, db)
+    t1 = is_tier1_complete(answered_ids)
+    t2 = is_tier2_complete(answered_ids)
+    total = len(ALL_PROGRESSIVE_SCREENS)
 
-    if is_core_complete(answered_ids):
+    if is_all_progressive_complete(answered_ids):
         return CoreScreenOut(
             screen_id="done",
             screen_label="Complete",
-            screen_number=len(CORE_SCREENS),
-            total_screens=len(CORE_SCREENS),
+            screen_number=total,
+            total_screens=total,
+            tier=2,
+            tier1_complete=True,
+            tier2_complete=True,
             questions=[],
             existing_answers=[],
             core_complete=True,
         )
 
-    screen = get_next_core_screen(answered_ids)
+    screen = get_next_progressive_screen(answered_ids)
     if screen is None:
-        # Shouldn't happen if is_core_complete is false, but be safe
         return CoreScreenOut(
             screen_id="done",
             screen_label="Complete",
-            screen_number=len(CORE_SCREENS),
-            total_screens=len(CORE_SCREENS),
+            screen_number=total,
+            total_screens=total,
+            tier=2,
+            tier1_complete=t1,
+            tier2_complete=t2,
             questions=[],
             existing_answers=[],
-            core_complete=True,
+            core_complete=t1,
         )
 
-    screen_number = CORE_SCREENS.index(screen) + 1
-    questions = get_core_screen_questions(screen)
+    screen_number = ALL_PROGRESSIVE_SCREENS.index(screen) + 1
+    questions = get_screen_questions(screen)
 
-    # Get existing answers for these questions
     qids = {q.question_id for q in questions}
     result = await db.execute(
         select(Answer).where(
@@ -151,10 +159,13 @@ async def get_next_core(
         screen_id=screen["id"],
         screen_label=screen["label"],
         screen_number=screen_number,
-        total_screens=len(CORE_SCREENS),
+        total_screens=total,
+        tier=screen.get("tier", 1),
+        tier1_complete=t1,
+        tier2_complete=t2,
         questions=[_build_question_out(q) for q in questions],
         existing_answers=existing,
-        core_complete=False,
+        core_complete=t1,
     )
 
 
@@ -362,5 +373,5 @@ async def get_progress(
         current_question_id=user.current_question_id,
         progress_pct=round(len(answered_ids) / total_questions * 100, 1) if total_questions > 0 else 0,
         modules=modules_status,
-        core_complete=is_core_complete(answered_ids),
+        core_complete=is_tier1_complete(answered_ids),
     )
