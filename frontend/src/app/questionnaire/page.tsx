@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   getCoreNextScreen,
@@ -71,6 +71,8 @@ export default function QuestionnairePage() {
 
   // Phase: "tier1" → "tier1_done" → "tier2" → "tier2_done" → "deep_dive" → "complete"
   const [phase, setPhase] = useState<"tier1" | "tier1_done" | "tier2" | "tier2_done" | "deep_dive" | "complete">("tier1");
+  const phaseRef = useRef(phase);
+  phaseRef.current = phase; // always current — avoids stale closures
 
   // Core phase state
   const [coreScreen, setCoreScreen] = useState<CoreScreen | null>(null);
@@ -98,13 +100,14 @@ export default function QuestionnairePage() {
       setError("");
       const screen = await getCoreNextScreen();
 
-      // Check tier milestones
-      if (screen.tier1_complete && (phase === "tier1")) {
+      // Check tier milestones (use ref to avoid stale closure)
+      const currentPhase = phaseRef.current;
+      if (screen.tier1_complete && currentPhase === "tier1") {
         setPhase("tier1_done");
         setLoading(false);
         return;
       }
-      if (screen.tier2_complete && (phase === "tier2")) {
+      if (screen.tier2_complete && currentPhase === "tier2") {
         setPhase("tier2_done");
         setLoading(false);
         return;
@@ -162,13 +165,13 @@ export default function QuestionnairePage() {
       const progress = await getProgress();
       setModules(progress.modules);
       setPrevProgress(progress.progress_pct);
-      if (progress.core_complete && phase === "tier1") {
+      if (progress.core_complete && phaseRef.current === "tier1") {
         setPhase("tier1_done");
       }
     } catch {
       // Non-critical
     }
-  }, [phase]);
+  }, []); // phaseRef.current used instead of phase dep
 
   const loadQuestions = useCallback(async (module?: string) => {
     try {
@@ -243,6 +246,13 @@ export default function QuestionnairePage() {
     // Start with core phase
     loadCoreScreen();
   }, [router, loadCoreScreen]);
+
+  // ── When switching to tier2, load next progressive screen ──
+  useEffect(() => {
+    if (phase === "tier2" && !loading) {
+      loadCoreScreen();
+    }
+  }, [phase, loading, loadCoreScreen]);
 
   // ── When switching to deep-dive, load module questions ──
   useEffect(() => {
@@ -483,7 +493,7 @@ export default function QuestionnairePage() {
             </button>
             <button
               className="btn btn-outline"
-              onClick={() => { setPhase("tier2"); loadCoreScreen(); }}
+              onClick={() => setPhase("tier2")}
               style={{ padding: "0.75rem 2rem" }}
             >
               Sharpen My Results (~5 min)
