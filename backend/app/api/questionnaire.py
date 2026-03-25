@@ -374,4 +374,5 @@ async def get_progress(
         progress_pct=round(len(answered_ids) / total_questions * 100, 1) if total_questions > 0 else 0,
         modules=modules_status,
         core_complete=is_tier1_complete(answered_ids),
+        tier2_complete=is_tier2_complete(answered_ids),
     )

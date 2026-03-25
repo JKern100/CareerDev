@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { generateSummary, getSummary, getMe, SummaryReport, APP_VERSION } from "@/lib/api";
+import { generateSummary, getSummary, getMe, getProgress, SummaryReport, APP_VERSION } from "@/lib/api";
 import AppHeader from "@/components/AppHeader";
 import FlowerSpinner from "@/components/FlowerSpinner";
 import ReactMarkdown from "react-markdown";
@@ -12,6 +12,7 @@ export default function SummaryPage() {
   const router = useRouter();
   const [summary, setSummary] = useState<SummaryReport | null>(null);
   const [canRegenerate, setCanRegenerate] = useState(false);
+  const [tier2Complete, setTier2Complete] = useState(false);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
@@ -25,9 +26,10 @@ export default function SummaryPage() {
 
     async function load() {
       try {
-        // Check user's regeneration permission
-        const me = await getMe();
+        // Check user's permissions and questionnaire progress
+        const [me, progress] = await Promise.all([getMe(), getProgress()]);
         setCanRegenerate(me.can_regenerate_summary);
+        setTier2Complete(me.questionnaire_completed || progress.tier2_complete);
 
         // Try to get existing summary
         const data = await getSummary();
@@ -139,7 +141,7 @@ export default function SummaryPage() {
         </ReactMarkdown>
       </div>
 
-      {/* Action buttons */}
+      {/* Action buttons — depends on tier progress */}
       <div
         style={{
           marginTop: "3rem",
@@ -150,19 +152,38 @@ export default function SummaryPage() {
           textAlign: "center",
         }}
       >
-        <h3 style={{ marginBottom: "0.5rem" }}>Ready for the next step?</h3>
-        <p className="text-muted" style={{ marginBottom: "1.5rem" }}>
-          Your Career Analysis Report will score and rank specific career pathways
-          based on your profile, with salary data, credential recommendations, and
-          a realistic transition timeline.
-        </p>
-        <button
-          className="btn btn-primary"
-          style={{ fontSize: "1rem", padding: "0.75rem 2rem" }}
-          onClick={() => router.push("/results")}
-        >
-          Generate Career Analysis
-        </button>
+        {tier2Complete ? (
+          <>
+            <h3 style={{ marginBottom: "0.5rem" }}>Ready for the next step?</h3>
+            <p className="text-muted" style={{ marginBottom: "1.5rem" }}>
+              Your Career Analysis Report will score and rank specific career pathways
+              based on your profile, with salary data, credential recommendations, and
+              a realistic transition timeline.
+            </p>
+            <button
+              className="btn btn-primary"
+              style={{ fontSize: "1rem", padding: "0.75rem 2rem" }}
+              onClick={() => router.push("/results")}
+            >
+              Generate Career Analysis
+            </button>
+          </>
+        ) : (
+          <>
+            <h3 style={{ marginBottom: "0.5rem" }}>Want more accurate results?</h3>
+            <p className="text-muted" style={{ marginBottom: "1.5rem" }}>
+              Answer ~20 more questions (~5 min) to fully score all your skills, preferences, and constraints.
+              This unlocks the full Career Analysis Report with pathway rankings, salary data, and a transition plan.
+            </p>
+            <button
+              className="btn btn-primary"
+              style={{ fontSize: "1rem", padding: "0.75rem 2rem" }}
+              onClick={() => router.push("/questionnaire")}
+            >
+              Sharpen My Results (~5 min)
+            </button>
+          </>
+        )}
       </div>
 
       {/* Human review recommendation */}
