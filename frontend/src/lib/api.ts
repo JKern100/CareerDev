@@ -194,6 +194,7 @@ export async function getProgress() {
     progress_pct: number;
     modules: ModuleStatus[];
     core_complete: boolean;
+    tier2_complete: boolean;
   }>("/questionnaire/progress");
 }
 
