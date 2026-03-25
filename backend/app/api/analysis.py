@@ -20,6 +20,7 @@ from app.services.career_analysis import (
     check_completion_gate,
     call_analysis_api,
 )
+from app.services.routing import is_core_complete
 from app.api.deps import get_current_user
 from app.services.activity import log_activity
 
@@ -34,8 +35,14 @@ async def generate_summary(
     db: AsyncSession = Depends(get_db),
 ):
     """Generate a narrative summary report playing back the user's answers."""
+    # Allow generation after core questions OR full questionnaire completion
     if not user.questionnaire_completed:
-        raise HTTPException(status_code=400, detail="Complete the questionnaire first")
+        answered_ids_result = await db.execute(
+            select(Answer.question_id).where(Answer.user_id == user.id)
+        )
+        answered_ids = {row[0] for row in answered_ids_result.all()}
+        if not is_core_complete(answered_ids):
+            raise HTTPException(status_code=400, detail="Complete the questionnaire first")
 
     # Check if user already has a summary and needs permission to regenerate
     existing = await db.execute(
