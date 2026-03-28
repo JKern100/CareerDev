@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { runAnalysis, getCareerReport, getResults, CareerAnalysis, PathwayResult } from "@/lib/api";
+import { runAnalysis, getCareerReport, getResults, getMe, CareerAnalysis, PathwayResult } from "@/lib/api";
 import AppHeader from "@/components/AppHeader";
 import AnalysisLoader from "@/components/AnalysisLoader";
 import FlowerSpinner from "@/components/FlowerSpinner";
@@ -20,6 +20,7 @@ export default function ResultsPage() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
   const [shareOpen, setShareOpen] = useState(false);
+  const [questionnaireComplete, setQuestionnaireComplete] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -30,6 +31,9 @@ export default function ResultsPage() {
 
     async function load() {
       try {
+        // Check questionnaire completion status
+        getMe().then(me => setQuestionnaireComplete(me.questionnaire_completed)).catch(() => {});
+
         // Try to get existing report first
         const data = await getCareerReport();
 
@@ -172,6 +176,31 @@ export default function ResultsPage() {
         </div>
 
         {pathways.length > 0 && <ResourcesSection pathways={pathways} />}
+
+        {!questionnaireComplete && (
+          <div style={{
+            marginTop: "1.5rem",
+            padding: "1.25rem 1.5rem",
+            background: "linear-gradient(135deg, rgba(37, 99, 235, 0.06), rgba(139, 92, 246, 0.06))",
+            border: "1px solid rgba(37, 99, 235, 0.2)",
+            borderRadius: "12px",
+            textAlign: "center",
+          }}>
+            <h3 style={{ fontSize: "1rem", marginBottom: "0.5rem" }}>Want a more detailed analysis?</h3>
+            <p className="text-muted" style={{ fontSize: "0.875rem", marginBottom: "1rem", lineHeight: 1.6 }}>
+              Your report is based on partial questionnaire data. Answering more questions will make
+              the recommendations more personalised and the analysis more confident.
+              Your progress is saved &mdash; pick up where you left off.
+            </p>
+            <button
+              className="btn btn-outline"
+              style={{ padding: "0.6rem 1.5rem", fontSize: "0.9rem", borderColor: "var(--primary)", color: "var(--primary)" }}
+              onClick={() => router.push("/questionnaire")}
+            >
+              Continue Questionnaire
+            </button>
+          </div>
+        )}
       </div>
 
       {pathways.length > 0 && (

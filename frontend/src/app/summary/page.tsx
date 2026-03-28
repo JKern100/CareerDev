@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { generateSummary, getSummary, getMe, getProgress, SummaryReport, APP_VERSION } from "@/lib/api";
+import { generateSummary, getSummary, getMe, getProgress, getCareerReport, SummaryReport, APP_VERSION } from "@/lib/api";
 import AppHeader from "@/components/AppHeader";
 import FlowerSpinner from "@/components/FlowerSpinner";
 import ReactMarkdown from "react-markdown";
@@ -13,6 +13,8 @@ export default function SummaryPage() {
   const [summary, setSummary] = useState<SummaryReport | null>(null);
   const [canRegenerate, setCanRegenerate] = useState(false);
   const [tier2Complete, setTier2Complete] = useState(false);
+  const [hasAnalysisReport, setHasAnalysisReport] = useState(false);
+  const [questionnaireComplete, setQuestionnaireComplete] = useState(false);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
@@ -30,6 +32,15 @@ export default function SummaryPage() {
         const [me, progress] = await Promise.all([getMe(), getProgress()]);
         setCanRegenerate(me.can_regenerate_summary);
         setTier2Complete(me.questionnaire_completed || progress.tier2_complete);
+        setQuestionnaireComplete(me.questionnaire_completed);
+
+        // Check if career analysis report already exists
+        try {
+          await getCareerReport();
+          setHasAnalysisReport(true);
+        } catch {
+          setHasAnalysisReport(false);
+        }
 
         // Try to get existing summary
         const data = await getSummary();
@@ -154,19 +165,38 @@ export default function SummaryPage() {
       >
         {tier2Complete ? (
           <>
-            <h3 style={{ marginBottom: "0.5rem" }}>Ready for the next step?</h3>
+            <h3 style={{ marginBottom: "0.5rem" }}>
+              {hasAnalysisReport ? "Your Career Analysis" : "Ready for the next step?"}
+            </h3>
             <p className="text-muted" style={{ marginBottom: "1.5rem" }}>
-              Your Career Analysis Report will score and rank specific career pathways
-              based on your profile, with salary data, credential recommendations, and
-              a realistic transition timeline.
+              {hasAnalysisReport
+                ? "Your career analysis report is ready with pathway rankings, salary data, and credential recommendations."
+                : "Your Career Analysis Report will score and rank specific career pathways based on your profile, with salary data, credential recommendations, and a realistic transition timeline."
+              }
             </p>
-            <button
-              className="btn btn-primary"
-              style={{ fontSize: "1rem", padding: "0.75rem 2rem" }}
-              onClick={() => router.push("/results")}
-            >
-              Generate Career Analysis
-            </button>
+            <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
+              <button
+                className="btn btn-primary"
+                style={{ fontSize: "1rem", padding: "0.75rem 2rem" }}
+                onClick={() => router.push("/results")}
+              >
+                {hasAnalysisReport ? "View Career Analysis" : "Generate Career Analysis"}
+              </button>
+              {!questionnaireComplete && (
+                <button
+                  className="btn btn-outline"
+                  style={{ fontSize: "0.9rem", padding: "0.75rem 1.5rem" }}
+                  onClick={() => router.push("/questionnaire")}
+                >
+                  Continue Questionnaire
+                </button>
+              )}
+            </div>
+            {!questionnaireComplete && (
+              <p className="text-muted" style={{ fontSize: "0.8rem", marginTop: "1rem" }}>
+                Answering more questions will make your analysis richer and more personalised.
+              </p>
+            )}
           </>
         ) : (
           <>
