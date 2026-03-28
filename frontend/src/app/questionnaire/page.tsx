@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   getCoreNextScreen,
@@ -67,6 +67,14 @@ const MODULE_MILESTONES: Record<string, { heading: string; message: string; next
 };
 
 export default function QuestionnairePage() {
+  return (
+    <Suspense fallback={<div className="container" style={{ textAlign: "center", marginTop: "4rem" }}><FlowerSpinner size={48} /><p className="text-muted" style={{ marginTop: "1rem" }}>Loading...</p></div>}>
+      <QuestionnaireContent />
+    </Suspense>
+  );
+}
+
+function QuestionnaireContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const startParam = searchParams.get("start"); // ?start=tier2
