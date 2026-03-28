@@ -547,43 +547,126 @@ function QuestionnaireContent() {
     return (
       <>
         <AppHeader />
-        <div className="container" style={{ textAlign: "center", marginTop: "4rem", maxWidth: "560px" }}>
-          <div style={{
-            width: "64px", height: "64px", borderRadius: "50%",
-            background: "#d1fae5",
-            display: "inline-flex", alignItems: "center", justifyContent: "center",
-            fontSize: "1.75rem", marginBottom: "1.5rem",
-          }}>
-            &#9989;
+        <div className="container" style={{ marginTop: "2.5rem", maxWidth: "620px" }}>
+          <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+            <div style={{
+              width: "64px", height: "64px", borderRadius: "50%",
+              background: "#d1fae5",
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
+              fontSize: "1.75rem", marginBottom: "1.5rem",
+            }}>
+              &#9989;
+            </div>
+            <h1 style={{ fontSize: "1.5rem", marginBottom: "0.75rem" }}>
+              Your career rankings are locked in
+            </h1>
+            <p style={{ color: "var(--muted)", lineHeight: 1.7, fontSize: "0.95rem" }}>
+              You&apos;ve answered all the questions that determine your pathway scores.
+              You can see your results now &mdash; or unlock a significantly richer, more personalised report.
+            </p>
           </div>
-          <h1 style={{ fontSize: "1.5rem", marginBottom: "0.75rem" }}>
-            Your results are fully scored!
-          </h1>
-          <p style={{ color: "var(--muted)", lineHeight: 1.7, fontSize: "0.95rem", marginBottom: "1rem" }}>
-            All scoring-relevant questions are answered. Your career pathway rankings
-            are now as accurate as they&apos;ll get. You can view your full results, or
-            optionally personalise your report with additional context.
-          </p>
-          <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
+
+          {/* Primary CTA */}
+          <div style={{ textAlign: "center", marginBottom: "2rem" }}>
             <button
               className="btn btn-primary"
               onClick={() => router.push("/summary")}
-              style={{ padding: "0.75rem 2rem" }}
+              style={{ padding: "0.75rem 2.5rem", fontSize: "1rem" }}
             >
-              See My Full Results
-            </button>
-            <button
-              className="btn btn-outline"
-              onClick={() => setPhase("deep_dive")}
-              style={{ padding: "0.75rem 2rem" }}
-            >
-              Personalise My Report
+              See My Results Now
             </button>
           </div>
-          <p style={{ color: "var(--muted)", fontSize: "0.8rem", marginTop: "1.5rem" }}>
-            The optional deep-dive adds context about your aviation background, constraints, and aspirations
-            that makes the AI-generated narrative richer and more personalised.
-          </p>
+
+          {/* Stage 3 pitch */}
+          <div style={{
+            background: "linear-gradient(135deg, rgba(37, 99, 235, 0.06), rgba(139, 92, 246, 0.06))",
+            border: "1px solid rgba(37, 99, 235, 0.2)",
+            borderRadius: "14px",
+            padding: "1.75rem 1.5rem",
+            marginBottom: "1.5rem",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
+              <span style={{
+                fontSize: "0.7rem", background: "var(--primary)", color: "white",
+                padding: "0.2rem 0.65rem", borderRadius: "20px", fontWeight: 600,
+                letterSpacing: "0.03em",
+              }}>
+                RECOMMENDED
+              </span>
+            </div>
+
+            <h2 style={{ fontSize: "1.15rem", marginBottom: "0.75rem", fontWeight: 600 }}>
+              Want a report that actually sounds like you?
+            </h2>
+
+            <p style={{ color: "var(--muted)", lineHeight: 1.75, fontSize: "0.9rem", marginBottom: "1.25rem" }}>
+              Your current report uses your scores to rank careers. But the <strong style={{ color: "var(--fg)" }}>personalised deep-dive</strong> transforms it into
+              a career transition plan written specifically for your situation &mdash; your aviation background, your real constraints, your ambitions, and the
+              trade-offs you&apos;re actually willing to make.
+            </p>
+
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "0.75rem",
+              marginBottom: "1.5rem",
+            }}>
+              {[
+                { icon: "&#9992;&#65039;", label: "Your aviation story", desc: "How your specific crew experience translates to each career" },
+                { icon: "&#128170;", label: "Evidence-backed skills", desc: "Real examples from your career that prove your strengths" },
+                { icon: "&#127919;", label: "Your dream role", desc: "We'll address what you really want — even if it's ambitious" },
+                { icon: "&#9878;&#65039;", label: "Realistic constraints", desc: "Visa, finances, family — your plan will actually work" },
+              ].map((item) => (
+                <div key={item.label} style={{
+                  background: "white",
+                  borderRadius: "10px",
+                  padding: "0.875rem",
+                  border: "1px solid var(--border)",
+                }}>
+                  <div dangerouslySetInnerHTML={{ __html: item.icon }} style={{ fontSize: "1.25rem", marginBottom: "0.375rem" }} />
+                  <p style={{ fontWeight: 600, fontSize: "0.85rem", marginBottom: "0.25rem" }}>{item.label}</p>
+                  <p style={{ color: "var(--muted)", fontSize: "0.775rem", lineHeight: 1.5 }}>{item.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            <div style={{
+              background: "white",
+              borderRadius: "10px",
+              padding: "1rem 1.25rem",
+              border: "1px solid var(--border)",
+              marginBottom: "1.25rem",
+            }}>
+              <p style={{ fontWeight: 600, fontSize: "0.85rem", marginBottom: "0.5rem", color: "var(--fg)" }}>
+                What to expect
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", fontSize: "0.825rem", color: "#475569", lineHeight: 1.6 }}>
+                <p>&#128340; <strong>~15-20 minutes</strong> across 8 modules &mdash; similar to a short podcast episode</p>
+                <p>&#128190; <strong>Save and continue any time</strong> &mdash; close the browser, come back tomorrow, pick up exactly where you left off</p>
+                <p>&#128221; <strong>Mix of quick picks and short answers</strong> &mdash; mostly tapping options, a few short written responses</p>
+                <p>&#127775; <strong>Each module unlocks more detail</strong> &mdash; your report gets richer after every section you complete</p>
+              </div>
+            </div>
+
+            <div style={{ textAlign: "center" }}>
+              <button
+                className="btn btn-outline"
+                onClick={() => setPhase("deep_dive")}
+                style={{
+                  padding: "0.75rem 2.5rem",
+                  fontSize: "0.95rem",
+                  borderColor: "var(--primary)",
+                  color: "var(--primary)",
+                  fontWeight: 600,
+                }}
+              >
+                Start the Deep-Dive
+              </button>
+              <p style={{ color: "var(--muted)", fontSize: "0.75rem", marginTop: "0.75rem" }}>
+                You can stop after any module and still see improved results.
+              </p>
+            </div>
+          </div>
         </div>
       </>
     );
