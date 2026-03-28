@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Question } from "@/lib/api";
 
 interface Props {
@@ -209,12 +210,33 @@ export default function QuestionField({
     }
   };
 
+  const [showHints, setShowHints] = useState(false);
+  const hasHints = question.option_hints && Object.keys(question.option_hints).length > 0;
+
   return (
     <div id={`q-${question.question_id}`} className="card">
       <div className="mb-2">
         <p style={{ fontWeight: 500 }}>
           {question.prompt}
           {question.required && <span style={{ color: "var(--error)" }}> *</span>}
+          {hasHints && (
+            <button
+              type="button"
+              onClick={() => setShowHints(!showHints)}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "var(--primary)",
+                fontSize: "0.8rem",
+                marginLeft: "0.5rem",
+                padding: 0,
+                fontWeight: 400,
+              }}
+            >
+              {showHints ? "hide examples" : "examples"}
+            </button>
+          )}
         </p>
         {question.help_text && (
           <p className="text-sm text-muted" style={{ marginTop: "0.25rem", lineHeight: 1.5 }}>
@@ -224,6 +246,26 @@ export default function QuestionField({
       </div>
 
       {renderInput()}
+
+      {/* Option hints — expandable examples for each option */}
+      {showHints && hasHints && (
+        <div style={{
+          marginTop: "0.75rem",
+          padding: "0.75rem 1rem",
+          background: "#f8fafc",
+          borderRadius: "8px",
+          border: "1px solid var(--border)",
+          fontSize: "0.8rem",
+          lineHeight: 1.6,
+          color: "#475569",
+        }}>
+          {Object.entries(question.option_hints!).map(([option, hint]) => (
+            <div key={option} style={{ marginBottom: "0.4rem" }}>
+              <strong>{option}:</strong> {hint}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* "Not sure" option — shown for non-consent, non-text questions */}
       {onNotSure && !isNotSure && question.question_id !== "Q005" && (

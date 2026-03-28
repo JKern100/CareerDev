@@ -1,0 +1,114 @@
+{
+  "Q024": {
+    "Handled a medical emergency": "e.g. a passenger fainted, had a seizure, or needed oxygen — you took charge of first aid and coordinated with the flight deck",
+    "De-escalated a difficult passenger": "e.g. a passenger refused to buckle up, was aggressive to crew, or caused a disturbance — you calmed the situation without escalation",
+    "Led the cabin crew team through a challenge": "e.g. during a diversion, delay, or staffing issue — you coordinated the team and kept service running",
+    "Delivered exceptional service to a passenger": "e.g. went above and beyond for a nervous flyer, a family with children, or a VIP — and received genuine thanks",
+    "Managed a safety incident calmly": "e.g. turbulence injury, smoke in cabin, emergency landing prep — you followed procedure while keeping passengers calm",
+    "Trained or mentored new crew": "e.g. guided a new joiner through their first flights, helped them build confidence, or ran onboard briefings",
+    "Solved an operational problem creatively": "e.g. found a workaround for broken equipment, managed catering shortfall, or reorganised seating to solve a problem",
+    "Received recognition or an award": "e.g. commendation email, service excellence award, passenger letter, or management recognition"
+  },
+  "Q025": {
+    "Severe turbulence or emergency landing": "e.g. unexpected clear air turbulence causing injuries, or an emergency diversion that felt genuinely dangerous",
+    "Verbally abusive passenger": "e.g. a passenger screaming, using slurs, or personally targeting you — beyond normal difficult behaviour",
+    "Conflict with crew or management": "e.g. a senior crew member undermining you, unfair rostering, or being blamed for something that wasn't your fault",
+    "Exhaustion or burnout episode": "e.g. back-to-back flights with no recovery, falling asleep on the bus home, or feeling unable to go back to work",
+    "Medical emergency beyond your training": "e.g. a passenger needed care you weren't equipped to give — felt helpless or scared",
+    "Unfair treatment by management": "e.g. denied promotion without reason, punished for calling in sick, or policy applied inconsistently",
+    "Personal safety felt threatened": "e.g. a passenger invaded your space, followed you, or made you feel physically unsafe",
+    "Constant schedule disruption": "e.g. roster changes destroying personal plans repeatedly, missed family events, inability to plan life"
+  },
+  "Q047": {
+    "Structured": "Clear processes, defined roles, predictable routines — like airline operations but on the ground",
+    "Fast-changing": "Dynamic priorities, frequent pivots, startup-like energy — suits people who get bored with routine",
+    "Creative": "Design, content, visual work, brainstorming — roles where you make things or shape how they look and feel",
+    "Analytical": "Data, research, problem-solving, spreadsheets — roles where you figure things out systematically",
+    "Mission-driven": "Nonprofits, healthcare, education, sustainability — work where the purpose matters as much as the pay",
+    "Luxury/service": "Hotels, private aviation, high-end retail — premium environments similar to business/first class service"
+  },
+  "Q106": {
+    "L&D": "Learning & Development — corporate training, instructional design, coaching employees",
+    "HR": "Human Resources — recruitment, employee relations, people management, talent strategy",
+    "CX": "Customer Experience — designing and managing how customers interact with a brand or service",
+    "Operations": "Operations & Logistics — scheduling, process management, supply chain, coordination",
+    "Safety": "Safety & Compliance — HSE, quality assurance, audit, regulatory roles across industries",
+    "Tech": "Technology & Digital — business analysis, UX design, data analytics, digital transformation",
+    "Entrepreneurship": "Starting your own business — freelancing, consulting, coaching practice, or service company",
+    "Creative & Design": "Graphic design, photography, interior design, art direction, visual merchandising",
+    "Media & Communications": "PR, corporate comms, social media management, content strategy, event coordination",
+    "Healthcare": "Non-clinical healthcare roles — patient experience, clinic coordination, healthcare admin",
+    "Education & Coaching": "Teaching, academic coordination, life/career coaching, corporate facilitation",
+    "Hospitality": "Hotels, cruise lines, luxury retail, VIP services — premium service management",
+    "Sales": "B2B/B2C sales, account management, business development — commission-based earning potential"
+  },
+  "Q042": {
+    "Low": "You mainly use your phone — email and basic apps. Spreadsheets and software feel unfamiliar.",
+    "Medium": "Comfortable with email, basic Excel, and common apps. Can learn new tools with some guidance.",
+    "High": "Confident with multiple software tools, can self-teach new tech, and enjoy digital problem-solving."
+  },
+  "Q054": {
+    "Individual contributor": "You want to do great work without managing people — specialist, analyst, designer, or expert roles",
+    "Manager": "You want to lead a team of 3-15 people, set direction, and develop others",
+    "Senior leader": "You aspire to director/VP level — shaping strategy, managing managers, influencing the organisation",
+    "Unsure": "You haven't decided yet — that's fine, we'll explore both paths in your results"
+  },
+  "Q109": {
+    "Career growth ceiling": "You've hit the top of what's available in your current role and want more",
+    "Burnout/wellbeing": "The lifestyle, schedule, or emotional demands are taking a toll on your health",
+    "Medical/health": "A health condition means flying is no longer viable or safe for you",
+    "Redundancy or contract ending": "Your airline is restructuring, or your contract won't be renewed",
+    "Financial": "The pay isn't enough for your needs, or the career doesn't offer the growth you want",
+    "Family/lifestyle": "You need stability, predictable hours, or to be home for family",
+    "Curiosity": "You're not unhappy — just wondering what else is out there"
+  },
+  "Q057": {
+    "Work-life balance": "Predictable hours, no constant on-call, ability to plan your personal life",
+    "Minimum salary met": "Your next role must meet a specific income floor — no negotiation",
+    "Location stability": "You need to stay in your current city/country — relocation isn't an option",
+    "Health benefits": "Medical insurance for you and/or family is essential — not optional",
+    "Remote or hybrid work": "You need flexibility to work from home at least part of the week",
+    "Career growth path": "Clear promotion track — you won't accept a dead-end role",
+    "Job security": "Permanent contract preferred — no short-term gigs or unstable startups",
+    "Family-friendly hours": "School hours, no weekends, or flexibility for childcare/family needs",
+    "Respectful culture": "Zero tolerance for toxic management, bullying, or discrimination",
+    "Learning opportunities": "Employer-supported training, courses, or professional development"
+  },
+  "Q058": {
+    "Night shifts": "Any role requiring regular overnight or early-morning shifts",
+    "Long commute": "More than 45-60 minutes each way — not worth the time cost",
+    "Toxic or high-pressure culture": "Constant targets, blame culture, aggressive management, or unethical practices",
+    "Sales targets": "Being measured on revenue, quotas, or commission — the pressure of selling",
+    "Constant customer complaints": "Front-line complaint handling as a primary job function",
+    "Physical labor": "Roles requiring heavy lifting, standing all day, or physical strain",
+    "Unpaid overtime": "Cultures where long hours are expected but not compensated",
+    "Low pay": "Below your minimum acceptable salary — even if the role is interesting",
+    "Micromanagement": "Being closely monitored, needing approval for everything, no autonomy",
+    "Working in isolation": "Fully solo work with minimal team interaction or collaboration"
+  },
+  "Q061": {
+    "Employer-sponsored visa": "Your current employer sponsors your right to live and work here — leaving means losing the visa",
+    "Permanent residency": "You have PR/indefinite leave — you can work for any employer without sponsorship",
+    "Citizen": "You hold citizenship in your country of residence",
+    "Family/spouse visa": "Your visa is tied to a family member's employment or residency status",
+    "Self-sponsored visa": "You hold your own visa (e.g. freelancer visa, investor visa) independent of an employer",
+    "Student visa": "You're on a student visa with limited work rights",
+    "Not sure": "You're uncertain about your exact visa status — we'll treat this conservatively"
+  },
+  "Q070": {
+    "No": "You cannot afford or aren't willing to stop earning — any career change must happen alongside your current job",
+    "Up to 1 month": "You could take a short break (e.g. between jobs) but not much more",
+    "Up to 3 months": "You have enough runway for a focused study period — bootcamp or intensive course",
+    "6+ months": "You could invest in a longer program — diploma, degree, or extended training"
+  },
+  "Q071": {
+    "Yes": "You're willing to take a step back in seniority to enter a new field — even if it means lower pay initially",
+    "No": "You expect to enter at a level matching your aviation experience — mid-level or above",
+    "Maybe": "Depends on the role, salary, and growth potential — you'd consider it for the right opportunity"
+  },
+  "Q048": {
+    "Onsite": "You prefer going to a physical workplace every day — office, clinic, hotel, airport, etc.",
+    "Hybrid": "Mix of office and home — typically 2-3 days onsite per week",
+    "Remote": "Fully work-from-home or work-from-anywhere — no regular commute"
+  }
+}

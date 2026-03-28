@@ -93,6 +93,7 @@ def _build_question_out(q) -> QuestionOut:
         max_val=q.max_val,
         tags=q.tags_json,
         help_text=q.help_text,
+        option_hints=q.option_hints,
     )
 
 
