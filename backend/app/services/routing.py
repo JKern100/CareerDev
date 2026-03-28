@@ -9,6 +9,7 @@ from pathlib import Path
 from dataclasses import dataclass
 
 QUESTION_BANK_PATH = Path(__file__).parent.parent / "data" / "question_bank.csv"
+OPTION_HINTS_PATH = Path(__file__).parent.parent / "data" / "option_hints.json"
 
 MODULE_LABELS = {
     "A": "Consent & Baseline",
@@ -147,10 +148,20 @@ class QuestionDef:
     route_if_json: dict | None
     tags_json: list | None
     help_text: str | None
+    option_hints: dict | None  # {option_text: hint_text}
+
+
+def _load_option_hints() -> dict:
+    """Load option-level hints from JSON file."""
+    if OPTION_HINTS_PATH.exists():
+        with open(OPTION_HINTS_PATH, "r") as f:
+            return json.load(f)
+    return {}
 
 
 def load_question_bank() -> list[QuestionDef]:
     """Load all questions from CSV."""
+    option_hints = _load_option_hints()
     questions = []
     with open(QUESTION_BANK_PATH, "r") as f:
         reader = csv.DictReader(f)
@@ -184,8 +195,9 @@ def load_question_bank() -> list[QuestionDef]:
                 except (ValueError, TypeError):
                     return None
 
+            qid = row["question_id"]
             questions.append(QuestionDef(
-                question_id=row["question_id"],
+                question_id=qid,
                 module=row["module"],
                 prompt=row["prompt"],
                 question_type=row["type"],
@@ -196,6 +208,7 @@ def load_question_bank() -> list[QuestionDef]:
                 route_if_json=route_if,
                 tags_json=tags,
                 help_text=row.get("help_text") or None,
+                option_hints=option_hints.get(qid),
             ))
     return questions
 

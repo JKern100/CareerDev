@@ -18,8 +18,14 @@ import {
 import QuestionField from "@/components/QuestionField";
 import AppHeader from "@/components/AppHeader";
 import FlowerSpinner from "@/components/FlowerSpinner";
+import ukTranslations from "@/translations/uk.json";
 
 type AnswerMap = Record<string, { value: string | number | string[]; confidence: number }>;
+
+// Available translation packs
+const TRANSLATIONS: Record<string, typeof ukTranslations> = {
+  uk: ukTranslations,
+};
 
 const MODULE_ORDER = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
@@ -85,6 +91,20 @@ function QuestionnaireContent() {
   );
   const phaseRef = useRef(phase);
   phaseRef.current = phase; // always current — avoids stale closures
+
+  // Language
+  const [lang, setLang] = useState<string>(() => {
+    if (typeof window !== "undefined") return localStorage.getItem("questionnaire_lang") || "en";
+    return "en";
+  });
+  const tr = lang !== "en" ? TRANSLATIONS[lang] : null;
+  const ui = tr?.ui as Record<string, string> | undefined;
+  const qTr = tr?.questions as Record<string, { prompt?: string; options?: Record<string, string>; help_text?: string }> | undefined;
+
+  function toggleLang(newLang: string) {
+    setLang(newLang);
+    localStorage.setItem("questionnaire_lang", newLang);
+  }
 
   // Core phase state
   const [coreScreen, setCoreScreen] = useState<CoreScreen | null>(null);
@@ -492,11 +512,10 @@ function QuestionnaireContent() {
             &#127775;
           </div>
           <h1 style={{ fontSize: "1.5rem", marginBottom: "0.75rem" }}>
-            Your initial results are ready!
+            {ui?.tier1_done_title || "Your initial results are ready!"}
           </h1>
           <p style={{ color: "var(--muted)", lineHeight: 1.7, fontSize: "0.95rem", marginBottom: "1rem" }}>
-            Based on your quick assessment, we&apos;ve matched you to career pathways.
-            You can see your results now, or sharpen them with ~20 more questions (~5 min).
+            {ui?.tier1_done_body || "Based on your quick assessment, we've matched you to career pathways. You can see your results now, or sharpen them with ~20 more questions (~5 min)."}
           </p>
           <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
             <button
@@ -504,14 +523,14 @@ function QuestionnaireContent() {
               onClick={() => router.push("/summary")}
               style={{ padding: "0.75rem 2rem" }}
             >
-              See My Results
+              {ui?.tier1_done_see || "See My Results"}
             </button>
             <button
               className="btn btn-outline"
               onClick={() => setPhase("tier2")}
               style={{ padding: "0.75rem 2rem" }}
             >
-              Sharpen My Results (~5 min)
+              {ui?.tier1_done_sharpen || "Sharpen My Results (~5 min)"}
             </button>
           </div>
           <p style={{ color: "var(--muted)", fontSize: "0.8rem", marginTop: "1.5rem" }}>
@@ -706,13 +725,19 @@ function QuestionnaireContent() {
       )}
       <AppHeader />
       <div className="container">
-        <p className="text-sm text-muted" style={{ textAlign: "right", marginBottom: "0.25rem" }}>{APP_VERSION}</p>
+        <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "0.75rem", marginBottom: "0.25rem" }}>
+          <div style={{ display: "flex", gap: "0.25rem", fontSize: "0.75rem" }}>
+            <button onClick={() => toggleLang("en")} style={{ background: lang === "en" ? "var(--primary)" : "transparent", color: lang === "en" ? "white" : "var(--muted)", border: "1px solid var(--border)", borderRadius: "4px", padding: "0.15rem 0.5rem", cursor: "pointer", fontSize: "0.75rem" }}>EN</button>
+            <button onClick={() => toggleLang("uk")} style={{ background: lang === "uk" ? "var(--primary)" : "transparent", color: lang === "uk" ? "white" : "var(--muted)", border: "1px solid var(--border)", borderRadius: "4px", padding: "0.15rem 0.5rem", cursor: "pointer", fontSize: "0.75rem" }}>UA</button>
+          </div>
+          <p className="text-sm text-muted">{APP_VERSION}</p>
+        </div>
 
         {/* Core progress header */}
         <div className="flex justify-between items-center mb-1">
           <div>
             <p className="text-sm text-muted">
-              Step {coreScreen.screen_number} of {coreScreen.total_screens}: {phase === "tier1" ? "Quick Match" : "Sharpening Results"}
+              {ui?.step_of?.replace("{n}", String(coreScreen.screen_number)).replace("{total}", String(coreScreen.total_screens)) || `Step ${coreScreen.screen_number} of ${coreScreen.total_screens}`}: {phase === "tier1" ? (ui?.quick_match || "Quick Match") : (ui?.sharpening || "Sharpening Results")}
             </p>
           </div>
           <p className="text-sm text-muted">
@@ -738,6 +763,8 @@ function QuestionnaireContent() {
               question={q}
               value={answers[q.question_id]?.value ?? ""}
               isNotSure={answers[q.question_id]?.value === "not_sure"}
+              translation={qTr?.[q.question_id]}
+              uiStrings={ui}
               onChange={(val) =>
                 setAnswers((prev) => ({
                   ...prev,
@@ -890,6 +917,8 @@ function QuestionnaireContent() {
               question={q}
               value={answers[q.question_id]?.value ?? ""}
               isNotSure={answers[q.question_id]?.value === "not_sure"}
+              translation={qTr?.[q.question_id]}
+              uiStrings={ui}
               onChange={(val) =>
                 setAnswers((prev) => ({
                   ...prev,

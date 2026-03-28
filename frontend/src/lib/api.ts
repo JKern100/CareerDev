@@ -114,6 +114,7 @@ export interface Question {
   max_val: number | null;
   tags: string[] | null;
   help_text: string | null;
+  option_hints: Record<string, string> | null;
 }
 
 export interface ExistingAnswer {
