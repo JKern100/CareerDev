@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   getCoreNextScreen,
   getNextQuestions,
@@ -68,9 +68,13 @@ const MODULE_MILESTONES: Record<string, { heading: string; message: string; next
 
 export default function QuestionnairePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const startParam = searchParams.get("start"); // ?start=tier2
 
   // Phase: "tier1" → "tier1_done" → "tier2" → "tier2_done" → "deep_dive" → "complete"
-  const [phase, setPhase] = useState<"tier1" | "tier1_done" | "tier2" | "tier2_done" | "deep_dive" | "complete">("tier1");
+  const [phase, setPhase] = useState<"tier1" | "tier1_done" | "tier2" | "tier2_done" | "deep_dive" | "complete">(
+    startParam === "tier2" ? "tier2" : "tier1"
+  );
   const phaseRef = useRef(phase);
   phaseRef.current = phase; // always current — avoids stale closures
 
@@ -243,16 +247,19 @@ export default function QuestionnairePage() {
       setShowWelcome(true);
       localStorage.removeItem("is_first_login");
     }
-    // Start with core phase
-    loadCoreScreen();
+    // Start loading — tier2 useEffect handles its own load
+    if (phaseRef.current !== "tier2") {
+      loadCoreScreen();
+    }
   }, [router, loadCoreScreen]);
 
   // ── When switching to tier2, load next progressive screen ──
   useEffect(() => {
-    if (phase === "tier2" && !loading) {
+    if (phase === "tier2") {
       loadCoreScreen();
     }
-  }, [phase, loading, loadCoreScreen]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
 
   // ── When switching to deep-dive, load module questions ──
   useEffect(() => {

@@ -178,7 +178,7 @@ export default function SummaryPage() {
             <button
               className="btn btn-primary"
               style={{ fontSize: "1rem", padding: "0.75rem 2rem" }}
-              onClick={() => router.push("/questionnaire")}
+              onClick={() => router.push("/questionnaire?start=tier2")}
             >
               Sharpen My Results (~5 min)
             </button>
