@@ -176,10 +176,11 @@ async def run_analysis(
         for a in answers_raw
     }
 
-    # Step 1 — Completion gate
-    gate_passed, gate_error = check_completion_gate(answers)
-    if not gate_passed:
-        raise HTTPException(status_code=400, detail=gate_error)
+    # Step 1 — Completion gate (skip for Tier 2 users — AI handles partial data via Resource 13 fallbacks)
+    if user.questionnaire_completed:
+        gate_passed, gate_error = check_completion_gate(answers)
+        if not gate_passed:
+            raise HTTPException(status_code=400, detail=gate_error)
 
     # Step 2 — Build the AI call
     system_prompt = build_system_prompt()
