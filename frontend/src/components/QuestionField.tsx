@@ -3,12 +3,20 @@
 import { useState } from "react";
 import { Question } from "@/lib/api";
 
+interface QuestionTranslation {
+  prompt?: string;
+  options?: Record<string, string>;
+  help_text?: string;
+}
+
 interface Props {
   question: Question;
   value: string | number | string[];
   onChange: (value: string | number | string[]) => void;
   onNotSure?: () => void;
   isNotSure?: boolean;
+  translation?: QuestionTranslation;
+  uiStrings?: Record<string, string>;
 }
 
 export default function QuestionField({
@@ -17,6 +25,8 @@ export default function QuestionField({
   onChange,
   onNotSure,
   isNotSure,
+  translation,
+  uiStrings,
 }: Props) {
   const renderInput = () => {
     if (isNotSure) {
@@ -74,7 +84,7 @@ export default function QuestionField({
                   checked={value === opt}
                   onChange={() => onChange(opt)}
                 />
-                {opt}
+                {t.opt(opt)}
               </label>
             ))}
           </div>
@@ -111,7 +121,7 @@ export default function QuestionField({
                       }
                     }}
                   />
-                  {opt}
+                  {t.opt(opt)}
                 </label>
               );
             })}
@@ -213,11 +223,18 @@ export default function QuestionField({
   const [showHints, setShowHints] = useState(false);
   const hasHints = question.option_hints && Object.keys(question.option_hints).length > 0;
 
+  // Translation helpers — fall back to English originals
+  const t = {
+    prompt: translation?.prompt || question.prompt,
+    helpText: translation?.help_text || question.help_text,
+    opt: (opt: string) => translation?.options?.[opt] || opt,
+  };
+
   return (
     <div id={`q-${question.question_id}`} className="card">
       <div className="mb-2">
         <p style={{ fontWeight: 500 }}>
-          {question.prompt}
+          {t.prompt}
           {question.required && <span style={{ color: "var(--error)" }}> *</span>}
           {hasHints && (
             <button
@@ -234,13 +251,13 @@ export default function QuestionField({
                 fontWeight: 400,
               }}
             >
-              {showHints ? "hide examples" : "examples"}
+              {showHints ? (uiStrings?.hide_examples || "hide examples") : (uiStrings?.examples || "examples")}
             </button>
           )}
         </p>
-        {question.help_text && (
+        {t.helpText && (
           <p className="text-sm text-muted" style={{ marginTop: "0.25rem", lineHeight: 1.5 }}>
-            {question.help_text}
+            {t.helpText}
           </p>
         )}
       </div>
@@ -283,7 +300,7 @@ export default function QuestionField({
               textDecoration: "underline",
             }}
           >
-            Not sure
+            {uiStrings?.not_sure || "Not sure"}
           </button>
         </div>
       )}
