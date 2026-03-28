@@ -30,6 +30,7 @@ export default function AppHeader() {
     localStorage.removeItem("token");
     localStorage.removeItem("admin_token");
     localStorage.removeItem("impersonating");
+    localStorage.removeItem("questionnaire_lang");
     router.push("/");
   }
 

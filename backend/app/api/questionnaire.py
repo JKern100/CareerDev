@@ -328,7 +328,13 @@ async def mark_complete(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Mark questionnaire as completed."""
+    """Mark questionnaire as completed. Requires at least Tier 2 questions answered."""
+    answered_ids = await _get_answered_ids(user.id, db)
+    if not is_tier2_complete(answered_ids):
+        raise HTTPException(
+            status_code=400,
+            detail="Please complete at least the first two stages of the questionnaire before marking as complete.",
+        )
     user.questionnaire_completed = True
     await log_activity(db, user, "questionnaire_completed")
     await db.commit()

@@ -275,11 +275,31 @@ function QuestionnaireContent() {
       setShowWelcome(true);
       localStorage.removeItem("is_first_login");
     }
-    // Start loading — tier2 useEffect handles its own load
-    if (phaseRef.current !== "tier2") {
+
+    // If no explicit start param, auto-detect the right phase from progress
+    if (!startParam) {
+      getProgress().then((progress) => {
+        if (progress.tier2_complete) {
+          // All scoring done — go to deep-dive or show tier2_done milestone
+          setPhase("tier2_done");
+          setLoading(false);
+        } else if (progress.core_complete) {
+          // Tier 1 done — show tier1_done milestone
+          setPhase("tier1_done");
+          setLoading(false);
+        } else {
+          // Still in tier1
+          loadCoreScreen();
+        }
+      }).catch(() => {
+        loadCoreScreen();
+      });
+    } else if (phaseRef.current === "tier2") {
+      // ?start=tier2 — tier2 useEffect handles loading
+    } else {
       loadCoreScreen();
     }
-  }, [router, loadCoreScreen]);
+  }, [router, loadCoreScreen, startParam]);
 
   // ── When switching to tier2, load next progressive screen ──
   useEffect(() => {
