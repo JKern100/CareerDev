@@ -303,17 +303,18 @@ export default function PlanPage() {
                               aria-label={`Mark as ${STATUS_LABELS[nextStatus(step.status)]}`}
                             />
                           ) : (
-                            <div
+                            <button
                               style={{
                                 ...styles.statusBtn,
                                 borderColor: STATUS_COLORS[step.status],
                                 background: step.status === "done" ? "#22c55e" : "#334155",
-                                cursor: step.status === "skipped" ? "pointer" : "default",
+                                cursor: "pointer",
                               }}
-                              onClick={() => step.status === "skipped" && handleUnskip(step)}
+                              onClick={() => step.status === "skipped" ? handleUnskip(step) : handleUnskip(step)}
+                              aria-label={step.status === "done" ? "Mark as not done" : "Restore step"}
                             >
                               {step.status === "done" && <span style={{ color: "#fff", fontSize: "0.7rem" }}>✓</span>}
-                            </div>
+                            </button>
                           )}
 
                           <div style={{ flex: 1, minWidth: 0 }}>
