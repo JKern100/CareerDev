@@ -2,13 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getMe, getSummary, getCareerReport } from "@/lib/api";
+import { getMe, getSummary, getCareerReport, getProgress } from "@/lib/api";
 import FlowerSpinner from "@/components/FlowerSpinner";
 
 interface UserState {
   fullName: string | null;
   role: string;
   questionnaireCompleted: boolean;
+  tier1Complete: boolean;
+  tier2Complete: boolean;
+  progressPct: number;
   hasSummary: boolean;
   hasAnalysis: boolean;
 }
@@ -27,9 +30,9 @@ export default function DashboardPage() {
 
     async function load() {
       try {
-        const me = await getMe();
+        const [me, progress] = await Promise.all([getMe(), getProgress()]);
 
-        // Load summary and analysis checks in parallel to avoid slow sequential calls
+        // Load summary and analysis checks in parallel
         const [summaryResult, analysisResult] = await Promise.allSettled([
           getSummary(),
           getCareerReport(),
@@ -39,6 +42,9 @@ export default function DashboardPage() {
           fullName: me.full_name,
           role: me.role,
           questionnaireCompleted: me.questionnaire_completed,
+          tier1Complete: progress.tier1_complete,
+          tier2Complete: progress.tier2_complete,
+          progressPct: progress.progress_pct,
           hasSummary: summaryResult.status === "fulfilled",
           hasAnalysis: analysisResult.status === "fulfilled",
         });
@@ -66,60 +72,61 @@ export default function DashboardPage() {
     ? `Welcome back, ${user.fullName.split(" ")[0]}`
     : "Welcome back";
 
+  const qStatus = user.questionnaireCompleted ? "Completed"
+    : user.tier2Complete ? "Tier 2 done"
+    : user.tier1Complete ? "Tier 1 done"
+    : user.progressPct > 0 ? "In Progress" : "Not Started";
+
   const cards = [
     {
       id: "questionnaire",
       title: "Questionnaire",
       description: user.questionnaireCompleted
-        ? "You've completed all 8 modules. Review or update your answers."
-        : "Continue answering questions across 8 modules to build your career profile.",
+        ? "You've completed all modules. Review or update your answers."
+        : user.tier2Complete
+        ? `${Math.round(user.progressPct)}% complete. You can personalise your report with the optional deep-dive.`
+        : user.tier1Complete
+        ? `${Math.round(user.progressPct)}% complete. Answer ~20 more questions to unlock full career analysis.`
+        : "Answer a few quick questions to discover your best career pathways.",
       cta: user.questionnaireCompleted ? "Review Answers" : "Continue Questionnaire",
       enabled: true,
-      href: "/questionnaire",
+      href: user.tier1Complete && !user.tier2Complete ? "/questionnaire?start=tier2" : "/questionnaire",
       accent: "#3b82f6",
       step: "STEP 1",
-      status: user.questionnaireCompleted ? "Completed" : "In Progress",
-      statusColor: user.questionnaireCompleted ? "#22c55e" : "#f59e0b",
+      status: qStatus,
+      statusColor: user.questionnaireCompleted ? "#22c55e" : user.progressPct > 0 ? "#f59e0b" : "#64748b",
     },
     {
       id: "summary",
       title: "Profile Report",
       description: user.hasSummary
-        ? "Your personal narrative summary is ready. See who you are, what you bring, and what matters to you."
-        : "Complete the questionnaire to unlock your AI-generated personal profile summary.",
-      cta: "View Profile Report",
-      enabled: user.hasSummary,
+        ? "Your personal narrative summary is ready."
+        : user.tier1Complete
+        ? "Your profile summary is ready to generate."
+        : "Complete the quick assessment to unlock your profile summary.",
+      cta: user.hasSummary ? "View Profile Report" : user.tier1Complete ? "Generate Profile Report" : "Locked",
+      enabled: user.hasSummary || user.tier1Complete,
       href: "/summary",
       accent: "#8b5cf6",
       step: "STEP 2",
-      status: user.hasSummary ? "Ready" : "Locked",
-      statusColor: user.hasSummary ? "#22c55e" : "#64748b",
-    },
-    {
-      id: "advisor",
-      title: "Schedule with Advisor",
-      description: "Book a 1-on-1 session with a career advisor to discuss your profile and explore your options.",
-      cta: "Coming Soon",
-      enabled: false,
-      href: "/book",
-      accent: "#06b6d4",
-      step: "STEP 3",
-      status: "Coming Soon",
-      statusColor: "#64748b",
+      status: user.hasSummary ? "Ready" : user.tier1Complete ? "Ready to Generate" : "Locked",
+      statusColor: user.hasSummary ? "#22c55e" : user.tier1Complete ? "#f59e0b" : "#64748b",
     },
     {
       id: "analysis",
       title: "Career Analysis",
       description: user.hasAnalysis
         ? "Your full career analysis is ready — ranked pathways, salary data, credentials, and a transition plan."
-        : "Your AI-powered career analysis with ranked pathways, salary benchmarks, and an actionable transition plan.",
-      cta: user.hasAnalysis ? "View Career Analysis" : "Generate Analysis",
-      enabled: user.hasAnalysis || user.questionnaireCompleted,
+        : user.tier2Complete
+        ? "Your career analysis is ready to generate — pathway rankings, salary benchmarks, and a transition plan."
+        : "Complete the questionnaire (Stages 1 & 2) to unlock your full AI-powered career analysis.",
+      cta: user.hasAnalysis ? "View Career Analysis" : user.tier2Complete ? "Generate Analysis" : "Locked",
+      enabled: user.hasAnalysis || user.tier2Complete,
       href: "/results",
       accent: "#2563eb",
       step: "YOUR GOAL",
-      status: user.hasAnalysis ? "Ready" : user.questionnaireCompleted ? "Ready to Generate" : "Locked",
-      statusColor: user.hasAnalysis ? "#22c55e" : user.questionnaireCompleted ? "#f59e0b" : "#64748b",
+      status: user.hasAnalysis ? "Ready" : user.tier2Complete ? "Ready to Generate" : "Locked",
+      statusColor: user.hasAnalysis ? "#22c55e" : user.tier2Complete ? "#f59e0b" : "#64748b",
       featured: true,
     },
   ];

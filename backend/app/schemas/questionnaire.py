@@ -82,7 +82,7 @@ class QuestionnaireProgressOut(BaseModel):
     current_question_id: str | None
     progress_pct: float
     modules: list[ModuleStatusOut]
-    core_complete: bool = False
+    tier1_complete: bool = False
     tier2_complete: bool = False
 
 
@@ -96,4 +96,3 @@ class CoreScreenOut(BaseModel):
     tier2_complete: bool = False
     questions: list[QuestionOut]
     existing_answers: list[ExistingAnswerOut] = []
-    core_complete: bool = False  # backward compat (= tier1_complete)

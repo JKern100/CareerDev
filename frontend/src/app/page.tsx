@@ -218,7 +218,7 @@ export default function Home() {
         </div>
 
         <p style={{ color: "#475569", fontSize: "0.85rem", marginTop: "1.5rem" }}>
-          119 guided questions. 14 career pathways. Location-aware salary data.
+          18 questions for initial results. 40 for full scoring. Optional deep-dive. 14 career pathways.
         </p>
       </section>
 
@@ -252,7 +252,7 @@ export default function Home() {
             {
               step: "01",
               title: "Complete the questionnaire",
-              desc: "108 questions across 8 modules covering your skills, preferences, constraints, and goals. Takes about 20 minutes.",
+              desc: "A progressive 3-stage assessment: 18 quick-match questions for initial results, ~20 more to sharpen your scores, and an optional deep-dive for maximum personalisation.",
             },
             {
               step: "02",
@@ -661,7 +661,7 @@ export default function Home() {
         >
           {[
             { stat: "3,000+", label: "Lines of domain knowledge" },
-            { stat: "119", label: "Guided assessment questions" },
+            { stat: "3", label: "Progressive assessment stages" },
             { stat: "14", label: "Scored career pathways" },
             { stat: "6", label: "Independent scoring dimensions" },
             { stat: "8", label: "Assessment modules" },
