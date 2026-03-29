@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getMe, createCheckout } from "@/lib/api";
+import { getMe, createCheckout, validatePromo, redeemPromo, PromoValidation } from "@/lib/api";
 import AppHeader from "@/components/AppHeader";
 
 const PLANS = [
@@ -64,6 +64,11 @@ export default function PricingPage() {
   const [isPremium, setIsPremium] = useState(false);
   const [loading, setLoading] = useState<string | null>(null);
   const [loggedIn, setLoggedIn] = useState(false);
+  const [promoInput, setPromoInput] = useState("");
+  const [promoResult, setPromoResult] = useState<PromoValidation | null>(null);
+  const [promoError, setPromoError] = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoSuccess, setPromoSuccess] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -91,6 +96,33 @@ export default function PricingPage() {
       alert(err instanceof Error ? err.message : "Failed to start checkout");
     } finally {
       setLoading(null);
+    }
+  }
+
+  async function handlePromoValidate() {
+    if (!promoInput.trim()) return;
+    if (!loggedIn) { router.push("/register"); return; }
+    setPromoLoading(true);
+    setPromoError("");
+    setPromoResult(null);
+    setPromoSuccess("");
+    try {
+      const result = await validatePromo(promoInput.trim(), "pro");
+      setPromoResult(result);
+      if (result.is_free) {
+        // Auto-redeem full unlock codes
+        const redeem = await redeemPromo(promoInput.trim(), "pro");
+        if (redeem.redeemed) {
+          setPromoSuccess(redeem.message);
+          setCurrentPlan(redeem.plan);
+          setIsPremium(true);
+          setPromoResult(null);
+        }
+      }
+    } catch (err: unknown) {
+      setPromoError(err instanceof Error ? err.message : "Invalid code");
+    } finally {
+      setPromoLoading(false);
     }
   }
 
@@ -166,6 +198,43 @@ export default function PricingPage() {
               </div>
             );
           })}
+        </div>
+
+        {/* Promo Code */}
+        <div style={styles.promoSection}>
+          <p style={{ color: "#94a3b8", fontSize: "0.9rem", marginBottom: "0.75rem" }}>
+            Have a promo code?
+          </p>
+          <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center", maxWidth: "400px", margin: "0 auto" }}>
+            <input
+              type="text"
+              value={promoInput}
+              onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+              onKeyDown={(e) => e.key === "Enter" && handlePromoValidate()}
+              placeholder="Enter code"
+              style={styles.promoInput}
+            />
+            <button
+              onClick={handlePromoValidate}
+              disabled={promoLoading || !promoInput.trim()}
+              style={{ ...styles.promoBtn, opacity: promoLoading || !promoInput.trim() ? 0.5 : 1 }}
+            >
+              {promoLoading ? "..." : "Apply"}
+            </button>
+          </div>
+          {promoError && (
+            <p style={{ color: "#f87171", fontSize: "0.82rem", marginTop: "0.5rem" }}>{promoError}</p>
+          )}
+          {promoResult && !promoResult.is_free && (
+            <p style={{ color: "#4ade80", fontSize: "0.85rem", marginTop: "0.5rem" }}>
+              {promoResult.description} applied! Use this code at checkout.
+            </p>
+          )}
+          {promoSuccess && (
+            <p style={{ color: "#4ade80", fontSize: "0.95rem", fontWeight: 600, marginTop: "0.75rem" }}>
+              {promoSuccess}
+            </p>
+          )}
         </div>
 
         {/* Monthly option */}
@@ -266,6 +335,38 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: "0.95rem",
     fontWeight: 600,
     transition: "opacity 0.15s",
+  },
+  promoSection: {
+    textAlign: "center",
+    padding: "1.5rem",
+    background: "rgba(255,255,255,0.02)",
+    border: "1px solid #1e293b",
+    borderRadius: "12px",
+    marginBottom: "1rem",
+  },
+  promoInput: {
+    flex: 1,
+    background: "rgba(255,255,255,0.05)",
+    border: "1px solid #334155",
+    borderRadius: "8px",
+    padding: "0.55rem 0.9rem",
+    color: "#f1f5f9",
+    fontSize: "0.9rem",
+    outline: "none",
+    fontFamily: "monospace",
+    letterSpacing: "0.05em",
+    textTransform: "uppercase",
+  },
+  promoBtn: {
+    background: "rgba(255,255,255,0.06)",
+    border: "1px solid #334155",
+    color: "#e2e8f0",
+    padding: "0.55rem 1.25rem",
+    borderRadius: "8px",
+    cursor: "pointer",
+    fontSize: "0.9rem",
+    fontWeight: 600,
+    whiteSpace: "nowrap",
   },
   monthlySection: {
     textAlign: "center",

@@ -31,8 +31,9 @@ import {
   MODULE_LABELS,
 } from "@/lib/api";
 import LoginActivityChart from "@/components/LoginActivityChart";
+import AdminPromo from "@/components/AdminPromo";
 
-type Tab = "dashboard" | "users" | "questions" | "activity";
+type Tab = "dashboard" | "users" | "questions" | "activity" | "promo";
 
 /* ── Help Content ─────────────────────────────────────────────────────── */
 
@@ -750,7 +751,7 @@ export default function AdminPage() {
 
       {/* Tabs */}
       <div style={styles.tabs}>
-        {(["dashboard", "users", "activity", "questions"] as Tab[]).map((t) => (
+        {(["dashboard", "users", "activity", "questions", "promo"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => handleTabChange(t)}
@@ -759,7 +760,7 @@ export default function AdminPage() {
               ...(tab === t ? styles.tabActive : {}),
             }}
           >
-            {t === "dashboard" ? "Dashboard" : t === "users" ? "Users" : t === "activity" ? "Activity" : "Questions"}
+            {t === "dashboard" ? "Dashboard" : t === "users" ? "Users" : t === "activity" ? "Activity" : t === "promo" ? "Promo Codes" : "Questions"}
           </button>
         ))}
       </div>
@@ -1256,6 +1257,12 @@ export default function AdminPage() {
                 No questions match your filters.
               </p>
             )}
+          </div>
+        )}
+
+        {tab === "promo" && (
+          <div style={{ padding: "1rem" }}>
+            <AdminPromo />
           </div>
         )}
       </div>

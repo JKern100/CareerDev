@@ -654,3 +654,74 @@ export async function createCheckout(plan: "pro" | "premium" | "monthly") {
 export async function getSubscription() {
   return request<SubscriptionStatus>("/payment/subscription");
 }
+
+// Promo Codes
+export interface PromoValidation {
+  valid: boolean;
+  code: string;
+  discount_type: string;
+  description: string;
+  original_cents: number;
+  discount_cents: number;
+  final_cents: number;
+  is_free: boolean;
+}
+
+export interface PromoRedeemResult {
+  redeemed: boolean;
+  plan: string;
+  message: string;
+}
+
+export interface PromoCodeData {
+  id: string;
+  code: string;
+  discount_type: string;
+  discount_value: number;
+  applies_to: string;
+  unlocks_plan: string | null;
+  max_uses: number | null;
+  max_uses_per_user: number;
+  times_used: number;
+  is_active: boolean;
+  expires_at: string | null;
+  note: string | null;
+  created_at: string;
+}
+
+export async function validatePromo(code: string, plan: string) {
+  return request<PromoValidation>("/promo/validate", {
+    method: "POST",
+    body: JSON.stringify({ code, plan }),
+  });
+}
+
+export async function redeemPromo(code: string, plan: string) {
+  return request<PromoRedeemResult>("/promo/redeem", {
+    method: "POST",
+    body: JSON.stringify({ code, plan }),
+  });
+}
+
+// Admin promo
+export async function getAdminPromoCodes() {
+  return request<PromoCodeData[]>("/promo/admin/codes");
+}
+
+export async function createAdminPromoCode(data: Record<string, unknown>) {
+  return request<PromoCodeData>("/promo/admin/codes", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateAdminPromoCode(codeId: string, data: Record<string, unknown>) {
+  return request<PromoCodeData>(`/promo/admin/codes/${codeId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteAdminPromoCode(codeId: string) {
+  return request<{ detail: string }>(`/promo/admin/codes/${codeId}`, { method: "DELETE" });
+}
