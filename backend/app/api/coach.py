@@ -5,8 +5,8 @@ from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
-from sqlalchemy import select
+from pydantic import BaseModel, Field
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -24,7 +24,7 @@ router = APIRouter(prefix="/coach", tags=["coach"])
 # ── Schemas ──────────────────────────────────────────────────────────────
 
 class ChatRequest(BaseModel):
-    message: str
+    message: str = Field(..., min_length=1, max_length=5000)
 
 
 class ChatResponse(BaseModel):
@@ -39,7 +39,7 @@ class MessageOut(BaseModel):
 
 
 class GoalCreate(BaseModel):
-    title: str
+    title: str = Field(..., min_length=1, max_length=500)
     target_date: str | None = None
 
 
@@ -54,8 +54,16 @@ class GoalOut(BaseModel):
 
 class GoalUpdate(BaseModel):
     completed: bool | None = None
-    title: str | None = None
+    title: str | None = Field(default=None, max_length=500)
     target_date: str | None = None
+
+
+def _parse_goal_id(goal_id: str) -> UUID:
+    """Parse goal_id string to UUID, raising 400 on invalid format."""
+    try:
+        return UUID(goal_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid goal ID")
 
 
 # ── Chat ─────────────────────────────────────────────────────────────────
@@ -67,12 +75,6 @@ async def send_chat_message(
     db: AsyncSession = Depends(get_db),
 ):
     """Send a message to the AI career coach and get a response."""
-    if not data.message.strip():
-        raise HTTPException(status_code=400, detail="Message cannot be empty")
-
-    if len(data.message) > 5000:
-        raise HTTPException(status_code=400, detail="Message too long (max 5000 characters)")
-
     try:
         reply = await chat_with_coach(user.id, data.message.strip(), db)
         await log_activity(db, user, "coach_chat", f"Sent message ({len(data.message)} chars)")
@@ -80,8 +82,8 @@ async def send_chat_message(
         return ChatResponse(reply=reply)
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e))
-    except Exception as e:
-        logger.exception("Coach chat error")
+    except Exception:
+        logger.exception("Coach chat error for user %s", user.id)
         raise HTTPException(status_code=500, detail="Failed to get coach response. Please try again.")
 
 
@@ -119,15 +121,16 @@ async def clear_chat_history(
 ):
     """Clear all chat history (start fresh)."""
     result = await db.execute(
-        select(CoachMessage).where(CoachMessage.user_id == user.id)
+        select(CoachMessage.id).where(CoachMessage.user_id == user.id)
     )
-    messages = result.scalars().all()
-    for m in messages:
-        await db.delete(m)
+    count = len(result.all())
+    await db.execute(
+        delete(CoachMessage).where(CoachMessage.user_id == user.id)
+    )
     await db.commit()
-    await log_activity(db, user, "coach_clear_history", f"Cleared {len(messages)} messages")
+    await log_activity(db, user, "coach_clear_history", f"Cleared {count} messages")
     await db.commit()
-    return {"detail": f"Cleared {len(messages)} messages"}
+    return {"detail": f"Cleared {count} messages"}
 
 
 # ── Goals ────────────────────────────────────────────────────────────────
@@ -163,9 +166,6 @@ async def create_goal(
     db: AsyncSession = Depends(get_db),
 ):
     """Create a new career goal."""
-    if not data.title.strip():
-        raise HTTPException(status_code=400, detail="Goal title cannot be empty")
-
     goal = CoachGoal(
         user_id=user.id,
         title=data.title.strip(),
@@ -194,9 +194,10 @@ async def update_goal(
     db: AsyncSession = Depends(get_db),
 ):
     """Update a goal (mark complete, rename, change date)."""
+    parsed_id = _parse_goal_id(goal_id)
     result = await db.execute(
         select(CoachGoal).where(
-            CoachGoal.id == UUID(goal_id),
+            CoachGoal.id == parsed_id,
             CoachGoal.user_id == user.id,
         )
     )
@@ -231,16 +232,14 @@ async def delete_goal(
     db: AsyncSession = Depends(get_db),
 ):
     """Delete a goal."""
+    parsed_id = _parse_goal_id(goal_id)
     result = await db.execute(
-        select(CoachGoal).where(
-            CoachGoal.id == UUID(goal_id),
+        delete(CoachGoal).where(
+            CoachGoal.id == parsed_id,
             CoachGoal.user_id == user.id,
         )
     )
-    goal = result.scalar_one_or_none()
-    if not goal:
+    if result.rowcount == 0:
         raise HTTPException(status_code=404, detail="Goal not found")
-
-    await db.delete(goal)
     await db.commit()
     return {"detail": "Goal deleted"}
