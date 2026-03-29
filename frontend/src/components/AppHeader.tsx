@@ -119,6 +119,21 @@ export default function AppHeader() {
           Dashboard
         </a>
         <a
+          href="/plan"
+          style={{
+            background: "rgba(34, 197, 94, 0.1)",
+            border: "1px solid rgba(34, 197, 94, 0.3)",
+            color: "#4ade80",
+            padding: "0.4rem 1rem",
+            borderRadius: "8px",
+            fontSize: "0.85rem",
+            textDecoration: "none",
+            cursor: "pointer",
+          }}
+        >
+          Action Plan
+        </a>
+        <a
           href="/coach"
           style={{
             background: "rgba(234, 179, 8, 0.1)",

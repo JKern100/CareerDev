@@ -591,3 +591,43 @@ export async function updateCoachGoal(goalId: string, data: { completed?: boolea
 export async function deleteCoachGoal(goalId: string) {
   return request<{ detail: string }>(`/coach/goals/${goalId}`, { method: "DELETE" });
 }
+
+// Action Plan
+export interface ActionStepData {
+  id: string;
+  pathway_id: string | null;
+  pathway_name: string | null;
+  category: "this_week" | "first_step" | "credential";
+  title: string;
+  description: string | null;
+  url: string | null;
+  duration: string | null;
+  sort_order: number;
+  status: "todo" | "in_progress" | "done" | "skipped";
+  notes: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+}
+
+export interface ActionPlan {
+  total: number;
+  done: number;
+  in_progress: number;
+  skipped: number;
+  steps: ActionStepData[];
+}
+
+export async function getActionPlan() {
+  return request<ActionPlan>("/action-plan");
+}
+
+export async function generateActionPlan() {
+  return request<ActionPlan>("/action-plan/generate", { method: "POST" });
+}
+
+export async function updateActionStep(stepId: string, data: { status?: string; notes?: string }) {
+  return request<ActionStepData>(`/action-plan/steps/${stepId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
