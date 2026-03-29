@@ -29,10 +29,11 @@ CORE_MODULES = ["A", "B", "C", "D", "E", "F", "G", "H"]
 #
 # Tier 1 "Quick Match"   — 18 questions, ~5 min → initial pathway rankings
 # Tier 2 "Sharpen"       — 22 more questions, ~5 min → full scoring accuracy
-# Tier 3 "Personalise"   — remaining module questions (optional deep-dive)
+# Tier 3 "Personalise"   — 40 curated questions, ~10-12 min (optional deep-dive)
 #
 # After Tier 2, the user has answered ALL 40 scoring-relevant questions.
 # Tier 3 adds context for the AI narrative but doesn't change rankings.
+# Total across all tiers: 80 questions.
 # ---------------------------------------------------------------------------
 
 TIER1_SCREENS = [
@@ -81,7 +82,50 @@ TIER2_SCREENS = [
     },
 ]
 
-ALL_PROGRESSIVE_SCREENS = TIER1_SCREENS + TIER2_SCREENS
+TIER3_SCREENS = [
+    {
+        "id": "t3_1", "tier": 3,
+        "label": "Your Background",
+        "questions": ["Q002", "Q004", "Q010", "Q110"],
+    },
+    {
+        "id": "t3_2", "tier": 3,
+        "label": "Aviation Reflections",
+        "questions": ["Q024", "Q025", "Q026", "Q111"],
+    },
+    {
+        "id": "t3_3", "tier": 3,
+        "label": "Your Evidence",
+        "questions": ["Q038", "Q039", "Q040"],
+    },
+    {
+        "id": "t3_4", "tier": 3,
+        "label": "Strengths & Growth",
+        "questions": ["Q044", "Q045", "Q046", "Q112"],
+    },
+    {
+        "id": "t3_5", "tier": 3,
+        "label": "Your Priorities",
+        "questions": ["Q057", "Q058", "Q059", "Q114", "Q115"],
+    },
+    {
+        "id": "t3_6", "tier": 3,
+        "label": "Constraints & Feasibility",
+        "questions": ["Q068", "Q076", "Q077", "Q078", "Q116", "Q117"],
+    },
+    {
+        "id": "t3_7", "tier": 3,
+        "label": "Location & Finances",
+        "questions": ["Q079", "Q080", "Q087", "Q091", "Q092", "Q096", "Q118"],
+    },
+    {
+        "id": "t3_8", "tier": 3,
+        "label": "Education & Aspirations",
+        "questions": ["Q097", "Q098", "Q102", "Q105", "Q107", "Q108", "Q119"],
+    },
+]
+
+ALL_PROGRESSIVE_SCREENS = TIER1_SCREENS + TIER2_SCREENS + TIER3_SCREENS
 
 
 TIER1_QUESTION_IDS: set[str] = set()
@@ -92,7 +136,11 @@ TIER2_QUESTION_IDS: set[str] = set()
 for _screen in TIER2_SCREENS:
     TIER2_QUESTION_IDS.update(_screen["questions"])
 
-ALL_PROGRESSIVE_IDS = TIER1_QUESTION_IDS | TIER2_QUESTION_IDS
+TIER3_QUESTION_IDS: set[str] = set()
+for _screen in TIER3_SCREENS:
+    TIER3_QUESTION_IDS.update(_screen["questions"])
+
+ALL_PROGRESSIVE_IDS = TIER1_QUESTION_IDS | TIER2_QUESTION_IDS | TIER3_QUESTION_IDS
 
 
 
@@ -289,6 +337,10 @@ def is_tier1_complete(answered_ids: set[str]) -> bool:
 
 def is_tier2_complete(answered_ids: set[str]) -> bool:
     return TIER2_QUESTION_IDS.issubset(answered_ids)
+
+
+def is_tier3_complete(answered_ids: set[str]) -> bool:
+    return TIER3_QUESTION_IDS.issubset(answered_ids)
 
 
 def is_all_progressive_complete(answered_ids: set[str]) -> bool:
