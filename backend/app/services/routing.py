@@ -83,8 +83,6 @@ TIER2_SCREENS = [
 
 ALL_PROGRESSIVE_SCREENS = TIER1_SCREENS + TIER2_SCREENS
 
-# Backward-compatible aliases
-CORE_SCREENS = TIER1_SCREENS
 
 TIER1_QUESTION_IDS: set[str] = set()
 for _screen in TIER1_SCREENS:
@@ -96,8 +94,6 @@ for _screen in TIER2_SCREENS:
 
 ALL_PROGRESSIVE_IDS = TIER1_QUESTION_IDS | TIER2_QUESTION_IDS
 
-# Backward-compatible alias
-CORE_QUESTION_IDS = TIER1_QUESTION_IDS
 
 
 # Conditional module triggers based on question answers
@@ -304,15 +300,3 @@ def get_screen_questions(screen: dict) -> list["QuestionDef"]:
     bank = {q.question_id: q for q in get_question_bank()}
     return [bank[qid] for qid in screen["questions"] if qid in bank]
 
-
-# Backward-compatible aliases
-def get_next_core_screen(answered_ids: set[str]) -> dict | None:
-    return get_next_progressive_screen(answered_ids)
-
-
-def is_core_complete(answered_ids: set[str]) -> bool:
-    return is_tier1_complete(answered_ids)
-
-
-def get_core_screen_questions(screen: dict) -> list["QuestionDef"]:
-    return get_screen_questions(screen)
