@@ -5,59 +5,6 @@ import { useRouter } from "next/navigation";
 import { getMe, createCheckout, validatePromo, redeemPromo, PromoValidation } from "@/lib/api";
 import AppHeader from "@/components/AppHeader";
 
-const PLANS = [
-  {
-    id: "free" as const,
-    name: "Free",
-    price: "$0",
-    period: "",
-    description: "Get started with your career assessment",
-    features: [
-      "Career questionnaire (Tier 1 & 2)",
-      "Profile summary report",
-      "Basic career analysis",
-    ],
-    cta: "Current Plan",
-    disabled: true,
-    accent: "#64748b",
-  },
-  {
-    id: "pro" as const,
-    name: "Pro",
-    price: "$29",
-    period: "one-time",
-    description: "Full analysis with actionable next steps",
-    features: [
-      "Everything in Free",
-      "AI Career Coach (unlimited)",
-      "Structured Action Plan with tracking",
-      "Credential recommendations with links",
-      "Priority report generation",
-    ],
-    cta: "Get Pro",
-    disabled: false,
-    accent: "#3b82f6",
-    popular: true,
-  },
-  {
-    id: "premium" as const,
-    name: "Premium",
-    price: "$49",
-    period: "one-time",
-    description: "Complete career transition package",
-    features: [
-      "Everything in Pro",
-      "Report regeneration (unlimited)",
-      "1-on-1 advisor session (45 min)",
-      "Resume review by AI Coach",
-      "Priority support",
-    ],
-    cta: "Get Premium",
-    disabled: false,
-    accent: "#8b5cf6",
-  },
-];
-
 export default function PricingPage() {
   const router = useRouter();
   const [currentPlan, setCurrentPlan] = useState<string>("free");
@@ -83,7 +30,7 @@ export default function PricingPage() {
       .catch(() => {});
   }, []);
 
-  async function handleCheckout(plan: "pro" | "premium" | "monthly") {
+  async function handleCheckout(plan: "pro" | "monthly") {
     if (!loggedIn) {
       router.push("/register");
       return;
@@ -126,84 +73,103 @@ export default function PricingPage() {
     }
   }
 
+  const alreadyPro = isPremium || currentPlan === "pro" || currentPlan === "premium" || currentPlan === "monthly";
+
   return (
     <div style={styles.page}>
       {loggedIn && <AppHeader />}
       <div style={styles.container}>
         <div style={styles.hero}>
-          <h1 style={styles.title}>Choose Your Plan</h1>
+          <h1 style={styles.title}>Simple pricing, full career clarity</h1>
           <p style={styles.subtitle}>
-            Start free. Upgrade when you're ready to take action on your career transition.
+            Start free to see your top pathways. Upgrade to Pro for the complete career transition toolkit.
           </p>
         </div>
 
         <div style={styles.grid}>
-          {PLANS.map((plan) => {
-            const isCurrent = currentPlan === plan.id;
-            const isUpgrade = !isCurrent && isPremium && plan.id === "free";
+          {/* Free tier */}
+          <div style={{ ...styles.card, borderColor: "#1e293b" }}>
+            <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.25rem" }}>Free</h2>
+            <div style={styles.priceRow}>
+              <span style={{ fontSize: "2rem", fontWeight: 800 }}>$0</span>
+            </div>
+            <p style={{ color: "#94a3b8", fontSize: "0.88rem", marginBottom: "1.25rem", lineHeight: 1.5 }}>
+              Discover your best career pathways in 5 minutes
+            </p>
 
-            return (
-              <div
-                key={plan.id}
-                style={{
-                  ...styles.card,
-                  ...(plan.popular ? styles.popularCard : {}),
-                  borderColor: plan.popular ? plan.accent : "#1e293b",
-                }}
-              >
-                {plan.popular && <div style={styles.popularBadge}>Most Popular</div>}
+            <ul style={styles.featureList}>
+              <li style={styles.featureItem}><span style={styles.checkMark}>+</span> Stage 1 questionnaire (18 questions)</li>
+              <li style={styles.featureItem}><span style={styles.checkMark}>+</span> Teaser profile report</li>
+              <li style={styles.featureItem}><span style={styles.checkMark}>+</span> Top pathway matches (preview)</li>
+              <li style={styles.featureLocked}><span style={styles.lockIcon}>-</span> Full career analysis</li>
+              <li style={styles.featureLocked}><span style={styles.lockIcon}>-</span> AI Career Coach</li>
+              <li style={styles.featureLocked}><span style={styles.lockIcon}>-</span> Action Plan</li>
+            </ul>
 
-                <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.25rem" }}>
-                  {plan.name}
-                </h2>
-                <div style={styles.priceRow}>
-                  <span style={{ fontSize: "2rem", fontWeight: 800 }}>{plan.price}</span>
-                  {plan.period && (
-                    <span style={{ color: "#64748b", fontSize: "0.9rem", marginLeft: "0.25rem" }}>
-                      {plan.period}
-                    </span>
-                  )}
-                </div>
-                <p style={{ color: "#94a3b8", fontSize: "0.88rem", marginBottom: "1.25rem", lineHeight: 1.5 }}>
-                  {plan.description}
-                </p>
+            <button
+              disabled
+              style={{
+                ...styles.ctaBtn,
+                background: "rgba(255,255,255,0.06)",
+                color: "#64748b",
+                border: "1px solid #1e293b",
+                opacity: 0.6,
+                cursor: "default",
+              }}
+            >
+              {alreadyPro ? "Included" : "Current Plan"}
+            </button>
+          </div>
 
-                <ul style={styles.featureList}>
-                  {plan.features.map((f) => (
-                    <li key={f} style={styles.featureItem}>
-                      <span style={{ color: plan.accent, marginRight: "0.5rem" }}>+</span>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
+          {/* Pro tier */}
+          <div style={{ ...styles.card, ...styles.popularCard, borderColor: "#3b82f6" }}>
+            <div style={styles.popularBadge}>Full Access</div>
 
-                <button
-                  onClick={() => {
-                    if (plan.id !== "free" && !isCurrent) {
-                      handleCheckout(plan.id);
-                    }
-                  }}
-                  disabled={plan.disabled || isCurrent || loading !== null}
-                  style={{
-                    ...styles.ctaBtn,
-                    background: plan.popular ? plan.accent : "rgba(255,255,255,0.06)",
-                    color: plan.popular ? "white" : "#e2e8f0",
-                    border: plan.popular ? "none" : "1px solid #334155",
-                    opacity: plan.disabled || isCurrent || loading !== null ? 0.5 : 1,
-                    cursor: plan.disabled || isCurrent ? "default" : "pointer",
-                  }}
-                >
-                  {loading === plan.id ? "Redirecting..." : isCurrent ? "Current Plan" : plan.cta}
-                </button>
-              </div>
-            );
-          })}
+            <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.25rem" }}>Pro</h2>
+            <div style={styles.priceRow}>
+              <span style={{ fontSize: "2rem", fontWeight: 800 }}>$9</span>
+              <span style={{ color: "#64748b", fontSize: "0.9rem", marginLeft: "0.25rem" }}>/month</span>
+            </div>
+            <p style={{ color: "#94a3b8", fontSize: "0.88rem", marginBottom: "1.25rem", lineHeight: 1.5 }}>
+              Your complete career transition toolkit
+            </p>
+
+            <ul style={styles.featureList}>
+              <li style={styles.featureItem}><span style={styles.checkBlue}>+</span> Everything in Free</li>
+              <li style={styles.featureItem}><span style={styles.checkBlue}>+</span> Full questionnaire (Stages 2 & 3)</li>
+              <li style={styles.featureItem}><span style={styles.checkBlue}>+</span> Complete career analysis with salary data</li>
+              <li style={styles.featureItem}><span style={styles.checkBlue}>+</span> AI Career Coach (unlimited)</li>
+              <li style={styles.featureItem}><span style={styles.checkBlue}>+</span> Structured Action Plan with tracking</li>
+              <li style={styles.featureItem}><span style={styles.checkBlue}>+</span> Report regeneration</li>
+              <li style={styles.featureItem}><span style={styles.checkBlue}>+</span> Credential recommendations with links</li>
+            </ul>
+
+            <button
+              onClick={() => !alreadyPro && handleCheckout("monthly")}
+              disabled={alreadyPro || loading !== null}
+              style={{
+                ...styles.ctaBtn,
+                background: alreadyPro ? "rgba(34,197,94,0.15)" : "#3b82f6",
+                color: alreadyPro ? "#4ade80" : "white",
+                border: alreadyPro ? "1px solid rgba(34,197,94,0.3)" : "none",
+                opacity: loading !== null ? 0.5 : 1,
+                cursor: alreadyPro ? "default" : "pointer",
+              }}
+            >
+              {loading === "monthly" ? "Redirecting..." : alreadyPro ? "Current Plan" : "Start Pro — $9/month"}
+            </button>
+            {!alreadyPro && (
+              <p style={{ color: "#475569", fontSize: "0.78rem", marginTop: "0.5rem", textAlign: "center" }}>
+                Cancel anytime. Processed securely by LemonSqueezy.
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Promo Code */}
         <div style={styles.promoSection}>
           <p style={{ color: "#94a3b8", fontSize: "0.9rem", marginBottom: "0.75rem" }}>
-            Have a promo code?
+            Have a discount or access code?
           </p>
           <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center", maxWidth: "400px", margin: "0 auto" }}>
             <input
@@ -237,27 +203,6 @@ export default function PricingPage() {
           )}
         </div>
 
-        {/* Monthly option */}
-        <div style={styles.monthlySection}>
-          <p style={{ color: "#94a3b8", fontSize: "0.9rem", marginBottom: "0.75rem" }}>
-            Prefer monthly payments?
-          </p>
-          <button
-            onClick={() => handleCheckout("monthly")}
-            disabled={isPremium || loading !== null}
-            style={{
-              ...styles.monthlyBtn,
-              opacity: isPremium ? 0.5 : 1,
-              cursor: isPremium ? "default" : "pointer",
-            }}
-          >
-            {isPremium ? "You already have a plan" : "$15/month — Cancel anytime"}
-          </button>
-          <p style={{ color: "#475569", fontSize: "0.78rem", marginTop: "0.5rem" }}>
-            Includes everything in Pro. Billed monthly via LemonSqueezy.
-          </p>
-        </div>
-
         {/* Trust signals */}
         <div style={styles.trustSection}>
           <div style={styles.trustItem}>
@@ -266,11 +211,11 @@ export default function PricingPage() {
           </div>
           <div style={styles.trustItem}>
             <strong>Instant Access</strong>
-            <span>Features unlock immediately after payment.</span>
+            <span>All Pro features unlock immediately after payment.</span>
           </div>
           <div style={styles.trustItem}>
-            <strong>UAE Friendly</strong>
-            <span>Accepts all major credit cards. No local trade license needed.</span>
+            <strong>Cancel Anytime</strong>
+            <span>No lock-in. Cancel your subscription whenever you want.</span>
           </div>
         </div>
       </div>
@@ -280,13 +225,13 @@ export default function PricingPage() {
 
 const styles: Record<string, React.CSSProperties> = {
   page: { background: "#0a0e1a", color: "#f1f5f9", minHeight: "100vh" },
-  container: { maxWidth: "1000px", margin: "0 auto", padding: "0 1rem 4rem" },
+  container: { maxWidth: "780px", margin: "0 auto", padding: "0 1rem 4rem" },
   hero: { textAlign: "center", padding: "2.5rem 0 2rem" },
   title: { fontSize: "clamp(1.5rem, 4vw, 2.25rem)", fontWeight: 700, marginBottom: "0.5rem" },
   subtitle: { color: "#94a3b8", fontSize: "1.05rem", maxWidth: "500px", margin: "0 auto" },
   grid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
     gap: "1.25rem",
     marginBottom: "2rem",
   },
@@ -328,6 +273,16 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "0.35rem 0",
     lineHeight: 1.4,
   },
+  featureLocked: {
+    fontSize: "0.85rem",
+    color: "#475569",
+    padding: "0.35rem 0",
+    lineHeight: 1.4,
+    textDecoration: "line-through",
+  },
+  checkMark: { color: "#64748b", marginRight: "0.5rem" },
+  checkBlue: { color: "#3b82f6", marginRight: "0.5rem" },
+  lockIcon: { color: "#334155", marginRight: "0.5rem" },
   ctaBtn: {
     width: "100%",
     padding: "0.7rem",
@@ -342,7 +297,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: "rgba(255,255,255,0.02)",
     border: "1px solid #1e293b",
     borderRadius: "12px",
-    marginBottom: "1rem",
+    marginBottom: "2rem",
   },
   promoInput: {
     flex: 1,
@@ -367,23 +322,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: "0.9rem",
     fontWeight: 600,
     whiteSpace: "nowrap",
-  },
-  monthlySection: {
-    textAlign: "center",
-    padding: "1.5rem",
-    background: "rgba(255,255,255,0.02)",
-    border: "1px solid #1e293b",
-    borderRadius: "12px",
-    marginBottom: "2rem",
-  },
-  monthlyBtn: {
-    background: "rgba(234, 179, 8, 0.1)",
-    border: "1px solid rgba(234, 179, 8, 0.3)",
-    color: "#facc15",
-    padding: "0.6rem 2rem",
-    borderRadius: "10px",
-    fontSize: "0.95rem",
-    fontWeight: 600,
   },
   trustSection: {
     display: "grid",

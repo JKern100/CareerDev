@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.models.user import User
 from app.models.coach import CoachMessage, CoachGoal
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, require_premium
 from app.services.coach import chat_with_coach
 from app.services.activity import log_activity
 
@@ -71,7 +71,7 @@ def _parse_goal_id(goal_id: str) -> UUID:
 @router.post("/chat", response_model=ChatResponse)
 async def send_chat_message(
     data: ChatRequest,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_premium),
     db: AsyncSession = Depends(get_db),
 ):
     """Send a message to the AI career coach and get a response."""
@@ -91,7 +91,7 @@ async def send_chat_message(
 async def get_chat_history(
     limit: int = 50,
     offset: int = 0,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_premium),
     db: AsyncSession = Depends(get_db),
 ):
     """Get the user's chat history with the coach."""
@@ -116,7 +116,7 @@ async def get_chat_history(
 
 @router.delete("/history")
 async def clear_chat_history(
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_premium),
     db: AsyncSession = Depends(get_db),
 ):
     """Clear all chat history (start fresh)."""
@@ -137,7 +137,7 @@ async def clear_chat_history(
 
 @router.get("/goals", response_model=list[GoalOut])
 async def list_goals(
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_premium),
     db: AsyncSession = Depends(get_db),
 ):
     """List all career goals."""
@@ -162,7 +162,7 @@ async def list_goals(
 @router.post("/goals", response_model=GoalOut, status_code=201)
 async def create_goal(
     data: GoalCreate,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_premium),
     db: AsyncSession = Depends(get_db),
 ):
     """Create a new career goal."""
@@ -190,7 +190,7 @@ async def create_goal(
 async def update_goal(
     goal_id: str,
     data: GoalUpdate,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_premium),
     db: AsyncSession = Depends(get_db),
 ):
     """Update a goal (mark complete, rename, change date)."""
@@ -228,7 +228,7 @@ async def update_goal(
 @router.delete("/goals/{goal_id}")
 async def delete_goal(
     goal_id: str,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_premium),
     db: AsyncSession = Depends(get_db),
 ):
     """Delete a goal."""

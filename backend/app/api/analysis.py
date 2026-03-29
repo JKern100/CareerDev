@@ -21,7 +21,7 @@ from app.services.career_analysis import (
     call_analysis_api,
 )
 from app.services.routing import is_tier1_complete, is_tier2_complete
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, require_premium
 from app.services.activity import log_activity
 
 logger = logging.getLogger(__name__)
@@ -135,7 +135,7 @@ async def get_summary(
 
 @router.post("/run", response_model=AnalysisRunOut)
 async def run_analysis(
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_premium),
     db: AsyncSession = Depends(get_db),
 ):
     """Run the full analysis pipeline: completion gate, AI call, and store results.

@@ -36,6 +36,8 @@ from app.services.routing import (
     get_screen_questions,
 )
 from app.api.deps import get_current_user
+from app.models.payment import Subscription
+from app.services.payment import is_premium
 
 router = APIRouter(prefix="/questionnaire", tags=["questionnaire"])
 
@@ -138,6 +140,27 @@ async def get_next_core(
             questions=[],
             existing_answers=[],
         )
+
+    # Gate Tier 2 and 3 behind paid subscription
+    screen_tier = screen.get("tier", 1)
+    if screen_tier >= 2:
+        sub_result = await db.execute(
+            select(Subscription).where(Subscription.user_id == user.id)
+        )
+        sub = sub_result.scalar_one_or_none()
+        if not is_premium(sub):
+            return CoreScreenOut(
+                screen_id="upgrade_required",
+                screen_label="Upgrade to Pro",
+                screen_number=ALL_PROGRESSIVE_SCREENS.index(screen) + 1,
+                total_screens=total,
+                tier=screen_tier,
+                tier1_complete=t1,
+                tier2_complete=t2,
+                tier3_complete=t3,
+                questions=[],
+                existing_answers=[],
+            )
 
     screen_number = ALL_PROGRESSIVE_SCREENS.index(screen) + 1
     questions = get_screen_questions(screen)

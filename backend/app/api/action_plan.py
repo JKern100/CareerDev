@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.models.user import User
 from app.models.action_plan import ActionStep
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, require_premium
 from app.services.action_plan import generate_action_plan
 from app.services.activity import log_activity
 
@@ -78,7 +78,7 @@ def _step_out(s: ActionStep) -> StepOut:
 
 @router.get("", response_model=PlanSummary)
 async def get_action_plan(
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_premium),
     db: AsyncSession = Depends(get_db),
 ):
     """Get the user's action plan with all steps."""
@@ -99,7 +99,7 @@ async def get_action_plan(
 
 @router.post("/generate", response_model=PlanSummary)
 async def generate_plan(
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_premium),
     db: AsyncSession = Depends(get_db),
 ):
     """Generate or regenerate the action plan from the career analysis.
@@ -127,7 +127,7 @@ async def generate_plan(
 async def update_step(
     step_id: str,
     data: StepUpdate,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_premium),
     db: AsyncSession = Depends(get_db),
 ):
     """Update a step's status or notes."""

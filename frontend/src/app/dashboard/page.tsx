@@ -15,6 +15,8 @@ interface UserState {
   progressPct: number;
   hasSummary: boolean;
   hasAnalysis: boolean;
+  isPremium: boolean;
+  plan: string;
 }
 
 export default function DashboardPage() {
@@ -49,6 +51,8 @@ export default function DashboardPage() {
           progressPct: progress.progress_pct,
           hasSummary: summaryResult.status === "fulfilled",
           hasAnalysis: analysisResult.status === "fulfilled",
+          isPremium: me.is_premium,
+          plan: me.plan,
         });
       } catch {
         router.push("/login");
@@ -79,6 +83,8 @@ export default function DashboardPage() {
     : user.tier1Complete ? "Stage 1 Complete"
     : user.progressPct > 0 ? "In Progress" : "Not Started";
 
+  const pro = user.isPremium;
+
   const cards = [
     {
       id: "questionnaire",
@@ -86,15 +92,23 @@ export default function DashboardPage() {
       description: user.tier3Complete || user.questionnaireCompleted
         ? "All 3 stages complete. Your AI report has maximum detail. Review or update your answers any time."
         : user.tier2Complete
-        ? "Stages 1 & 2 complete. Personalise your report with Stage 3 (~40 questions, ~10 min)."
+        ? pro
+          ? "Stages 1 & 2 complete. Personalise your report with Stage 3 (~40 questions, ~10 min)."
+          : "Stages 1 & 2 complete. Upgrade to Pro to personalise your report with Stage 3."
         : user.tier1Complete
-        ? "Stage 1 complete. Answer ~20 more questions in Stage 2 to unlock full career analysis."
+        ? pro
+          ? "Stage 1 complete. Answer ~20 more questions in Stage 2 to unlock full career analysis."
+          : "Stage 1 complete. Upgrade to Pro to continue with Stage 2 and unlock your full career analysis."
         : "Start with 18 quick questions (~5 min) to discover your best career pathways.",
       cta: user.tier3Complete || user.questionnaireCompleted
         ? "Review Answers"
+        : user.tier1Complete && !pro
+        ? "Upgrade to Continue"
         : user.progressPct > 0 ? "Continue Questionnaire" : "Start Questionnaire",
       enabled: true,
-      href: user.tier1Complete && !user.tier2Complete ? "/questionnaire?start=tier2" : "/questionnaire",
+      href: user.tier1Complete && !pro
+        ? "/pricing"
+        : user.tier1Complete && !user.tier2Complete ? "/questionnaire?start=tier2" : "/questionnaire",
       accent: "#3b82f6",
       step: "STEP 1",
       status: qStatus,
@@ -119,47 +133,51 @@ export default function DashboardPage() {
     {
       id: "analysis",
       title: "Career Analysis",
-      description: user.hasAnalysis
+      description: !pro
+        ? "Upgrade to Pro to unlock your full AI-powered career analysis — ranked pathways, salary data, and a transition plan."
+        : user.hasAnalysis
         ? "Your full career analysis is ready — ranked pathways, salary data, credentials, and a transition plan."
         : user.tier2Complete
         ? "Stages 1 & 2 are done — generate your AI-powered pathway rankings, salary benchmarks, and transition plan."
         : "Complete Stages 1 & 2 of the questionnaire to unlock your full career analysis.",
-      cta: user.hasAnalysis ? "View Career Analysis" : user.tier2Complete ? "Generate Analysis" : "Locked",
-      enabled: user.hasAnalysis || user.tier2Complete,
-      href: "/results",
+      cta: !pro ? "Upgrade to Pro" : user.hasAnalysis ? "View Career Analysis" : user.tier2Complete ? "Generate Analysis" : "Locked",
+      enabled: !pro ? true : (user.hasAnalysis || user.tier2Complete),
+      href: !pro ? "/pricing" : "/results",
       accent: "#2563eb",
       step: "STEP 3",
-      status: user.hasAnalysis ? "Ready" : user.tier2Complete ? "Ready to Generate" : "Locked",
-      statusColor: user.hasAnalysis ? "#22c55e" : user.tier2Complete ? "#f59e0b" : "#64748b",
+      status: !pro ? "Pro" : user.hasAnalysis ? "Ready" : user.tier2Complete ? "Ready to Generate" : "Locked",
+      statusColor: !pro ? "#3b82f6" : user.hasAnalysis ? "#22c55e" : user.tier2Complete ? "#f59e0b" : "#64748b",
       featured: true,
     },
     {
       id: "plan",
       title: "Action Plan",
-      description: user.hasAnalysis
+      description: !pro
+        ? "Upgrade to Pro to get a structured action plan with trackable next steps for your top career pathways."
+        : user.hasAnalysis
         ? "Your step-by-step action plan — track credentials, weekly priorities, and first steps for your top pathways."
         : "Generate your career analysis first to unlock a structured action plan with trackable next steps.",
-      cta: user.hasAnalysis ? "View Action Plan" : "Locked",
-      enabled: user.hasAnalysis,
-      href: "/plan",
+      cta: !pro ? "Upgrade to Pro" : user.hasAnalysis ? "View Action Plan" : "Locked",
+      enabled: !pro ? true : user.hasAnalysis,
+      href: !pro ? "/pricing" : "/plan",
       accent: "#22c55e",
       step: "STEP 4",
-      status: user.hasAnalysis ? "Available" : "Locked",
-      statusColor: user.hasAnalysis ? "#22c55e" : "#64748b",
+      status: !pro ? "Pro" : user.hasAnalysis ? "Available" : "Locked",
+      statusColor: !pro ? "#3b82f6" : user.hasAnalysis ? "#22c55e" : "#64748b",
     },
     {
       id: "coach",
       title: "Career Coach",
-      description: user.tier1Complete
-        ? "Chat with your AI career coach — get personalised advice on interviews, resumes, salary negotiation, and your transition plan."
-        : "Complete Stage 1 first, then unlock your personal AI career coach.",
-      cta: user.tier1Complete ? "Talk to Coach" : "Locked",
-      enabled: user.tier1Complete,
-      href: "/coach",
+      description: !pro
+        ? "Upgrade to Pro to chat with your AI career coach — personalised advice on interviews, resumes, and your transition."
+        : "Chat with your AI career coach — get personalised advice on interviews, resumes, salary negotiation, and your transition plan.",
+      cta: !pro ? "Upgrade to Pro" : "Talk to Coach",
+      enabled: !pro ? true : user.tier1Complete,
+      href: !pro ? "/pricing" : "/coach",
       accent: "#eab308",
       step: "ANYTIME",
-      status: user.tier1Complete ? "Available" : "Locked",
-      statusColor: user.tier1Complete ? "#22c55e" : "#64748b",
+      status: !pro ? "Pro" : user.tier1Complete ? "Available" : "Locked",
+      statusColor: !pro ? "#3b82f6" : user.tier1Complete ? "#22c55e" : "#64748b",
     },
   ];
 
