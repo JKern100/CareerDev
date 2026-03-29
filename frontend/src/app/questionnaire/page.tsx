@@ -700,14 +700,31 @@ function QuestionnaireContent() {
   // ── Render: Complete ──
   if (phase === "complete") {
     return (
-      <div className="container" style={{ textAlign: "center", marginTop: "4rem" }}>
-        <h1>Questionnaire Complete</h1>
-        <p className="text-muted mb-3">
-          You&apos;ve answered all the questions. Let&apos;s start with a summary of your profile.
+      <div className="container" style={{ textAlign: "center", marginTop: "4rem", maxWidth: "560px" }}>
+        <div style={{
+          width: "64px", height: "64px", borderRadius: "50%",
+          background: "#d1fae5",
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          fontSize: "1.75rem", marginBottom: "1.5rem",
+        }}>
+          ✓
+        </div>
+        <h1 style={{ fontSize: "1.5rem", marginBottom: "0.75rem" }}>Questionnaire Complete</h1>
+        <p className="text-muted mb-3" style={{ lineHeight: 1.7 }}>
+          You&apos;ve answered all the questions. Your AI career coach is now fully briefed on your profile and ready to help.
         </p>
-        <button className="btn btn-primary" onClick={handleComplete}>
-          View My Profile Summary
-        </button>
+        <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
+          <button className="btn btn-primary" onClick={handleComplete} style={{ padding: "0.75rem 2rem" }}>
+            View My Profile Summary
+          </button>
+          <button
+            className="btn btn-outline"
+            style={{ padding: "0.75rem 1.5rem", borderColor: "rgba(234, 179, 8, 0.4)", color: "#eab308" }}
+            onClick={() => router.push("/coach")}
+          >
+            Talk to Coach
+          </button>
+        </div>
       </div>
     );
   }
