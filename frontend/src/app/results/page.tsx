@@ -107,14 +107,26 @@ export default function ResultsPage() {
   }
 
   if (error) {
+    const isTierError = error.toLowerCase().includes("complete") || error.toLowerCase().includes("stage") || error.toLowerCase().includes("questionnaire");
     return (
       <>
         <AppHeader />
         <div className="container" style={{ textAlign: "center", marginTop: "4rem" }}>
-          <p style={{ color: "var(--error)" }}>{error}</p>
-          <button className="btn btn-outline mt-2" onClick={() => router.push("/questionnaire")}>
-            Back to Questionnaire
-          </button>
+          <p style={{ color: "var(--error)", marginBottom: "1rem" }}>{error}</p>
+          <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
+            {isTierError ? (
+              <button className="btn btn-primary" onClick={() => router.push("/questionnaire")}>
+                Continue Questionnaire
+              </button>
+            ) : (
+              <button className="btn btn-outline" onClick={() => router.push("/questionnaire")}>
+                Back to Questionnaire
+              </button>
+            )}
+            <button className="btn btn-outline" onClick={() => router.push("/dashboard")}>
+              Back to Dashboard
+            </button>
+          </div>
         </div>
       </>
     );

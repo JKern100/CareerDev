@@ -197,7 +197,7 @@ function QuestionnaireContent() {
       const progress = await getProgress();
       setModules(progress.modules);
       setPrevProgress(progress.progress_pct);
-      if (progress.core_complete && phaseRef.current === "tier1") {
+      if (progress.tier1_complete && phaseRef.current === "tier1") {
         setPhase("tier1_done");
       }
     } catch {
@@ -283,7 +283,7 @@ function QuestionnaireContent() {
           // All scoring done — go to deep-dive or show tier2_done milestone
           setPhase("tier2_done");
           setLoading(false);
-        } else if (progress.core_complete) {
+        } else if (progress.tier1_complete) {
           // Tier 1 done — show tier1_done milestone
           setPhase("tier1_done");
           setLoading(false);
@@ -510,9 +510,14 @@ function QuestionnaireContent() {
     return (
       <div className="container" style={{ textAlign: "center", marginTop: "4rem" }}>
         <p style={{ color: "#ef4444", marginBottom: "1rem" }}>{error}</p>
-        <button className="btn btn-primary" onClick={() => (phase === "tier1" || phase === "tier2") ? loadCoreScreen() : loadQuestions()}>
-          Try Again
-        </button>
+        <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
+          <button className="btn btn-primary" onClick={() => (phase === "tier1" || phase === "tier2") ? loadCoreScreen() : loadQuestions()}>
+            Try Again
+          </button>
+          <button className="btn btn-outline" onClick={() => router.push("/dashboard")}>
+            Back to Dashboard
+          </button>
+        </div>
       </div>
     );
   }

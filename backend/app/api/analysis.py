@@ -58,10 +58,6 @@ async def generate_summary(
             detail="Profile summary regeneration is not enabled. Please contact your administrator.",
         )
 
-    # Reset the flag after use
-    if user.can_regenerate_summary:
-        user.can_regenerate_summary = False
-
     # Load user answers
     result = await db.execute(select(Answer).where(Answer.user_id == user.id))
     answers_raw = result.scalars().all()
@@ -75,12 +71,16 @@ async def generate_summary(
 
     # Generate the narrative
     api_key = settings.LLM_API_KEY
-    if api_key:
-        summary_text = await generate_summary_with_ai(answers, user.full_name, api_key)
-        used_ai = True
-    else:
-        summary_text = generate_summary_without_ai(answers, user.full_name)
-        used_ai = False
+    try:
+        if api_key:
+            summary_text = await generate_summary_with_ai(answers, user.full_name, api_key)
+            used_ai = True
+        else:
+            summary_text = generate_summary_without_ai(answers, user.full_name)
+            used_ai = False
+    except Exception:
+        # Generation failed — do NOT reset the flag so the user can retry
+        raise
 
     # Store in a report record
     report = Report(
@@ -89,6 +89,11 @@ async def generate_summary(
         status="complete",
     )
     db.add(report)
+
+    # Reset the regeneration flag only after successful generation and storage
+    if user.can_regenerate_summary:
+        user.can_regenerate_summary = False
+
     await db.commit()
     await db.refresh(report)
 
@@ -150,7 +155,7 @@ async def run_analysis(
         if not is_tier2_complete(answered_ids):
             raise HTTPException(
                 status_code=400,
-                detail="Complete the quick assessment first. Answer the 'Sharpen' questions for full analysis.",
+                detail="Complete both Stage 1 (Quick Match) and Stage 2 (Sharpen) before generating your career analysis. Go to the questionnaire to continue.",
             )
 
     # Check if user already has a report and needs permission to regenerate

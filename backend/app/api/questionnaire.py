@@ -119,7 +119,6 @@ async def get_next_core(
             tier2_complete=True,
             questions=[],
             existing_answers=[],
-            core_complete=True,
         )
 
     screen = get_next_progressive_screen(answered_ids)
@@ -134,7 +133,6 @@ async def get_next_core(
             tier2_complete=t2,
             questions=[],
             existing_answers=[],
-            core_complete=t1,
         )
 
     screen_number = ALL_PROGRESSIVE_SCREENS.index(screen) + 1
@@ -166,7 +164,6 @@ async def get_next_core(
         tier2_complete=t2,
         questions=[_build_question_out(q) for q in questions],
         existing_answers=existing,
-        core_complete=t1,
     )
 
 
@@ -380,6 +377,6 @@ async def get_progress(
         current_question_id=user.current_question_id,
         progress_pct=round(len(answered_ids) / total_questions * 100, 1) if total_questions > 0 else 0,
         modules=modules_status,
-        core_complete=is_tier1_complete(answered_ids),
+        tier1_complete=is_tier1_complete(answered_ids),
         tier2_complete=is_tier2_complete(answered_ids),
     )

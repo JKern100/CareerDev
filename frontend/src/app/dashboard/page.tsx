@@ -42,7 +42,7 @@ export default function DashboardPage() {
           fullName: me.full_name,
           role: me.role,
           questionnaireCompleted: me.questionnaire_completed,
-          tier1Complete: progress.core_complete,
+          tier1Complete: progress.tier1_complete,
           tier2Complete: progress.tier2_complete,
           progressPct: progress.progress_pct,
           hasSummary: summaryResult.status === "fulfilled",
