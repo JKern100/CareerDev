@@ -7,7 +7,7 @@ plus user-defined career goals for accountability tracking.
 import uuid
 from datetime import datetime
 
-from sqlalchemy import String, Text, DateTime, Integer, Boolean, Uuid, ForeignKey
+from sqlalchemy import String, Text, DateTime, Boolean, Uuid, ForeignKey, Index
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -15,6 +15,9 @@ from app.database import Base
 
 class CoachMessage(Base):
     __tablename__ = "coach_messages"
+    __table_args__ = (
+        Index("ix_coach_messages_user_created", "user_id", "created_at"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"), nullable=False, index=True)
@@ -25,6 +28,9 @@ class CoachMessage(Base):
 
 class CoachGoal(Base):
     __tablename__ = "coach_goals"
+    __table_args__ = (
+        Index("ix_coach_goals_user_created", "user_id", "created_at"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"), nullable=False, index=True)

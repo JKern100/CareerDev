@@ -5,11 +5,9 @@ career analysis, and conversation history, then calls the Gemini API
 for an ongoing coaching conversation.
 """
 
-import json
 import logging
-from datetime import datetime
 
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -17,7 +15,7 @@ from app.models.questionnaire import Answer, Question
 from app.models.report import Report, AnalysisReport
 from app.models.coach import CoachMessage, CoachGoal
 from app.models.pathway import PathwayScore, Pathway
-from app.services.routing import get_question_bank, MODULE_LABELS
+from app.services.routing import get_question_bank
 
 logger = logging.getLogger(__name__)
 
@@ -132,7 +130,7 @@ GUIDELINES:
 """
 
 
-async def load_user_career_context(user_id, db: AsyncSession) -> str:
+async def load_user_career_context(user_id: "UUID", db: AsyncSession) -> str:
     """Load all relevant career data for a user and build the context string."""
     from app.models.user import User
 
@@ -219,13 +217,14 @@ async def load_user_career_context(user_id, db: AsyncSession) -> str:
     )
 
 
-async def load_conversation_history(user_id, db: AsyncSession, limit: int = 50) -> list[dict]:
+async def load_conversation_history(user_id: "UUID", db: AsyncSession, limit: int = 50) -> list[dict]:
     """Load recent conversation messages for context."""
+    capped = min(limit, 200)
     result = await db.execute(
         select(CoachMessage)
         .where(CoachMessage.user_id == user_id)
         .order_by(CoachMessage.created_at.desc())
-        .limit(limit)
+        .limit(capped)
     )
     messages = result.scalars().all()
     # Reverse to chronological order
@@ -234,7 +233,7 @@ async def load_conversation_history(user_id, db: AsyncSession, limit: int = 50) 
 
 
 async def chat_with_coach(
-    user_id,
+    user_id: "UUID",
     user_message: str,
     db: AsyncSession,
 ) -> str:
@@ -284,8 +283,16 @@ async def chat_with_coach(
         })
 
     chat = model.start_chat(history=gemini_history)
-    response = chat.send_message(user_message)
-    assistant_reply = response.text
+
+    try:
+        response = chat.send_message(user_message)
+        assistant_reply = response.text
+    except Exception as e:
+        logger.exception("Gemini API call failed for user %s", user_id)
+        raise RuntimeError("The AI coach is temporarily unavailable. Please try again.")
+
+    if not assistant_reply:
+        raise RuntimeError("The AI coach returned an empty response. Please try again.")
 
     # Store both messages
     db.add(CoachMessage(user_id=user_id, role="user", content=user_message))

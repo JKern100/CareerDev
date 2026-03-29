@@ -189,6 +189,34 @@ export default function ResultsPage() {
 
         {pathways.length > 0 && <ResourcesSection pathways={pathways} />}
 
+        {/* Coach CTA */}
+        <div style={{
+          marginTop: "1.5rem",
+          padding: "1.25rem 1.5rem",
+          background: "linear-gradient(135deg, rgba(234, 179, 8, 0.06), rgba(234, 179, 8, 0.02))",
+          border: "1px solid rgba(234, 179, 8, 0.2)",
+          borderRadius: "12px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "1rem",
+        }}>
+          <div>
+            <h3 style={{ fontSize: "1rem", marginBottom: "0.25rem" }}>Questions about your results?</h3>
+            <p className="text-muted" style={{ fontSize: "0.875rem" }}>
+              Your AI Career Coach can help you act on this analysis — interview prep, resume tailoring, or planning your first 30 days.
+            </p>
+          </div>
+          <button
+            className="btn btn-outline"
+            style={{ padding: "0.6rem 1.5rem", fontSize: "0.9rem", borderColor: "rgba(234, 179, 8, 0.4)", color: "#eab308", whiteSpace: "nowrap" }}
+            onClick={() => router.push("/coach")}
+          >
+            Talk to Coach
+          </button>
+        </div>
+
         {!questionnaireComplete && (
           <div style={{
             marginTop: "1.5rem",
