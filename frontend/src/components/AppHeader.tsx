@@ -118,6 +118,21 @@ export default function AppHeader() {
         >
           Dashboard
         </a>
+        <a
+          href="/coach"
+          style={{
+            background: "rgba(234, 179, 8, 0.1)",
+            border: "1px solid rgba(234, 179, 8, 0.3)",
+            color: "#facc15",
+            padding: "0.4rem 1rem",
+            borderRadius: "8px",
+            fontSize: "0.85rem",
+            textDecoration: "none",
+            cursor: "pointer",
+          }}
+        >
+          Career Coach
+        </a>
         {isAdvisor && (
           <a
             href="/advisor"

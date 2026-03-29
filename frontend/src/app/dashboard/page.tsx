@@ -129,6 +129,20 @@ export default function DashboardPage() {
       statusColor: user.hasAnalysis ? "#22c55e" : user.tier2Complete ? "#f59e0b" : "#64748b",
       featured: true,
     },
+    {
+      id: "coach",
+      title: "Career Coach",
+      description: user.tier1Complete
+        ? "Chat with your AI career coach — get personalized advice on interviews, resumes, salary negotiation, and your transition plan."
+        : "Complete the quick assessment first, then unlock your personal AI career coach.",
+      cta: user.tier1Complete ? "Talk to Coach" : "Locked",
+      enabled: user.tier1Complete,
+      href: "/coach",
+      accent: "#eab308",
+      step: "ONGOING",
+      status: user.tier1Complete ? "Available" : "Locked",
+      statusColor: user.tier1Complete ? "#22c55e" : "#64748b",
+    },
   ];
 
   return (

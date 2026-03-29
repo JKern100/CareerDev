@@ -537,3 +537,57 @@ export async function cancelBooking(bookingId: string) {
 export async function getAllBookings() {
   return request<BookingData[]>("/scheduling/all-bookings");
 }
+
+// Coach
+export interface CoachMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  created_at: string;
+}
+
+export interface CoachGoal {
+  id: string;
+  title: string;
+  target_date: string | null;
+  completed: boolean;
+  created_at: string;
+  completed_at: string | null;
+}
+
+export async function sendCoachMessage(message: string) {
+  return request<{ reply: string }>("/coach/chat", {
+    method: "POST",
+    body: JSON.stringify({ message }),
+  });
+}
+
+export async function getCoachHistory(limit = 50, offset = 0) {
+  return request<CoachMessage[]>(`/coach/history?limit=${limit}&offset=${offset}`);
+}
+
+export async function clearCoachHistory() {
+  return request<{ detail: string }>("/coach/history", { method: "DELETE" });
+}
+
+export async function getCoachGoals() {
+  return request<CoachGoal[]>("/coach/goals");
+}
+
+export async function createCoachGoal(title: string, targetDate?: string) {
+  return request<CoachGoal>("/coach/goals", {
+    method: "POST",
+    body: JSON.stringify({ title, target_date: targetDate || null }),
+  });
+}
+
+export async function updateCoachGoal(goalId: string, data: { completed?: boolean; title?: string; target_date?: string }) {
+  return request<CoachGoal>(`/coach/goals/${goalId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteCoachGoal(goalId: string) {
+  return request<{ detail: string }>(`/coach/goals/${goalId}`, { method: "DELETE" });
+}
