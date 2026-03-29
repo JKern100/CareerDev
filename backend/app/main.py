@@ -194,6 +194,9 @@ async def lifespan(app: FastAPI):
     import app.models.audit  # noqa: F401
     import app.models.activity  # noqa: F401
     import app.models.coach  # noqa: F401
+    import app.models.action_plan  # noqa: F401
+    import app.models.payment  # noqa: F401
+    import app.models.promo  # noqa: F401
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -206,7 +209,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-from app.api import auth, questionnaire, analysis, privacy, admin, scheduling, results, coach
+from app.api import auth, questionnaire, analysis, privacy, admin, scheduling, results, coach, action_plan, payment, promo
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -231,6 +234,9 @@ app.include_router(admin.router)
 app.include_router(scheduling.router)
 app.include_router(results.router)
 app.include_router(coach.router)
+app.include_router(action_plan.router)
+app.include_router(payment.router)
+app.include_router(promo.router)
 
 
 @app.get("/health")

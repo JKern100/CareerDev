@@ -6,6 +6,9 @@ from app.models.advisor import Advisor, AvailabilitySlot, Booking
 from app.models.audit import AuditEvent
 from app.models.activity import ActivityEvent
 from app.models.coach import CoachMessage, CoachGoal
+from app.models.action_plan import ActionStep
+from app.models.payment import Payment, Subscription
+from app.models.promo import PromoCode, PromoRedemption
 
 __all__ = [
     "User",
@@ -22,4 +25,9 @@ __all__ = [
     "ActivityEvent",
     "CoachMessage",
     "CoachGoal",
+    "ActionStep",
+    "Payment",
+    "Subscription",
+    "PromoCode",
+    "PromoRedemption",
 ]

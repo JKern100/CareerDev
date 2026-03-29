@@ -133,9 +133,28 @@ async def login(data: UserLogin, db: AsyncSession = Depends(get_db)):
     return TokenResponse(access_token=token, is_first_login=is_first_login)
 
 
-@router.get("/me", response_model=UserResponse)
-async def me(user: User = Depends(get_current_user)):
-    return user
+@router.get("/me")
+async def me(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.models.payment import Subscription
+    from app.services.payment import is_premium as _is_premium
+
+    result = await db.execute(select(Subscription).where(Subscription.user_id == user.id))
+    sub = result.scalar_one_or_none()
+
+    return {
+        "id": str(user.id),
+        "email": user.email,
+        "full_name": user.full_name,
+        "role": user.role.value if hasattr(user.role, "value") else user.role,
+        "questionnaire_completed": user.questionnaire_completed,
+        "current_module": user.current_module,
+        "can_regenerate_summary": user.can_regenerate_summary,
+        "plan": sub.plan if sub else "free",
+        "is_premium": _is_premium(sub),
+    }
 
 
 @router.post("/forgot-password")

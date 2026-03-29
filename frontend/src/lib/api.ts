@@ -85,6 +85,8 @@ export async function getMe() {
     questionnaire_completed: boolean;
     current_module: string | null;
     can_regenerate_summary: boolean;
+    plan: string;
+    is_premium: boolean;
   }>("/auth/me");
 }
 
@@ -590,4 +592,136 @@ export async function updateCoachGoal(goalId: string, data: { completed?: boolea
 
 export async function deleteCoachGoal(goalId: string) {
   return request<{ detail: string }>(`/coach/goals/${goalId}`, { method: "DELETE" });
+}
+
+// Action Plan
+export interface ActionStepData {
+  id: string;
+  pathway_id: string | null;
+  pathway_name: string | null;
+  category: "this_week" | "first_step" | "credential";
+  title: string;
+  description: string | null;
+  url: string | null;
+  duration: string | null;
+  sort_order: number;
+  status: "todo" | "in_progress" | "done" | "skipped";
+  notes: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+}
+
+export interface ActionPlan {
+  total: number;
+  done: number;
+  in_progress: number;
+  skipped: number;
+  steps: ActionStepData[];
+}
+
+export async function getActionPlan() {
+  return request<ActionPlan>("/action-plan");
+}
+
+export async function generateActionPlan() {
+  return request<ActionPlan>("/action-plan/generate", { method: "POST" });
+}
+
+export async function updateActionStep(stepId: string, data: { status?: string; notes?: string }) {
+  return request<ActionStepData>(`/action-plan/steps/${stepId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+// Payment
+export interface SubscriptionStatus {
+  plan: string;
+  is_active: boolean;
+  is_premium: boolean;
+  activated_at: string | null;
+  expires_at: string | null;
+  cancelled_at: string | null;
+}
+
+export async function createCheckout(plan: "pro" | "premium" | "monthly") {
+  return request<{ checkout_url: string }>("/payment/checkout", {
+    method: "POST",
+    body: JSON.stringify({ plan }),
+  });
+}
+
+export async function getSubscription() {
+  return request<SubscriptionStatus>("/payment/subscription");
+}
+
+// Promo Codes
+export interface PromoValidation {
+  valid: boolean;
+  code: string;
+  discount_type: string;
+  description: string;
+  original_cents: number;
+  discount_cents: number;
+  final_cents: number;
+  is_free: boolean;
+}
+
+export interface PromoRedeemResult {
+  redeemed: boolean;
+  plan: string;
+  message: string;
+}
+
+export interface PromoCodeData {
+  id: string;
+  code: string;
+  discount_type: string;
+  discount_value: number;
+  applies_to: string;
+  unlocks_plan: string | null;
+  max_uses: number | null;
+  max_uses_per_user: number;
+  times_used: number;
+  is_active: boolean;
+  expires_at: string | null;
+  note: string | null;
+  created_at: string;
+}
+
+export async function validatePromo(code: string, plan: string) {
+  return request<PromoValidation>("/promo/validate", {
+    method: "POST",
+    body: JSON.stringify({ code, plan }),
+  });
+}
+
+export async function redeemPromo(code: string, plan: string) {
+  return request<PromoRedeemResult>("/promo/redeem", {
+    method: "POST",
+    body: JSON.stringify({ code, plan }),
+  });
+}
+
+// Admin promo
+export async function getAdminPromoCodes() {
+  return request<PromoCodeData[]>("/promo/admin/codes");
+}
+
+export async function createAdminPromoCode(data: Record<string, unknown>) {
+  return request<PromoCodeData>("/promo/admin/codes", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateAdminPromoCode(codeId: string, data: Record<string, unknown>) {
+  return request<PromoCodeData>(`/promo/admin/codes/${codeId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteAdminPromoCode(codeId: string) {
+  return request<{ detail: string }>(`/promo/admin/codes/${codeId}`, { method: "DELETE" });
 }

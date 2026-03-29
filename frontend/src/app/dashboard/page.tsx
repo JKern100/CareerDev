@@ -130,6 +130,20 @@ export default function DashboardPage() {
       featured: true,
     },
     {
+      id: "plan",
+      title: "Action Plan",
+      description: user.hasAnalysis
+        ? "Your step-by-step action plan — track credentials, weekly priorities, and first steps for your top pathways."
+        : "Complete your career analysis to unlock a structured action plan with trackable next steps.",
+      cta: user.hasAnalysis ? "View Action Plan" : "Locked",
+      enabled: user.hasAnalysis,
+      href: "/plan",
+      accent: "#22c55e",
+      step: "STEP 4",
+      status: user.hasAnalysis ? "Available" : "Locked",
+      statusColor: user.hasAnalysis ? "#22c55e" : "#64748b",
+    },
+    {
       id: "coach",
       title: "Career Coach",
       description: user.tier1Complete

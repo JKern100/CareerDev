@@ -189,12 +189,12 @@ export default function ResultsPage() {
 
         {pathways.length > 0 && <ResourcesSection pathways={pathways} />}
 
-        {/* Coach CTA */}
+        {/* Action Plan CTA */}
         <div style={{
           marginTop: "1.5rem",
           padding: "1.25rem 1.5rem",
-          background: "linear-gradient(135deg, rgba(234, 179, 8, 0.06), rgba(234, 179, 8, 0.02))",
-          border: "1px solid rgba(234, 179, 8, 0.2)",
+          background: "linear-gradient(135deg, rgba(34, 197, 94, 0.08), rgba(34, 197, 94, 0.02))",
+          border: "1px solid rgba(34, 197, 94, 0.25)",
           borderRadius: "12px",
           display: "flex",
           justifyContent: "space-between",
@@ -203,18 +203,27 @@ export default function ResultsPage() {
           gap: "1rem",
         }}>
           <div>
-            <h3 style={{ fontSize: "1rem", marginBottom: "0.25rem" }}>Questions about your results?</h3>
+            <h3 style={{ fontSize: "1rem", marginBottom: "0.25rem" }}>Ready to take action?</h3>
             <p className="text-muted" style={{ fontSize: "0.875rem" }}>
-              Your AI Career Coach can help you act on this analysis — interview prep, resume tailoring, or planning your first 30 days.
+              Turn this analysis into a step-by-step action plan — track credentials, first steps, and weekly priorities.
             </p>
           </div>
-          <button
-            className="btn btn-outline"
-            style={{ padding: "0.6rem 1.5rem", fontSize: "0.9rem", borderColor: "rgba(234, 179, 8, 0.4)", color: "#eab308", whiteSpace: "nowrap" }}
-            onClick={() => router.push("/coach")}
-          >
-            Talk to Coach
-          </button>
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+            <button
+              className="btn btn-primary"
+              style={{ padding: "0.6rem 1.5rem", fontSize: "0.9rem", whiteSpace: "nowrap" }}
+              onClick={() => router.push("/plan")}
+            >
+              View Action Plan
+            </button>
+            <button
+              className="btn btn-outline"
+              style={{ padding: "0.6rem 1.5rem", fontSize: "0.9rem", borderColor: "rgba(234, 179, 8, 0.4)", color: "#eab308", whiteSpace: "nowrap" }}
+              onClick={() => router.push("/coach")}
+            >
+              Ask Coach
+            </button>
+          </div>
         </div>
 
         {!questionnaireComplete && (

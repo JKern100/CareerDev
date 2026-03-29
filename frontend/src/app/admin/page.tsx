@@ -31,8 +31,9 @@ import {
   MODULE_LABELS,
 } from "@/lib/api";
 import LoginActivityChart from "@/components/LoginActivityChart";
+import AdminPromo from "@/components/AdminPromo";
 
-type Tab = "dashboard" | "users" | "questions" | "activity";
+type Tab = "dashboard" | "users" | "questions" | "activity" | "promo";
 
 /* ── Help Content ─────────────────────────────────────────────────────── */
 
@@ -110,6 +111,23 @@ const HELP_CONTENT: Record<Tab, { title: string; sections: { heading: string; bo
       {
         heading: "Modules",
         body: Object.entries(MODULE_LABELS).map(([k, v]) => `- **Module ${k}**: ${v}`).join("\n"),
+      },
+    ],
+  },
+  promo: {
+    title: "Promo Codes Help",
+    sections: [
+      {
+        heading: "Overview",
+        body: "Create and manage promotional codes that give users discounts or free access to paid plans.",
+      },
+      {
+        heading: "Discount Types",
+        body: `- **Percentage off**: Reduces the plan price by a percentage (e.g. 30% off).\n- **Fixed amount off**: Reduces the plan price by a fixed amount in cents (e.g. 1000 = $10 off).\n- **Full unlock**: Grants free access to a plan — no payment required. The user enters the code on the pricing page and the plan activates immediately.`,
+      },
+      {
+        heading: "Controls",
+        body: `- **Applies to**: Restrict which plans the code works on (all, pro, premium, monthly).\n- **Max uses**: Total number of times the code can be used across all users. Leave empty for unlimited.\n- **Max per user**: How many times a single user can use the code (default: 1).\n- **Expires at**: After this date, the code stops working.\n- **Note**: Internal note for your reference (e.g. "Influencer campaign", "Beta tester").`,
       },
     ],
   },
@@ -750,7 +768,7 @@ export default function AdminPage() {
 
       {/* Tabs */}
       <div style={styles.tabs}>
-        {(["dashboard", "users", "activity", "questions"] as Tab[]).map((t) => (
+        {(["dashboard", "users", "activity", "questions", "promo"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => handleTabChange(t)}
@@ -759,7 +777,7 @@ export default function AdminPage() {
               ...(tab === t ? styles.tabActive : {}),
             }}
           >
-            {t === "dashboard" ? "Dashboard" : t === "users" ? "Users" : t === "activity" ? "Activity" : "Questions"}
+            {t === "dashboard" ? "Dashboard" : t === "users" ? "Users" : t === "activity" ? "Activity" : t === "promo" ? "Promo Codes" : "Questions"}
           </button>
         ))}
       </div>
@@ -1256,6 +1274,12 @@ export default function AdminPage() {
                 No questions match your filters.
               </p>
             )}
+          </div>
+        )}
+
+        {tab === "promo" && (
+          <div style={{ padding: "1rem" }}>
+            <AdminPromo />
           </div>
         )}
       </div>
