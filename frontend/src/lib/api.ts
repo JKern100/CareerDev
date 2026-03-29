@@ -143,6 +143,7 @@ export interface CoreScreen {
   tier: number;
   tier1_complete: boolean;
   tier2_complete: boolean;
+  tier3_complete: boolean;
   questions: Question[];
   existing_answers?: ExistingAnswer[];
 }
@@ -197,6 +198,7 @@ export async function getProgress() {
     modules: ModuleStatus[];
     tier1_complete: boolean;
     tier2_complete: boolean;
+    tier3_complete: boolean;
   }>("/questionnaire/progress");
 }
 

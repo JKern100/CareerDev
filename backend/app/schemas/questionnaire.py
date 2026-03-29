@@ -84,6 +84,7 @@ class QuestionnaireProgressOut(BaseModel):
     modules: list[ModuleStatusOut]
     tier1_complete: bool = False
     tier2_complete: bool = False
+    tier3_complete: bool = False
 
 
 class CoreScreenOut(BaseModel):
@@ -94,5 +95,6 @@ class CoreScreenOut(BaseModel):
     tier: int = 1  # 1 or 2
     tier1_complete: bool = False
     tier2_complete: bool = False
+    tier3_complete: bool = False
     questions: list[QuestionOut]
     existing_answers: list[ExistingAnswerOut] = []

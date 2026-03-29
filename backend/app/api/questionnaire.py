@@ -31,6 +31,7 @@ from app.services.routing import (
     get_next_progressive_screen,
     is_tier1_complete,
     is_tier2_complete,
+    is_tier3_complete,
     is_all_progressive_complete,
     get_screen_questions,
 )
@@ -106,6 +107,7 @@ async def get_next_core(
     answered_ids = await _get_answered_ids(user.id, db)
     t1 = is_tier1_complete(answered_ids)
     t2 = is_tier2_complete(answered_ids)
+    t3 = is_tier3_complete(answered_ids)
     total = len(ALL_PROGRESSIVE_SCREENS)
 
     if is_all_progressive_complete(answered_ids):
@@ -114,9 +116,10 @@ async def get_next_core(
             screen_label="Complete",
             screen_number=total,
             total_screens=total,
-            tier=2,
+            tier=3,
             tier1_complete=True,
             tier2_complete=True,
+            tier3_complete=True,
             questions=[],
             existing_answers=[],
         )
@@ -128,9 +131,10 @@ async def get_next_core(
             screen_label="Complete",
             screen_number=total,
             total_screens=total,
-            tier=2,
+            tier=3,
             tier1_complete=t1,
             tier2_complete=t2,
+            tier3_complete=t3,
             questions=[],
             existing_answers=[],
         )
@@ -162,6 +166,7 @@ async def get_next_core(
         tier=screen.get("tier", 1),
         tier1_complete=t1,
         tier2_complete=t2,
+        tier3_complete=t3,
         questions=[_build_question_out(q) for q in questions],
         existing_answers=existing,
     )
@@ -379,4 +384,5 @@ async def get_progress(
         modules=modules_status,
         tier1_complete=is_tier1_complete(answered_ids),
         tier2_complete=is_tier2_complete(answered_ids),
+        tier3_complete=is_tier3_complete(answered_ids),
     )
