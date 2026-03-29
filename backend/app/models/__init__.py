@@ -7,6 +7,7 @@ from app.models.audit import AuditEvent
 from app.models.activity import ActivityEvent
 from app.models.coach import CoachMessage, CoachGoal
 from app.models.action_plan import ActionStep
+from app.models.payment import Payment, Subscription
 
 __all__ = [
     "User",
@@ -24,4 +25,6 @@ __all__ = [
     "CoachMessage",
     "CoachGoal",
     "ActionStep",
+    "Payment",
+    "Subscription",
 ]

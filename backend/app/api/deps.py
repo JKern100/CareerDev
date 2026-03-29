@@ -46,3 +46,23 @@ async def get_admin_user(user: User = Depends(get_current_user)) -> User:
             detail="Admin access required",
         )
     return user
+
+
+async def require_premium(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    """Dependency that requires an active paid subscription."""
+    from app.models.payment import Subscription
+    from app.services.payment import is_premium
+
+    result = await db.execute(
+        select(Subscription).where(Subscription.user_id == user.id)
+    )
+    sub = result.scalar_one_or_none()
+    if not is_premium(sub):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This feature requires a paid plan. Visit /pricing to upgrade.",
+        )
+    return user

@@ -37,6 +37,15 @@ class Settings(BaseSettings):
     LLM_MODEL: str = "gemini-2.5-flash"
     EMBEDDING_MODEL: str = "text-embedding-3-small"
 
+    # LemonSqueezy
+    LEMONSQUEEZY_API_KEY: str = ""
+    LEMONSQUEEZY_STORE_ID: str = ""
+    LEMONSQUEEZY_WEBHOOK_SECRET: str = ""
+    # Product variant IDs for each tier (set in LemonSqueezy dashboard)
+    LEMONSQUEEZY_VARIANT_PRO: str = ""       # one-time ~$29
+    LEMONSQUEEZY_VARIANT_PREMIUM: str = ""   # one-time ~$49
+    LEMONSQUEEZY_VARIANT_MONTHLY: str = ""   # subscription ~$15/mo
+
     @property
     def async_database_url(self) -> str:
         """Convert standard DATABASE_URL to async version for deployment platforms."""

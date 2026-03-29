@@ -61,6 +61,13 @@ export default function Home() {
           >
             Methodology
           </a>
+          <a
+            href="/pricing"
+            className="nav-link-desktop"
+            style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.9rem" }}
+          >
+            Pricing
+          </a>
           <button
             onClick={() => router.push(isLoggedIn ? dashboardPath : "/login")}
             style={{

@@ -85,6 +85,8 @@ export async function getMe() {
     questionnaire_completed: boolean;
     current_module: string | null;
     can_regenerate_summary: boolean;
+    plan: string;
+    is_premium: boolean;
   }>("/auth/me");
 }
 
@@ -630,4 +632,25 @@ export async function updateActionStep(stepId: string, data: { status?: string; 
     method: "PATCH",
     body: JSON.stringify(data),
   });
+}
+
+// Payment
+export interface SubscriptionStatus {
+  plan: string;
+  is_active: boolean;
+  is_premium: boolean;
+  activated_at: string | null;
+  expires_at: string | null;
+  cancelled_at: string | null;
+}
+
+export async function createCheckout(plan: "pro" | "premium" | "monthly") {
+  return request<{ checkout_url: string }>("/payment/checkout", {
+    method: "POST",
+    body: JSON.stringify({ plan }),
+  });
+}
+
+export async function getSubscription() {
+  return request<SubscriptionStatus>("/payment/subscription");
 }
