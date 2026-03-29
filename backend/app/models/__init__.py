@@ -5,6 +5,7 @@ from app.models.report import Report
 from app.models.advisor import Advisor, AvailabilitySlot, Booking
 from app.models.audit import AuditEvent
 from app.models.activity import ActivityEvent
+from app.models.coach import CoachMessage, CoachGoal
 
 __all__ = [
     "User",
@@ -19,4 +20,6 @@ __all__ = [
     "Booking",
     "AuditEvent",
     "ActivityEvent",
+    "CoachMessage",
+    "CoachGoal",
 ]
