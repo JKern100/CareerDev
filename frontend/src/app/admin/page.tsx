@@ -114,6 +114,23 @@ const HELP_CONTENT: Record<Tab, { title: string; sections: { heading: string; bo
       },
     ],
   },
+  promo: {
+    title: "Promo Codes Help",
+    sections: [
+      {
+        heading: "Overview",
+        body: "Create and manage promotional codes that give users discounts or free access to paid plans.",
+      },
+      {
+        heading: "Discount Types",
+        body: `- **Percentage off**: Reduces the plan price by a percentage (e.g. 30% off).\n- **Fixed amount off**: Reduces the plan price by a fixed amount in cents (e.g. 1000 = $10 off).\n- **Full unlock**: Grants free access to a plan — no payment required. The user enters the code on the pricing page and the plan activates immediately.`,
+      },
+      {
+        heading: "Controls",
+        body: `- **Applies to**: Restrict which plans the code works on (all, pro, premium, monthly).\n- **Max uses**: Total number of times the code can be used across all users. Leave empty for unlimited.\n- **Max per user**: How many times a single user can use the code (default: 1).\n- **Expires at**: After this date, the code stops working.\n- **Note**: Internal note for your reference (e.g. "Influencer campaign", "Beta tester").`,
+      },
+    ],
+  },
 };
 
 /* ── Help Modal Component ─────────────────────────────────────────────── */
