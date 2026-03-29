@@ -69,8 +69,8 @@ export default function DashboardPage() {
   }
 
   const greeting = user.fullName
-    ? `Welcome back, ${user.fullName.split(" ")[0]}`
-    : "Welcome back";
+    ? (user.progressPct > 0 ? `Welcome back, ${user.fullName.split(" ")[0]}` : `Welcome, ${user.fullName.split(" ")[0]}`)
+    : (user.progressPct > 0 ? "Welcome back" : "Welcome");
 
   const qStatus = user.questionnaireCompleted ? "Completed"
     : user.tier2Complete ? "Tier 2 done"
@@ -88,7 +88,7 @@ export default function DashboardPage() {
         : user.tier1Complete
         ? `${Math.round(user.progressPct)}% complete. Answer ~20 more questions to unlock full career analysis.`
         : "Answer a few quick questions to discover your best career pathways.",
-      cta: user.questionnaireCompleted ? "Review Answers" : "Continue Questionnaire",
+      cta: user.questionnaireCompleted ? "Review Answers" : user.progressPct > 0 ? "Continue Questionnaire" : "Start Questionnaire",
       enabled: true,
       href: user.tier1Complete && !user.tier2Complete ? "/questionnaire?start=tier2" : "/questionnaire",
       accent: "#3b82f6",
@@ -178,7 +178,7 @@ export default function DashboardPage() {
         <div style={styles.heroSection}>
           <h1 style={styles.greeting}>{greeting}</h1>
           <p style={styles.subtitle}>
-            Your career journey at a glance. Pick up where you left off.
+            {user.progressPct > 0 ? "Your career journey at a glance. Pick up where you left off." : "Your career transition starts here."}
           </p>
         </div>
 
