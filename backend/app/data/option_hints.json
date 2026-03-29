@@ -1,4 +1,160 @@
 {
+  "Q013": {
+    "A380": "Airbus A380 — the double-decker superjumbo. Shows experience with large-scale operations and premium service.",
+    "B777": "Boeing 777 — long-haul widebody. Common on international routes with multi-class cabins.",
+    "Narrow-body": "Single-aisle aircraft like A320, B737 — typically short-haul or low-cost operations.",
+    "Other": "Any other aircraft type — A350, B787 Dreamliner, regional jets, etc."
+  },
+  "Q049": {
+    "Monday-Friday": "Traditional office hours — 9-to-5 or similar, weekends off. Most corporate and government roles.",
+    "Shift work": "Rotating hours including evenings, nights, or weekends — similar to airline rostering but on the ground.",
+    "Flexible": "You set your own hours — common in freelance, remote, or results-based roles."
+  },
+  "Q062": {
+    "Yes": "Your next employer will need to sponsor your work visa — this limits which companies can hire you.",
+    "No": "You already have the right to work (citizen, PR, or existing visa) — no sponsorship needed.",
+    "Not sure": "You're unsure about your visa requirements — we'll factor this in conservatively."
+  },
+  "Q063": {
+    "Yes": "You're open to moving to a different company within the same country.",
+    "No": "You'd prefer to stay with your current employer or only consider roles abroad.",
+    "Maybe": "It depends on the opportunity — you're open but not actively looking to switch locally."
+  },
+  "Q067": {
+    "Yes": "Your airline or employer provides housing or a housing allowance — losing this affects your budget.",
+    "No": "You pay for your own accommodation — your housing costs won't change if you switch jobs."
+  },
+  "Q068": {
+    "Yes": "You financially support others — spouse, children, parents, or other family members.",
+    "No": "You're only responsible for your own expenses."
+  },
+  "Q069": {
+    "Yes": "Something limits where or how you can work — e.g. childcare, elderly parent, health condition, custody arrangement.",
+    "No": "You have no restrictions on where or when you can work."
+  },
+  "Q072": {
+    "None": "No health issues affecting your career options.",
+    "Some": "A health condition that may affect certain roles — e.g. back problems ruling out physical jobs, or a condition requiring regular treatment."
+  },
+  "Q073": {
+    "Degree documents": "Original or attested copies of your degree/diploma — many employers and visa processes require these.",
+    "Passport validity": "Your passport has at least 6-12 months validity — required for most visa applications and job offers.",
+    "Certificates": "Professional certificates, training records, or course completion documents you may need for your next role.",
+    "References": "Contact details of former managers or colleagues who can vouch for your work — most employers ask for 2-3."
+  },
+  "Q079": {
+    "Dubai": "The UAE's largest city and business hub — diverse job market, many expat-friendly employers.",
+    "Abu Dhabi": "UAE's capital — government, oil & gas, culture, and education sectors. More local-focused than Dubai.",
+    "Other GCC": "Saudi Arabia, Qatar, Bahrain, Kuwait, Oman — growing job markets with tax-free salaries.",
+    "London": "UK's main job market — highly competitive but diverse opportunities across all sectors.",
+    "Other UK": "Manchester, Birmingham, Edinburgh, etc. — lower cost of living than London, growing job markets.",
+    "Europe": "EU countries — may require language skills and work permits depending on your passport.",
+    "North America": "USA or Canada — strong job markets but often require sponsored visas.",
+    "Australia/NZ": "Australia or New Zealand — points-based visa systems, good quality of life.",
+    "Asia-Pacific": "Singapore, Hong Kong, Japan, etc. — international hubs with varied visa requirements.",
+    "Africa": "South Africa, Kenya, Nigeria, etc. — emerging markets with growing opportunities.",
+    "Open to anything": "You have no geographic preference — willing to go wherever the best opportunity is."
+  },
+  "Q080": {
+    "EU": "Any European Union member state — 27 countries with freedom of movement for EU citizens.",
+    "UK": "United Kingdom — separate visa system from the EU since Brexit.",
+    "Canada": "Points-based immigration system — Express Entry program popular for skilled workers.",
+    "Australia": "Points-based skilled visa system — strong demand for many professions.",
+    "USA": "Typically requires employer sponsorship (H-1B) or family ties — competitive process.",
+    "Other": "Any country not listed — we'll factor your interest into pathway recommendations."
+  },
+  "Q081": {
+    "0-6 months": "You're ready to move soon — actively looking or already have plans.",
+    "6-24 months": "You're planning ahead — time to research, save, and prepare.",
+    "24+ months": "Long-term goal — you want to explore options but no rush to act.",
+    "Unsure": "You haven't decided on a timeline yet."
+  },
+  "Q082": {
+    "Hot": "Warm year-round — Gulf, Southeast Asia, parts of Africa, southern US.",
+    "Temperate": "Four seasons — Europe, parts of Australia, eastern US/Canada.",
+    "Cold": "Cool or cold climate — Scandinavia, northern Canada, northern UK.",
+    "Doesn't matter": "Climate isn't a factor in your decision."
+  },
+  "Q086": {
+    "Yes": "You're willing to invest time learning a new language for career opportunities.",
+    "No": "You only want roles where your current languages are sufficient.",
+    "Maybe": "Depends on the language and how much it would help your career."
+  },
+  "Q087": {
+    "English": "Fluent or working proficiency in English.",
+    "Arabic": "Spoken Arabic — valuable in GCC and MENA region roles.",
+    "Hindi": "Spoken Hindi — useful in India and parts of the Gulf.",
+    "Urdu": "Spoken Urdu — useful in Pakistan and parts of the Gulf.",
+    "Tagalog": "Spoken Tagalog/Filipino — common among cabin crew from the Philippines.",
+    "Russian": "Spoken Russian — valuable for Eastern European and Central Asian markets.",
+    "Ukrainian": "Spoken Ukrainian.",
+    "French": "Spoken French — opens doors in France, Canada, Africa, and international organizations.",
+    "Spanish": "Spoken Spanish — valuable in Spain, Latin America, and the US.",
+    "Mandarin": "Spoken Mandarin Chinese — valuable for China-facing business roles.",
+    "German": "Spoken German — useful in Germany, Austria, and Switzerland.",
+    "Portuguese": "Spoken Portuguese — useful in Portugal and Brazil.",
+    "Japanese": "Spoken Japanese — valuable for Japan-based roles.",
+    "Korean": "Spoken Korean — valuable for South Korea-based roles.",
+    "Other": "Any other language not listed above."
+  },
+  "Q093": {
+    "Important": "You want performance bonuses or commission as a meaningful part of your compensation.",
+    "Neutral": "Bonuses are nice but not a deciding factor.",
+    "Not important": "You prefer a predictable salary — bonuses aren't a priority."
+  },
+  "Q094": {
+    "High": "Health insurance is essential — a must-have in any job offer.",
+    "Medium": "Important but you could manage short-term without it.",
+    "Low": "Not a priority — you have other coverage or it's less of a concern."
+  },
+  "Q097": {
+    "High school": "Secondary school diploma or equivalent — no tertiary education.",
+    "Diploma": "Post-secondary diploma or associate degree — 1-2 year program.",
+    "Bachelor's": "Undergraduate degree — typically 3-4 years at a university.",
+    "Master's": "Postgraduate degree — MBA, MA, MSc, etc.",
+    "Other": "Professional qualification, trade certificate, or non-standard credential."
+  },
+  "Q103": {
+    "Yes": "You're willing to invest 1-2 years in a master's degree or professional qualification.",
+    "No": "You prefer shorter courses or on-the-job learning — no long academic programs.",
+    "Maybe": "Depends on the program, cost, and how much it would boost your career."
+  },
+  "Q104": {
+    "Yes": "You'd consider studying in another country — potentially combining study with relocation.",
+    "No": "You only want to study in your current country of residence.",
+    "Maybe": "Depends on the program quality, visa options, and cost."
+  },
+  "Q105": {
+    "Within 1 month": "You're ready now — actively applying or about to hand in your notice.",
+    "1-3 months": "Very soon — finishing up current commitments and preparing to transition.",
+    "3-6 months": "Short-term — time to upskill, prepare applications, and plan finances.",
+    "6-12 months": "Medium-term — building skills and exploring while still employed.",
+    "12-24 months": "Long-term plan — want to be well-prepared before making the move.",
+    "Just exploring": "No timeline — you're curious about options but not planning to leave soon."
+  },
+  "Q112": {
+    "None": "You haven't managed anyone directly — your roles have been individual contributor.",
+    "1-3": "Small team — perhaps mentoring or leading a small group onboard.",
+    "4-10": "Medium team — e.g. managing a cabin section or a training group.",
+    "11-25": "Large team — e.g. full cabin crew on a widebody aircraft.",
+    "25+": "Very large team — multiple sections, departments, or large crew complements."
+  },
+  "Q113": {
+    "Under 5": "Mostly worked with people from similar backgrounds.",
+    "5-15": "Moderate diversity — common on domestic or regional airlines.",
+    "15-30": "High diversity — typical for large international carriers.",
+    "30+": "Extremely diverse — common at Gulf carriers like Emirates, Etihad, Qatar Airways."
+  },
+  "Q114": {
+    "Energised — I enjoy it": "You're an extrovert at work — people interaction fuels you rather than draining you.",
+    "Drained — I need recovery time": "You're more introverted — you need quiet time to recharge after intense social interaction.",
+    "It depends on the situation": "Your energy depends on the type of interaction — positive exchanges energise you, conflict drains you."
+  },
+  "Q118": {
+    "Yes — significant": "You send a large portion of your income to family abroad — this affects your minimum salary requirements.",
+    "Yes — modest": "You send some money home regularly but it's not the majority of your income.",
+    "No": "You don't have regular remittance obligations."
+  },
   "Q004": {
     "Pathways": "Which career directions suit you — e.g. HR, training, operations, design. The app will recommend specific job paths.",
     "Salary clarity": "How much you can expect to earn in different careers, compared to what you earn now.",
@@ -43,7 +199,8 @@
     "Managed a safety incident calmly": "e.g. turbulence injury, smoke in cabin, emergency landing prep — you followed procedure while keeping passengers calm",
     "Trained or mentored new crew": "e.g. guided a new joiner through their first flights, helped them build confidence, or ran onboard briefings",
     "Solved an operational problem creatively": "e.g. found a workaround for broken equipment, managed catering shortfall, or reorganised seating to solve a problem",
-    "Received recognition or an award": "e.g. commendation email, service excellence award, passenger letter, or management recognition"
+    "Received recognition or an award": "e.g. commendation email, service excellence award, passenger letter, or management recognition",
+    "Other": "A different proud moment not listed above — describe it briefly"
   },
   "Q025": {
     "Severe turbulence or emergency landing": "e.g. unexpected clear air turbulence causing injuries, or an emergency diversion that felt genuinely dangerous",
@@ -53,7 +210,8 @@
     "Medical emergency beyond your training": "e.g. a passenger needed care you weren't equipped to give — felt helpless or scared",
     "Unfair treatment by management": "e.g. denied promotion without reason, punished for calling in sick, or policy applied inconsistently",
     "Personal safety felt threatened": "e.g. a passenger invaded your space, followed you, or made you feel physically unsafe",
-    "Constant schedule disruption": "e.g. roster changes destroying personal plans repeatedly, missed family events, inability to plan life"
+    "Constant schedule disruption": "e.g. roster changes destroying personal plans repeatedly, missed family events, inability to plan life",
+    "Other": "A different difficult experience not listed above"
   },
   "Q047": {
     "Structured": "Clear processes, defined roles, predictable routines — like airline operations but on the ground",
@@ -96,7 +254,8 @@
     "Redundancy or contract ending": "Your airline is restructuring, or your contract won't be renewed",
     "Financial": "The pay isn't enough for your needs, or the career doesn't offer the growth you want",
     "Family/lifestyle": "You need stability, predictable hours, or to be home for family",
-    "Curiosity": "You're not unhappy — just wondering what else is out there"
+    "Curiosity": "You're not unhappy — just wondering what else is out there",
+    "Other": "A different reason for considering a career change"
   },
   "Q057": {
     "Work-life balance": "Predictable hours, no constant on-call, ability to plan your personal life",
@@ -151,7 +310,8 @@
     "Excel": "Microsoft Excel or Google Sheets — spreadsheets for data, budgets, tracking",
     "PowerPoint": "Microsoft PowerPoint or Google Slides — creating presentations",
     "LMS": "Learning Management System — platforms like Moodle, SAP SuccessFactors, or your airline's training portal",
-    "Scheduling apps": "Crew rostering apps, shift planners, or calendar management tools"
+    "Scheduling apps": "Crew rostering apps, shift planners, or calendar management tools",
+    "Other": "Any other software or digital tools you use regularly"
   },
   "Q055": {
     "Direct": "Tell me what's wrong clearly and honestly — I can handle it",
@@ -205,7 +365,8 @@
     "Teaching": "Qualifications to teach — CELTA, PGCE, or local teaching certificates",
     "Real estate license": "License to work as a property agent or broker in your country",
     "Safety": "General safety certifications beyond NEBOSH — fire safety, food safety, etc.",
-    "HR": "Human Resources certifications — SHRM, CIPD, or local equivalents"
+    "HR": "Human Resources certifications — SHRM, CIPD, or local equivalents",
+    "Other": "Any other certification or qualification you're interested in"
   },
   "Q111": {
     "Travel": "Visiting different places — even if not flying, you want variety in locations",
@@ -214,7 +375,8 @@
     "Helping people": "Making a difference in someone's day — service, care, support",
     "Prestige": "A role that carries respect — impressive job title, well-known company",
     "Variety": "Different tasks every day — not the same routine repeatedly",
-    "Physical activity": "Being on your feet, moving around — not stuck at a desk all day"
+    "Physical activity": "Being on your feet, moving around — not stuck at a desk all day",
+    "Other": "Something else you enjoy about aviation work that isn't listed"
   },
   "Q117": {
     "Yes": "You're entitled to a lump sum payment when you leave — common in GCC countries (gratuity) or similar severance",
