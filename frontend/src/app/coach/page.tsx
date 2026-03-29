@@ -19,6 +19,11 @@ import {
 import AppHeader from "@/components/AppHeader";
 import FlowerSpinner from "@/components/FlowerSpinner";
 
+let msgCounter = 0;
+function tempId(suffix = "") {
+  return `temp-${Date.now()}-${++msgCounter}${suffix}`;
+}
+
 export default function CoachPage() {
   const router = useRouter();
   const [messages, setMessages] = useState<CoachMessage[]>([]);
@@ -26,9 +31,11 @@ export default function CoachPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
   const [showGoals, setShowGoals] = useState(false);
   const [newGoalTitle, setNewGoalTitle] = useState("");
   const [newGoalDate, setNewGoalDate] = useState("");
+  const [goalBusy, setGoalBusy] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -42,12 +49,12 @@ export default function CoachPage() {
     async function load() {
       try {
         await getMe();
-        const [history, userGoals] = await Promise.all([
+        const [historyResult, goalsResult] = await Promise.allSettled([
           getCoachHistory(),
           getCoachGoals(),
         ]);
-        setMessages(history);
-        setGoals(userGoals);
+        if (historyResult.status === "fulfilled") setMessages(historyResult.value);
+        if (goalsResult.status === "fulfilled") setGoals(goalsResult.value);
       } catch {
         router.push("/login");
       } finally {
@@ -68,10 +75,12 @@ export default function CoachPage() {
 
     setInput("");
     setSending(true);
+    setError("");
 
     // Optimistically add user message
+    const userMsgId = tempId("u");
     const tempUserMsg: CoachMessage = {
-      id: `temp-${Date.now()}`,
+      id: userMsgId,
       role: "user",
       content: text,
       created_at: new Date().toISOString(),
@@ -80,21 +89,15 @@ export default function CoachPage() {
 
     try {
       const { reply } = await sendCoachMessage(text);
-      const assistantMsg: CoachMessage = {
-        id: `temp-${Date.now()}-reply`,
-        role: "assistant",
-        content: reply,
-        created_at: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, assistantMsg]);
-    } catch (err: unknown) {
-      const errorMsg: CoachMessage = {
-        id: `temp-${Date.now()}-error`,
-        role: "assistant",
-        content: "Sorry, I couldn't process that right now. Please try again.",
-        created_at: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, errorMsg]);
+      setMessages((prev) => [
+        ...prev,
+        { id: tempId("a"), role: "assistant", content: reply, created_at: new Date().toISOString() },
+      ]);
+    } catch {
+      // Remove the optimistic user message on failure
+      setMessages((prev) => prev.filter((m) => m.id !== userMsgId));
+      setInput(text); // Restore their input
+      setError("Failed to send message. Please try again.");
     } finally {
       setSending(false);
       inputRef.current?.focus();
@@ -113,31 +116,50 @@ export default function CoachPage() {
     try {
       await clearCoachHistory();
       setMessages([]);
-    } catch {}
+    } catch {
+      setError("Failed to clear history. Please try again.");
+    }
   }
 
   async function handleAddGoal() {
-    if (!newGoalTitle.trim()) return;
+    if (!newGoalTitle.trim() || goalBusy) return;
+    setGoalBusy(true);
     try {
       const goal = await createCoachGoal(newGoalTitle.trim(), newGoalDate || undefined);
       setGoals((prev) => [goal, ...prev]);
       setNewGoalTitle("");
       setNewGoalDate("");
-    } catch {}
+    } catch {
+      setError("Failed to create goal.");
+    } finally {
+      setGoalBusy(false);
+    }
   }
 
   async function handleToggleGoal(goal: CoachGoal) {
+    if (goalBusy) return;
+    setGoalBusy(true);
     try {
       const updated = await updateCoachGoal(goal.id, { completed: !goal.completed });
       setGoals((prev) => prev.map((g) => (g.id === goal.id ? updated : g)));
-    } catch {}
+    } catch {
+      setError("Failed to update goal.");
+    } finally {
+      setGoalBusy(false);
+    }
   }
 
   async function handleDeleteGoal(goalId: string) {
+    if (goalBusy) return;
+    setGoalBusy(true);
     try {
       await deleteCoachGoal(goalId);
       setGoals((prev) => prev.filter((g) => g.id !== goalId));
-    } catch {}
+    } catch {
+      setError("Failed to delete goal.");
+    } finally {
+      setGoalBusy(false);
+    }
   }
 
   if (loading) {
@@ -169,6 +191,7 @@ export default function CoachPage() {
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <button
               onClick={() => setShowGoals(!showGoals)}
+              aria-label={showGoals ? "Hide goals panel" : "Show goals panel"}
               style={{
                 ...styles.headerBtn,
                 background: showGoals ? "rgba(234, 179, 8, 0.15)" : "rgba(255,255,255,0.05)",
@@ -186,6 +209,16 @@ export default function CoachPage() {
           </div>
         </div>
 
+        {/* Error banner */}
+        {error && (
+          <div style={styles.errorBanner}>
+            <span>{error}</span>
+            <button onClick={() => setError("")} style={styles.errorDismiss}>
+              Dismiss
+            </button>
+          </div>
+        )}
+
         <div style={styles.layout}>
           {/* Goals Panel */}
           {showGoals && (
@@ -201,15 +234,24 @@ export default function CoachPage() {
                   placeholder="Add a new goal..."
                   style={styles.goalInput}
                   onKeyDown={(e) => e.key === "Enter" && handleAddGoal()}
+                  aria-label="New goal title"
                 />
                 <input
                   type="date"
                   value={newGoalDate}
                   onChange={(e) => setNewGoalDate(e.target.value)}
                   style={styles.goalDateInput}
+                  aria-label="Goal target date"
                 />
-                <button onClick={handleAddGoal} style={styles.addGoalBtn}>
-                  Add
+                <button
+                  onClick={handleAddGoal}
+                  disabled={goalBusy || !newGoalTitle.trim()}
+                  style={{
+                    ...styles.addGoalBtn,
+                    opacity: goalBusy || !newGoalTitle.trim() ? 0.5 : 1,
+                  }}
+                >
+                  {goalBusy ? "..." : "Add"}
                 </button>
               </div>
 
@@ -224,8 +266,10 @@ export default function CoachPage() {
                   <button
                     onClick={() => handleToggleGoal(goal)}
                     style={styles.goalCheckbox}
+                    aria-label={`Mark "${goal.title}" as complete`}
+                    disabled={goalBusy}
                   />
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <span style={styles.goalTitle}>{goal.title}</span>
                     {goal.target_date && (
                       <span style={styles.goalDate}>Due: {goal.target_date}</span>
@@ -234,6 +278,8 @@ export default function CoachPage() {
                   <button
                     onClick={() => handleDeleteGoal(goal.id)}
                     style={styles.goalDeleteBtn}
+                    aria-label={`Delete goal "${goal.title}"`}
+                    disabled={goalBusy}
                   >
                     x
                   </button>
@@ -249,6 +295,8 @@ export default function CoachPage() {
                       <button
                         onClick={() => handleToggleGoal(goal)}
                         style={{ ...styles.goalCheckbox, background: "#22c55e", borderColor: "#22c55e" }}
+                        aria-label={`Mark "${goal.title}" as incomplete`}
+                        disabled={goalBusy}
                       />
                       <span style={{ ...styles.goalTitle, textDecoration: "line-through" }}>
                         {goal.title}
@@ -256,6 +304,8 @@ export default function CoachPage() {
                       <button
                         onClick={() => handleDeleteGoal(goal.id)}
                         style={styles.goalDeleteBtn}
+                        aria-label={`Delete goal "${goal.title}"`}
+                        disabled={goalBusy}
                       >
                         x
                       </button>
@@ -269,9 +319,8 @@ export default function CoachPage() {
           {/* Chat Area */}
           <div style={styles.chatArea}>
             <div style={styles.messagesContainer}>
-              {messages.length === 0 && (
+              {messages.length === 0 && !sending && (
                 <div style={styles.emptyState}>
-                  <div style={styles.emptyIcon}>?</div>
                   <h2 style={styles.emptyTitle}>Start a conversation</h2>
                   <p style={styles.emptyText}>
                     Ask me anything about your career transition — interview prep,
@@ -304,31 +353,40 @@ export default function CoachPage() {
                 <div
                   key={msg.id}
                   style={{
-                    ...styles.messageBubble,
-                    ...(msg.role === "user" ? styles.userBubble : styles.assistantBubble),
+                    ...styles.messageRow,
+                    justifyContent: msg.role === "user" ? "flex-end" : "flex-start",
                   }}
                 >
-                  <div style={styles.messageRole}>
-                    {msg.role === "user" ? "You" : "Coach"}
-                  </div>
-                  {msg.role === "assistant" ? (
-                    <div style={styles.markdownContent}>
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {msg.content}
-                      </ReactMarkdown>
+                  <div
+                    style={{
+                      ...styles.messageBubble,
+                      ...(msg.role === "user" ? styles.userBubble : styles.assistantBubble),
+                    }}
+                  >
+                    <div style={styles.messageRole}>
+                      {msg.role === "user" ? "You" : "Coach"}
                     </div>
-                  ) : (
-                    <div style={styles.messageText}>{msg.content}</div>
-                  )}
+                    {msg.role === "assistant" ? (
+                      <div style={styles.markdownContent}>
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {msg.content}
+                        </ReactMarkdown>
+                      </div>
+                    ) : (
+                      <div style={styles.messageText}>{msg.content}</div>
+                    )}
+                  </div>
                 </div>
               ))}
 
               {sending && (
-                <div style={{ ...styles.messageBubble, ...styles.assistantBubble }}>
-                  <div style={styles.messageRole}>Coach</div>
-                  <div style={styles.typing}>
-                    <FlowerSpinner size={20} />
-                    <span style={{ marginLeft: "0.5rem", color: "#64748b" }}>Thinking...</span>
+                <div style={styles.messageRow}>
+                  <div style={{ ...styles.messageBubble, ...styles.assistantBubble }}>
+                    <div style={styles.messageRole}>Coach</div>
+                    <div style={styles.typing}>
+                      <FlowerSpinner size={20} />
+                      <span style={{ marginLeft: "0.5rem", color: "#64748b" }}>Thinking...</span>
+                    </div>
                   </div>
                 </div>
               )}
@@ -344,6 +402,7 @@ export default function CoachPage() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Ask your career coach anything..."
+                aria-label="Message to career coach"
                 style={styles.textarea}
                 rows={1}
                 disabled={sending}
@@ -416,6 +475,26 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: "0.82rem",
     whiteSpace: "nowrap",
   },
+  errorBanner: {
+    background: "rgba(239, 68, 68, 0.12)",
+    border: "1px solid rgba(239, 68, 68, 0.3)",
+    borderRadius: "8px",
+    padding: "0.6rem 1rem",
+    marginBottom: "0.75rem",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    color: "#fca5a5",
+    fontSize: "0.85rem",
+  },
+  errorDismiss: {
+    background: "none",
+    border: "none",
+    color: "#fca5a5",
+    cursor: "pointer",
+    fontSize: "0.82rem",
+    textDecoration: "underline",
+  },
   layout: {
     display: "flex",
     gap: "1rem",
@@ -424,14 +503,14 @@ const styles: Record<string, React.CSSProperties> = {
   },
   // Goals Panel
   goalsPanel: {
-    width: "300px",
+    width: "min(300px, 35vw)",
     flexShrink: 0,
     background: "rgba(255,255,255,0.02)",
     border: "1px solid #1e293b",
     borderRadius: "12px",
     padding: "1rem",
     overflowY: "auto",
-    maxHeight: "calc(100vh - 200px)",
+    maxHeight: "calc(100vh - 220px)",
   },
   goalsPanelTitle: {
     fontSize: "0.95rem",
@@ -503,6 +582,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: "0.85rem",
     color: "#e2e8f0",
     display: "block",
+    wordBreak: "break-word",
   },
   goalDate: {
     fontSize: "0.75rem",
@@ -542,6 +622,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     flexDirection: "column",
     gap: "0.75rem",
+    minHeight: "200px",
     maxHeight: "calc(100vh - 280px)",
   },
   // Empty state
@@ -551,21 +632,8 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: "center",
     justifyContent: "center",
     flex: 1,
-    padding: "2rem",
+    padding: "2rem 1rem",
     textAlign: "center",
-  },
-  emptyIcon: {
-    width: "56px",
-    height: "56px",
-    borderRadius: "50%",
-    background: "rgba(59, 130, 246, 0.1)",
-    border: "1px solid rgba(59, 130, 246, 0.3)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "1.5rem",
-    color: "#60a5fa",
-    marginBottom: "1rem",
   },
   emptyTitle: {
     fontSize: "1.2rem",
@@ -581,7 +649,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   suggestionsGrid: {
     display: "grid",
-    gridTemplateColumns: "1fr 1fr",
+    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
     gap: "0.5rem",
     maxWidth: "600px",
     width: "100%",
@@ -596,21 +664,22 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: "pointer",
     textAlign: "left",
     lineHeight: 1.4,
-    transition: "border-color 0.15s",
   },
   // Messages
+  messageRow: {
+    display: "flex",
+    width: "100%",
+  },
   messageBubble: {
     maxWidth: "85%",
     padding: "0.75rem 1rem",
     borderRadius: "12px",
   },
   userBubble: {
-    alignSelf: "flex-end",
     background: "rgba(59, 130, 246, 0.15)",
     border: "1px solid rgba(59, 130, 246, 0.25)",
   },
   assistantBubble: {
-    alignSelf: "flex-start",
     background: "rgba(255,255,255,0.04)",
     border: "1px solid #1e293b",
   },

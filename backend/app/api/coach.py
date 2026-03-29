@@ -76,6 +76,7 @@ async def send_chat_message(
     try:
         reply = await chat_with_coach(user.id, data.message.strip(), db)
         await log_activity(db, user, "coach_chat", f"Sent message ({len(data.message)} chars)")
+        await db.commit()
         return ChatResponse(reply=reply)
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e))
@@ -125,6 +126,7 @@ async def clear_chat_history(
         await db.delete(m)
     await db.commit()
     await log_activity(db, user, "coach_clear_history", f"Cleared {len(messages)} messages")
+    await db.commit()
     return {"detail": f"Cleared {len(messages)} messages"}
 
 
@@ -173,6 +175,7 @@ async def create_goal(
     await db.commit()
     await db.refresh(goal)
     await log_activity(db, user, "coach_goal_created", data.title[:100])
+    await db.commit()
     return GoalOut(
         id=str(goal.id),
         title=goal.title,

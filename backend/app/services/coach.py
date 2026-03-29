@@ -5,11 +5,9 @@ career analysis, and conversation history, then calls the Gemini API
 for an ongoing coaching conversation.
 """
 
-import json
 import logging
-from datetime import datetime
 
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -17,7 +15,7 @@ from app.models.questionnaire import Answer, Question
 from app.models.report import Report, AnalysisReport
 from app.models.coach import CoachMessage, CoachGoal
 from app.models.pathway import PathwayScore, Pathway
-from app.services.routing import get_question_bank, MODULE_LABELS
+from app.services.routing import get_question_bank
 
 logger = logging.getLogger(__name__)
 
