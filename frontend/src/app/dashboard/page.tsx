@@ -11,6 +11,7 @@ interface UserState {
   questionnaireCompleted: boolean;
   tier1Complete: boolean;
   tier2Complete: boolean;
+  tier3Complete: boolean;
   progressPct: number;
   hasSummary: boolean;
   hasAnalysis: boolean;
@@ -44,6 +45,7 @@ export default function DashboardPage() {
           questionnaireCompleted: me.questionnaire_completed,
           tier1Complete: progress.tier1_complete,
           tier2Complete: progress.tier2_complete,
+          tier3Complete: progress.tier3_complete,
           progressPct: progress.progress_pct,
           hasSummary: summaryResult.status === "fulfilled",
           hasAnalysis: analysisResult.status === "fulfilled",
@@ -72,29 +74,31 @@ export default function DashboardPage() {
     ? (user.progressPct > 0 ? `Welcome back, ${user.fullName.split(" ")[0]}` : `Welcome, ${user.fullName.split(" ")[0]}`)
     : (user.progressPct > 0 ? "Welcome back" : "Welcome");
 
-  const qStatus = user.questionnaireCompleted ? "Completed"
-    : user.tier2Complete ? "Tier 2 done"
-    : user.tier1Complete ? "Tier 1 done"
+  const qStatus = user.tier3Complete || user.questionnaireCompleted ? "All 3 Stages Complete"
+    : user.tier2Complete ? "Stage 2 Complete"
+    : user.tier1Complete ? "Stage 1 Complete"
     : user.progressPct > 0 ? "In Progress" : "Not Started";
 
   const cards = [
     {
       id: "questionnaire",
       title: "Questionnaire",
-      description: user.questionnaireCompleted
-        ? "You've completed all modules. Review or update your answers."
+      description: user.tier3Complete || user.questionnaireCompleted
+        ? "All 3 stages complete. Your AI report has maximum detail. Review or update your answers any time."
         : user.tier2Complete
-        ? `${Math.round(user.progressPct)}% complete. You can personalise your report with the optional deep-dive.`
+        ? "Stages 1 & 2 complete. Personalise your report with Stage 3 (~40 questions, ~10 min)."
         : user.tier1Complete
-        ? `${Math.round(user.progressPct)}% complete. Answer ~20 more questions to unlock full career analysis.`
-        : "Answer a few quick questions to discover your best career pathways.",
-      cta: user.questionnaireCompleted ? "Review Answers" : user.progressPct > 0 ? "Continue Questionnaire" : "Start Questionnaire",
+        ? "Stage 1 complete. Answer ~20 more questions in Stage 2 to unlock full career analysis."
+        : "Start with 18 quick questions (~5 min) to discover your best career pathways.",
+      cta: user.tier3Complete || user.questionnaireCompleted
+        ? "Review Answers"
+        : user.progressPct > 0 ? "Continue Questionnaire" : "Start Questionnaire",
       enabled: true,
       href: user.tier1Complete && !user.tier2Complete ? "/questionnaire?start=tier2" : "/questionnaire",
       accent: "#3b82f6",
       step: "STEP 1",
       status: qStatus,
-      statusColor: user.questionnaireCompleted ? "#22c55e" : user.progressPct > 0 ? "#f59e0b" : "#64748b",
+      statusColor: user.tier3Complete || user.questionnaireCompleted ? "#22c55e" : user.progressPct > 0 ? "#f59e0b" : "#64748b",
     },
     {
       id: "summary",
@@ -102,8 +106,8 @@ export default function DashboardPage() {
       description: user.hasSummary
         ? "Your personal narrative summary is ready."
         : user.tier1Complete
-        ? "Your profile summary is ready to generate."
-        : "Complete the quick assessment to unlock your profile summary.",
+        ? "Stage 1 is done — your profile summary is ready to generate."
+        : "Complete Stage 1 (18 questions) to unlock your profile summary.",
       cta: user.hasSummary ? "View Profile Report" : user.tier1Complete ? "Generate Profile Report" : "Locked",
       enabled: user.hasSummary || user.tier1Complete,
       href: "/summary",
@@ -118,13 +122,13 @@ export default function DashboardPage() {
       description: user.hasAnalysis
         ? "Your full career analysis is ready — ranked pathways, salary data, credentials, and a transition plan."
         : user.tier2Complete
-        ? "Your career analysis is ready to generate — pathway rankings, salary benchmarks, and a transition plan."
-        : "Complete the questionnaire (Stages 1 & 2) to unlock your full AI-powered career analysis.",
+        ? "Stages 1 & 2 are done — generate your AI-powered pathway rankings, salary benchmarks, and transition plan."
+        : "Complete Stages 1 & 2 of the questionnaire to unlock your full career analysis.",
       cta: user.hasAnalysis ? "View Career Analysis" : user.tier2Complete ? "Generate Analysis" : "Locked",
       enabled: user.hasAnalysis || user.tier2Complete,
       href: "/results",
       accent: "#2563eb",
-      step: "YOUR GOAL",
+      step: "STEP 3",
       status: user.hasAnalysis ? "Ready" : user.tier2Complete ? "Ready to Generate" : "Locked",
       statusColor: user.hasAnalysis ? "#22c55e" : user.tier2Complete ? "#f59e0b" : "#64748b",
       featured: true,
@@ -134,7 +138,7 @@ export default function DashboardPage() {
       title: "Action Plan",
       description: user.hasAnalysis
         ? "Your step-by-step action plan — track credentials, weekly priorities, and first steps for your top pathways."
-        : "Complete your career analysis to unlock a structured action plan with trackable next steps.",
+        : "Generate your career analysis first to unlock a structured action plan with trackable next steps.",
       cta: user.hasAnalysis ? "View Action Plan" : "Locked",
       enabled: user.hasAnalysis,
       href: "/plan",
@@ -147,13 +151,13 @@ export default function DashboardPage() {
       id: "coach",
       title: "Career Coach",
       description: user.tier1Complete
-        ? "Chat with your AI career coach — get personalized advice on interviews, resumes, salary negotiation, and your transition plan."
-        : "Complete the quick assessment first, then unlock your personal AI career coach.",
+        ? "Chat with your AI career coach — get personalised advice on interviews, resumes, salary negotiation, and your transition plan."
+        : "Complete Stage 1 first, then unlock your personal AI career coach.",
       cta: user.tier1Complete ? "Talk to Coach" : "Locked",
       enabled: user.tier1Complete,
       href: "/coach",
       accent: "#eab308",
-      step: "ONGOING",
+      step: "ANYTIME",
       status: user.tier1Complete ? "Available" : "Locked",
       statusColor: user.tier1Complete ? "#22c55e" : "#64748b",
     },
