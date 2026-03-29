@@ -1,4 +1,40 @@
 {
+  "Q004": {
+    "Pathways": "Which career directions suit you — e.g. HR, training, operations, design. The app will recommend specific job paths.",
+    "Salary clarity": "How much you can expect to earn in different careers, compared to what you earn now.",
+    "Study plan": "What courses, certifications, or training you'd need — and how long they take.",
+    "Relocation plan": "If you're thinking of moving countries — visa options, job markets, and timelines.",
+    "Entrepreneurship": "Starting your own business — freelancing, consulting, or launching a company.",
+    "Advisor coaching": "A 1-on-1 session with a human career advisor to discuss your options personally."
+  },
+  "Q008": {
+    "Direct": "Short, clear, to the point — no extra words. Just tell me what to do.",
+    "Detailed": "Thorough explanations with context and reasoning behind each recommendation.",
+    "Motivational": "Encouraging and energising — highlights your strengths and opportunities.",
+    "Minimal": "Bullet points only — the essentials with no narrative text."
+  },
+  "Q012": {
+    "GCC legacy carrier": "A full-service airline based in the Gulf region — Emirates, Etihad, Qatar Airways, Saudia, Gulf Air, etc.",
+    "Low-cost carrier": "A budget airline — flydubai, Air Arabia, Wizz Air, Ryanair, IndiGo, Cebu Pacific, etc.",
+    "Charter": "Airlines that operate on-demand or seasonal flights — not scheduled routes.",
+    "Other": "Any airline not listed above — regional carriers, cargo airlines, or airlines from other regions."
+  },
+  "Q014": {
+    "Economy": "Worked in economy/coach class cabin",
+    "Business": "Worked in business class cabin",
+    "First": "Worked in first class cabin",
+    "Senior": "Senior cabin crew member — additional responsibilities beyond standard crew",
+    "Lead": "Led a cabin section or team during flights",
+    "Purser-like duties": "In charge of the entire cabin — managed crew, handled reports, liaised with flight deck. Even if your title wasn't 'Purser'."
+  },
+  "Q015": {
+    "Trainer support": "Helped train new crew members onboard or in the training centre",
+    "Safety rep": "Represented your crew on safety matters — reported issues, attended safety meetings",
+    "Service excellence": "Part of a team focused on improving passenger service standards",
+    "Onboarding buddy": "Assigned to help new joiners settle in during their first weeks/months",
+    "Language speaker": "Used as a designated speaker for a specific language onboard",
+    "Documentation": "Responsible for reports, paperwork, or record-keeping beyond normal duties"
+  },
   "Q024": {
     "Handled a medical emergency": "e.g. a passenger fainted, had a seizure, or needed oxygen — you took charge of first aid and coordinated with the flight deck",
     "De-escalated a difficult passenger": "e.g. a passenger refused to buckle up, was aggressive to crew, or caused a disturbance — you calmed the situation without escalation",
@@ -110,5 +146,85 @@
     "Onsite": "You prefer going to a physical workplace every day — office, clinic, hotel, airport, etc.",
     "Hybrid": "Mix of office and home — typically 2-3 days onsite per week",
     "Remote": "Fully work-from-home or work-from-anywhere — no regular commute"
+  },
+  "Q043": {
+    "Excel": "Microsoft Excel or Google Sheets — spreadsheets for data, budgets, tracking",
+    "PowerPoint": "Microsoft PowerPoint or Google Slides — creating presentations",
+    "LMS": "Learning Management System — platforms like Moodle, SAP SuccessFactors, or your airline's training portal",
+    "Scheduling apps": "Crew rostering apps, shift planners, or calendar management tools"
+  },
+  "Q055": {
+    "Direct": "Tell me what's wrong clearly and honestly — I can handle it",
+    "Coaching": "Help me figure it out myself through questions and guidance",
+    "Structured": "Give me written feedback with specific examples and a plan to improve"
+  },
+  "Q059": {
+    "Stability": "A secure, predictable job — steady income, low risk of redundancy",
+    "Income growth": "Earning more over time — promotions, raises, or commission potential",
+    "Mission": "Working for a cause you believe in — healthcare, education, environment, social impact",
+    "Autonomy": "Freedom to make your own decisions — minimal supervision, flexible approach",
+    "Prestige": "A role or company that carries respect and status",
+    "Learning": "Constantly developing new skills — the role keeps you growing",
+    "Family time": "Being available for family — school runs, evenings free, weekends off"
+  },
+  "Q074": {
+    "Yes": "You're open to working in free zones (like DIFC, DMCC in Dubai) or special business areas with different rules",
+    "No": "You prefer regular employment outside of special zones",
+    "Not sure": "You don't know what free zones or special economic zones are — that's fine"
+  },
+  "Q083": {
+    "Expat-heavy": "Areas with many foreign residents — international schools, diverse restaurants, English widely spoken",
+    "Mixed": "A blend of local and international communities",
+    "Local": "Primarily local population — full cultural immersion, local language needed"
+  },
+  "Q090": {
+    "Cash": "You prefer a higher monthly salary even if benefits like housing or insurance are limited",
+    "Benefits": "You'd accept a lower salary if benefits are strong — free housing, insurance, flights, education allowance",
+    "Balanced": "A fair mix of both — decent salary with good benefits"
+  },
+  "Q096": {
+    "Yes": "You're open to freelancing, tutoring, online work, or a side business alongside your main job",
+    "No": "You want to focus on one job only",
+    "Maybe": "You'd consider it if the opportunity was right"
+  },
+  "Q099": {
+    "Self-study": "Online courses, books, videos — learning at your own pace, on your own schedule",
+    "Live cohort": "Studying with a group — scheduled online or in-person classes with an instructor and classmates",
+    "University": "Formal degree program at a university — structured, longer-term, with a recognised qualification"
+  },
+  "Q102": {
+    "PMP/PRINCE2": "Project Management certifications — for managing projects and teams in any industry",
+    "CIPD": "Chartered Institute of Personnel & Development — the main HR/people management qualification (UK & Gulf)",
+    "NEBOSH/IOSH": "Health, Safety & Environment certifications — for safety officer and HSE roles",
+    "IELTS/language tests": "English language proficiency tests — required for many visas and university admissions",
+    "Data/analytics": "Courses in data analysis, Excel, SQL, Power BI — for analytical and reporting roles",
+    "Coaching & mentoring": "Certifications for life coaching, career coaching, or executive coaching (e.g. ICF accredited)",
+    "Customer experience (CCXP)": "Certified Customer Experience Professional — for customer-facing strategy roles",
+    "UX": "User Experience design — for designing websites, apps, and digital products",
+    "Digital marketing": "Online marketing skills — social media, SEO, content marketing, Google Ads",
+    "Teaching": "Qualifications to teach — CELTA, PGCE, or local teaching certificates",
+    "Real estate license": "License to work as a property agent or broker in your country",
+    "Safety": "General safety certifications beyond NEBOSH — fire safety, food safety, etc.",
+    "HR": "Human Resources certifications — SHRM, CIPD, or local equivalents"
+  },
+  "Q111": {
+    "Travel": "Visiting different places — even if not flying, you want variety in locations",
+    "Team environment": "Working closely with a team — camaraderie, shared goals, social connection",
+    "Clear procedures": "Step-by-step processes — you like knowing exactly what to do and when",
+    "Helping people": "Making a difference in someone's day — service, care, support",
+    "Prestige": "A role that carries respect — impressive job title, well-known company",
+    "Variety": "Different tasks every day — not the same routine repeatedly",
+    "Physical activity": "Being on your feet, moving around — not stuck at a desk all day"
+  },
+  "Q117": {
+    "Yes": "You're entitled to a lump sum payment when you leave — common in GCC countries (gratuity) or similar severance",
+    "No": "You won't receive any payout when you leave your current role",
+    "Not sure": "You don't know — check your contract or HR department"
+  },
+  "Q119": {
+    "No": "This is your first time seriously considering leaving aviation",
+    "Yes — didn't get far": "You looked into it but didn't apply or interview — life got in the way or you weren't ready",
+    "Yes — tried and returned": "You actually left aviation but came back — for any reason",
+    "Currently in progress": "You're actively interviewing, studying, or preparing to leave right now"
   }
 }
