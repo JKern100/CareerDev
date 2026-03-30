@@ -102,8 +102,8 @@ export default function AppHeader() {
           color: "inherit",
         }}
       >
-        <img src="/logo.svg" alt="CareerDev" width={32} height={32} />
-        <span style={{ fontWeight: 600, fontSize: "1rem" }}>CareerDev</span>
+        <img src="/logo.svg" alt="CrewTransition" width={32} height={32} />
+        <span style={{ fontWeight: 600, fontSize: "1rem" }}>Crew<span style={{ color: "#2563eb", fontWeight: 700 }}>Transition</span></span>
       </a>
       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
         {/* Language selector */}

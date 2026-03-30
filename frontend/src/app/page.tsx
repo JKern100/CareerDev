@@ -36,8 +36,8 @@ export default function Home() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <img src="/logo.svg" alt="CareerDev" width={36} height={36} />
-          <span style={{ fontWeight: 600, fontSize: "1.1rem" }}>CareerDev</span>
+          <img src="/logo.svg" alt="CrewTransition" width={36} height={36} />
+          <span style={{ fontWeight: 600, fontSize: "1.1rem" }}>Crew<span style={{ color: "#2563eb", fontWeight: 700 }}>Transition</span></span>
         </div>
         <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
           <a
@@ -94,40 +94,68 @@ export default function Home() {
           margin: "0 auto",
         }}
       >
-        <div style={{ marginBottom: "1.5rem" }}>
-          <img
-            src="/logo.svg"
-            alt="CareerDev"
-            width={72}
-            height={72}
-            style={{ animation: "flowerSpin 5s linear infinite" }}
-          />
-        </div>
         <div
           style={{
             display: "inline-block",
             background: "rgba(37, 99, 235, 0.15)",
             color: "#60a5fa",
-            padding: "0.4rem 1rem",
+            padding: "0.4rem 1.25rem",
             borderRadius: "20px",
-            fontSize: "0.85rem",
-            fontWeight: 500,
+            fontSize: "0.8rem",
+            fontWeight: 600,
             marginBottom: "1.5rem",
             border: "1px solid rgba(37, 99, 235, 0.3)",
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
           }}
         >
-          Built for flight crew worldwide
+          Built for flight attendants
+        </div>
+
+        {/* Brand logo text */}
+        <div style={{ marginBottom: "1.5rem" }}>
+          <span
+            style={{
+              fontFamily: "'Georgia', 'Times New Roman', serif",
+              fontSize: "clamp(2.5rem, 6vw, 4rem)",
+              fontWeight: 400,
+              fontStyle: "italic",
+              color: "#f1f5f9",
+            }}
+          >
+            Crew
+          </span>
+          <span
+            style={{
+              fontSize: "clamp(2.5rem, 6vw, 4rem)",
+              fontWeight: 700,
+              color: "#2563eb",
+            }}
+          >
+            Transition
+          </span>
+          <span
+            style={{
+              fontSize: "clamp(1.5rem, 3vw, 2rem)",
+              fontWeight: 400,
+              color: "#94a3b8",
+            }}
+          >
+            .com
+          </span>
         </div>
 
         <h1
           style={{
-            fontSize: "clamp(2rem, 5vw, 3.5rem)",
+            fontSize: "clamp(1.75rem, 4.5vw, 3rem)",
             fontWeight: 700,
             lineHeight: 1.15,
             marginBottom: "1.5rem",
+            letterSpacing: "0.02em",
+            textTransform: "uppercase",
           }}
         >
-          Your career beyond{" "}
+          Plan your{" "}
           <span
             style={{
               background: "linear-gradient(135deg, #38bdf8, #2563eb)",
@@ -135,35 +163,69 @@ export default function Home() {
               WebkitTextFillColor: "transparent",
             }}
           >
-            the cabin
-          </span>
+            career
+          </span>{" "}
+          takeoff.
         </h1>
-
-        <p
-          style={{
-            fontSize: "0.95rem",
-            color: "#60a5fa",
-            fontWeight: 500,
-            letterSpacing: "0.05em",
-            marginBottom: "1rem",
-          }}
-        >
-          Created by crew, for crew
-        </p>
 
         <p
           style={{
             fontSize: "1.15rem",
             color: "#94a3b8",
-            maxWidth: "600px",
-            margin: "0 auto 2.5rem",
+            maxWidth: "550px",
+            margin: "0 auto 2rem",
             lineHeight: 1.7,
           }}
         >
-          AI-powered career advice built for cabin crew. Get ranked career pathways,
-          salary comparisons, and a concrete transition plan grounded in local labor
-          rules and real market data.
+          AI-powered guidance, real career pathways,
+          and clear next steps — for life beyond the cabin.
         </p>
+
+        {/* Feature pills */}
+        <div
+          style={{
+            display: "flex",
+            gap: "1.5rem",
+            justifyContent: "center",
+            flexWrap: "wrap",
+            marginBottom: "2.5rem",
+          }}
+        >
+          {[
+            { icon: "\u2728", label: "AI-powered guidance" },
+            { icon: "\uD83D\uDE80", label: "New career pathways" },
+            { icon: "\uD83D\uDCCA", label: "Compare salaries" },
+          ].map((item) => (
+            <div
+              key={item.label}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                color: "#cbd5e1",
+                fontSize: "0.9rem",
+                fontWeight: 500,
+              }}
+            >
+              <span
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "8px",
+                  background: "rgba(37, 99, 235, 0.15)",
+                  border: "1px solid rgba(37, 99, 235, 0.3)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "0.9rem",
+                }}
+              >
+                {item.icon}
+              </span>
+              {item.label}
+            </div>
+          ))}
+        </div>
 
         <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
           {isLoggedIn ? (
@@ -225,7 +287,7 @@ export default function Home() {
         </div>
 
         <p style={{ color: "#475569", fontSize: "0.85rem", marginTop: "1.5rem" }}>
-          18 questions for initial results. 40 for full scoring. Optional deep-dive. 14 career pathways.
+          Free to start. 14 career pathways. Results in minutes.
         </p>
       </section>
 
@@ -510,7 +572,7 @@ export default function Home() {
               fontSize: "1.05rem",
             }}
           >
-            CareerDev doesn&apos;t send your answers to an AI and hope for the best. Every
+            CrewTransition doesn&apos;t send your answers to an AI and hope for the best. Every
             recommendation passes through a multi-layered analysis pipeline backed by
             structured knowledge documents, deterministic scoring, and domain-specific
             intelligence built exclusively for aviation professionals.
@@ -712,7 +774,7 @@ export default function Home() {
         }}
       >
         <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1rem" }}>
-          Ready to explore what&apos;s next?
+          Ready for your career takeoff?
         </h2>
         <p style={{ color: "#94a3b8", marginBottom: "2rem" }}>
           Create a free account and start your career assessment today.
@@ -744,7 +806,7 @@ export default function Home() {
           fontSize: "0.8rem",
         }}
       >
-        CareerDev {APP_VERSION} — Built for cabin crew worldwide
+        CrewTransition {APP_VERSION} — Built for flight attendants worldwide
       </footer>
     </div>
   );
