@@ -12,6 +12,7 @@ import {
 } from "@/lib/api";
 import AppHeader from "@/components/AppHeader";
 import FlowerSpinner from "@/components/FlowerSpinner";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const STATUS_LABELS: Record<string, string> = {
   todo: "To Do",
@@ -41,6 +42,8 @@ function nextStatus(current: string): string {
 
 export default function PlanPage() {
   const router = useRouter();
+  const { t } = useTranslation();
+  const p = (key: string) => t(`pages.plan.${key}`);
   const [plan, setPlan] = useState<ActionPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -159,18 +162,16 @@ export default function PlanPage() {
         <AppHeader />
         <div style={styles.container}>
           <div style={styles.emptyState}>
-            <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.75rem" }}>Your Action Plan</h1>
+            <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.75rem" }}>{p("title")}</h1>
             <p style={{ color: "#94a3b8", marginBottom: "1.5rem", maxWidth: "500px", lineHeight: 1.6 }}>
-              {error
-                ? error
-                : "Generate a structured action plan from your career analysis — concrete steps, credentials to pursue, and weekly priorities you can track."}
+              {error || p("generate_desc")}
             </p>
             <button
               onClick={handleGenerate}
               disabled={generating}
               style={{ ...styles.primaryBtn, opacity: generating ? 0.6 : 1 }}
             >
-              {generating ? "Generating..." : "Generate My Action Plan"}
+              {generating ? p("generating") : p("generate")}
             </button>
             {generating && (
               <div style={{ marginTop: "1rem" }}>
@@ -202,9 +203,9 @@ export default function PlanPage() {
         {/* Header */}
         <div style={styles.header}>
           <div>
-            <h1 style={styles.title}>Your Action Plan</h1>
+            <h1 style={styles.title}>{p("title")}</h1>
             <p style={styles.subtitle}>
-              {plan.done} of {plan.total} steps completed
+              {p("completed_of").replace("{done}", String(plan.done)).replace("{total}", String(plan.total))}
               {plan.in_progress > 0 && ` · ${plan.in_progress} in progress`}
             </p>
           </div>

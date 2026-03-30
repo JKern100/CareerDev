@@ -11,8 +11,11 @@ import FlowerSpinner from "@/components/FlowerSpinner";
 import InstagramShareModal from "@/components/InstagramShareModal";
 import InstagramIcon from "@/components/InstagramIcon";
 import ResourcesSection from "@/components/ResourcesSection";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function ResultsPage() {
+  const { t } = useTranslation();
+  const p = (key: string) => t(`pages.results.${key}`);
   const router = useRouter();
   const [report, setReport] = useState<CareerAnalysis | null>(null);
   const [pathways, setPathways] = useState<PathwayResult[]>([]);

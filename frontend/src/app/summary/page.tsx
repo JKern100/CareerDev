@@ -7,9 +7,12 @@ import AppHeader from "@/components/AppHeader";
 import FlowerSpinner from "@/components/FlowerSpinner";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function SummaryPage() {
   const router = useRouter();
+  const { t } = useTranslation();
+  const p = (key: string) => t(`pages.summary.${key}`);
   const [summary, setSummary] = useState<SummaryReport | null>(null);
   const [canRegenerate, setCanRegenerate] = useState(false);
   const [tier2Complete, setTier2Complete] = useState(false);
