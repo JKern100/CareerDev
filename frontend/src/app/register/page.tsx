@@ -3,8 +3,11 @@
 import { useState } from "react";
 import { register, resendVerification } from "@/lib/api";
 import FlowerSpinner from "@/components/FlowerSpinner";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function RegisterPage() {
+  const { t } = useTranslation();
+  const p = (key: string) => t(`pages.register.${key}`);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -112,15 +115,15 @@ export default function RegisterPage() {
     <div className="container" style={{ maxWidth: "400px" }}>
       <div style={{ textAlign: "center", marginTop: "2rem" }}>
         <FlowerSpinner size={48} />
-        <h1 style={{ marginTop: "0.75rem" }}>Create Account</h1>
+        <h1 style={{ marginTop: "0.75rem" }}>{p("title")}</h1>
         <p className="text-muted text-sm mb-3">
-          Start your career transition journey
+          {p("subtitle") !== "pages.register.subtitle" ? p("subtitle") : "Start your career transition journey"}
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="card flex flex-col gap-1">
         <div>
-          <label className="text-sm">Full Name</label>
+          <label className="text-sm">{p("full_name")}</label>
           <input
             type="text"
             value={fullName}
@@ -129,7 +132,7 @@ export default function RegisterPage() {
           />
         </div>
         <div>
-          <label className="text-sm">Email</label>
+          <label className="text-sm">{p("email")}</label>
           <input
             type="email"
             value={email}
@@ -139,7 +142,7 @@ export default function RegisterPage() {
           />
         </div>
         <div>
-          <label className="text-sm">Password</label>
+          <label className="text-sm">{p("password")}</label>
           <input
             type="password"
             value={password}
@@ -151,13 +154,13 @@ export default function RegisterPage() {
         </div>
         {error && <p style={{ color: "var(--error)", fontSize: "0.875rem" }}>{error}</p>}
         <button className="btn btn-primary mt-2" disabled={loading} type="submit">
-          {loading ? "Creating account..." : "Create Account"}
+          {loading ? `${p("submit")}...` : p("submit")}
         </button>
       </form>
 
       <p className="text-sm text-muted mt-2" style={{ textAlign: "center" }}>
-        Already have an account?{" "}
-        <a href="/login" style={{ color: "var(--primary)" }}>Sign in</a>
+        {p("have_account")}{" "}
+        <a href="/login" style={{ color: "var(--primary)" }}>{p("login")}</a>
       </p>
     </div>
   );
