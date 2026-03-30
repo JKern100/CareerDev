@@ -88,169 +88,187 @@ export default function Home() {
       {/* Hero */}
       <section
         style={{
-          textAlign: "center",
-          padding: "3rem 1rem 2.5rem",
-          maxWidth: "800px",
-          margin: "0 auto",
+          position: "relative",
+          overflow: "hidden",
+          minHeight: "600px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "2rem 1rem 3rem",
         }}
       >
+        {/* Background plane image */}
         <div
           style={{
-            display: "inline-block",
-            background: "rgba(37, 99, 235, 0.15)",
-            color: "#60a5fa",
-            padding: "0.4rem 1.25rem",
-            borderRadius: "20px",
-            fontSize: "0.8rem",
-            fontWeight: 600,
-            marginBottom: "1.5rem",
-            border: "1px solid rgba(37, 99, 235, 0.3)",
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
+            position: "absolute",
+            inset: 0,
+            zIndex: 0,
           }}
         >
-          Built for flight attendants
+          <img
+            src="/hero-plane.png"
+            alt=""
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: "center top",
+            }}
+          />
+          {/* Dark overlay for text readability */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "linear-gradient(180deg, rgba(10,14,26,0.55) 0%, rgba(10,14,26,0.75) 50%, rgba(10,14,26,0.95) 100%)",
+            }}
+          />
         </div>
 
-        {/* Brand logo text */}
-        <div style={{ marginBottom: "1.5rem" }}>
-          <span
+        {/* Content over background */}
+        <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: "900px" }}>
+          {/* Badge */}
+          <div
             style={{
-              fontFamily: "'Georgia', 'Times New Roman', serif",
-              fontSize: "clamp(2.5rem, 6vw, 4rem)",
-              fontWeight: 400,
-              fontStyle: "italic",
-              color: "#f1f5f9",
+              display: "inline-block",
+              background: "rgba(37, 99, 235, 0.2)",
+              color: "#60a5fa",
+              padding: "0.4rem 1.25rem",
+              borderRadius: "20px",
+              fontSize: "0.8rem",
+              fontWeight: 600,
+              marginBottom: "1.5rem",
+              border: "1px solid rgba(37, 99, 235, 0.4)",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              backdropFilter: "blur(8px)",
             }}
           >
-            Crew
-          </span>
-          <span
-            style={{
-              fontSize: "clamp(2.5rem, 6vw, 4rem)",
-              fontWeight: 700,
-              color: "#2563eb",
-            }}
-          >
-            Transition
-          </span>
-          <span
-            style={{
-              fontSize: "clamp(1.5rem, 3vw, 2rem)",
-              fontWeight: 400,
-              color: "#94a3b8",
-            }}
-          >
-            .com
-          </span>
-        </div>
+            Built for flight attendants
+          </div>
 
-        <h1
-          style={{
-            fontSize: "clamp(1.75rem, 4.5vw, 3rem)",
-            fontWeight: 700,
-            lineHeight: 1.15,
-            marginBottom: "1.5rem",
-            letterSpacing: "0.02em",
-            textTransform: "uppercase",
-          }}
-        >
-          Plan your{" "}
-          <span
-            style={{
-              background: "linear-gradient(135deg, #38bdf8, #2563eb)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
-          >
-            career
-          </span>{" "}
-          takeoff.
-        </h1>
-
-        <p
-          style={{
-            fontSize: "1.15rem",
-            color: "#94a3b8",
-            maxWidth: "550px",
-            margin: "0 auto 2rem",
-            lineHeight: 1.7,
-          }}
-        >
-          AI-powered guidance, real career pathways,
-          and clear next steps — for life beyond the cabin.
-        </p>
-
-        {/* Feature pills */}
-        <div
-          style={{
-            display: "flex",
-            gap: "1.5rem",
-            justifyContent: "center",
-            flexWrap: "wrap",
-            marginBottom: "2.5rem",
-          }}
-        >
-          {[
-            { icon: "\u2728", label: "AI-powered guidance" },
-            { icon: "\uD83D\uDE80", label: "New career pathways" },
-            { icon: "\uD83D\uDCCA", label: "Compare salaries" },
-          ].map((item) => (
-            <div
-              key={item.label}
+          {/* Logo image */}
+          <div style={{ marginBottom: "1.25rem" }}>
+            <img
+              src="/hero-logo.png"
+              alt="CrewTransition.com"
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                color: "#cbd5e1",
-                fontSize: "0.9rem",
-                fontWeight: 500,
+                maxWidth: "min(480px, 85vw)",
+                height: "auto",
+                display: "block",
+                margin: "0 auto",
+                filter: "drop-shadow(0 4px 24px rgba(0,0,0,0.5))",
+              }}
+            />
+          </div>
+
+          {/* Headline */}
+          <h1
+            style={{
+              fontSize: "clamp(1.75rem, 4.5vw, 3rem)",
+              fontWeight: 700,
+              lineHeight: 1.15,
+              marginBottom: "1rem",
+              letterSpacing: "0.02em",
+              textTransform: "uppercase",
+              textShadow: "0 2px 12px rgba(0,0,0,0.5)",
+            }}
+          >
+            Plan your{" "}
+            <span
+              style={{
+                background: "linear-gradient(135deg, #38bdf8, #2563eb)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
               }}
             >
-              <span
+              career
+            </span>{" "}
+            takeoff.
+          </h1>
+
+          {/* People image — flight attendant to businesswoman */}
+          <div style={{ marginBottom: "1.25rem" }}>
+            <img
+              src="/hero-people.png"
+              alt="From flight attendant to business professional"
+              style={{
+                maxWidth: "min(520px, 90vw)",
+                height: "auto",
+                display: "block",
+                margin: "0 auto",
+                borderRadius: "16px",
+                border: "1px solid rgba(255,255,255,0.1)",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+              }}
+            />
+          </div>
+
+          <p
+            style={{
+              fontSize: "1.15rem",
+              color: "#cbd5e1",
+              maxWidth: "550px",
+              margin: "0 auto 1.5rem",
+              lineHeight: 1.7,
+              textShadow: "0 1px 8px rgba(0,0,0,0.4)",
+            }}
+          >
+            AI-powered guidance, real career pathways,
+            and clear next steps — for life beyond the cabin.
+          </p>
+
+          {/* Feature pills */}
+          <div
+            style={{
+              display: "flex",
+              gap: "1.5rem",
+              justifyContent: "center",
+              flexWrap: "wrap",
+              marginBottom: "2rem",
+            }}
+          >
+            {[
+              { icon: "\u2728", label: "AI-powered guidance" },
+              { icon: "\uD83D\uDE80", label: "New career pathways" },
+              { icon: "\uD83D\uDCCA", label: "Compare salaries" },
+            ].map((item) => (
+              <div
+                key={item.label}
                 style={{
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "8px",
-                  background: "rgba(37, 99, 235, 0.15)",
-                  border: "1px solid rgba(37, 99, 235, 0.3)",
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
+                  gap: "0.5rem",
+                  color: "#cbd5e1",
                   fontSize: "0.9rem",
+                  fontWeight: 500,
                 }}
               >
-                {item.icon}
-              </span>
-              {item.label}
-            </div>
-          ))}
-        </div>
+                <span
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "8px",
+                    background: "rgba(37, 99, 235, 0.2)",
+                    border: "1px solid rgba(37, 99, 235, 0.4)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  {item.icon}
+                </span>
+                {item.label}
+              </div>
+            ))}
+          </div>
 
-        <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
-          {isLoggedIn ? (
-            <button
-              onClick={() => router.push(dashboardPath)}
-              style={{
-                background: "#2563eb",
-                color: "white",
-                border: "none",
-                padding: "0.875rem 2rem",
-                borderRadius: "10px",
-                fontSize: "1rem",
-                fontWeight: 600,
-                cursor: "pointer",
-                transition: "background 0.15s",
-              }}
-              onMouseOver={(e) => (e.currentTarget.style.background = "#1d4ed8")}
-              onMouseOut={(e) => (e.currentTarget.style.background = "#2563eb")}
-            >
-              Continue where you left off
-            </button>
-          ) : (
-            <>
+          <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
+            {isLoggedIn ? (
               <button
-                onClick={() => router.push("/register")}
+                onClick={() => router.push(dashboardPath)}
                 style={{
                   background: "#2563eb",
                   color: "white",
@@ -265,30 +283,52 @@ export default function Home() {
                 onMouseOver={(e) => (e.currentTarget.style.background = "#1d4ed8")}
                 onMouseOut={(e) => (e.currentTarget.style.background = "#2563eb")}
               >
-                Start your assessment
+                Continue where you left off
               </button>
-              <button
-                onClick={() => router.push("/login")}
-                style={{
-                  background: "rgba(255,255,255,0.05)",
-                  color: "#f1f5f9",
-                  border: "1px solid #334155",
-                  padding: "0.875rem 2rem",
-                  borderRadius: "10px",
-                  fontSize: "1rem",
-                  fontWeight: 500,
-                  cursor: "pointer",
-                }}
-              >
-                Sign in
-              </button>
-            </>
-          )}
-        </div>
+            ) : (
+              <>
+                <button
+                  onClick={() => router.push("/register")}
+                  style={{
+                    background: "#2563eb",
+                    color: "white",
+                    border: "none",
+                    padding: "0.875rem 2rem",
+                    borderRadius: "10px",
+                    fontSize: "1rem",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    transition: "background 0.15s",
+                  }}
+                  onMouseOver={(e) => (e.currentTarget.style.background = "#1d4ed8")}
+                  onMouseOut={(e) => (e.currentTarget.style.background = "#2563eb")}
+                >
+                  Start your assessment
+                </button>
+                <button
+                  onClick={() => router.push("/login")}
+                  style={{
+                    background: "rgba(255,255,255,0.08)",
+                    color: "#f1f5f9",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    padding: "0.875rem 2rem",
+                    borderRadius: "10px",
+                    fontSize: "1rem",
+                    fontWeight: 500,
+                    cursor: "pointer",
+                    backdropFilter: "blur(8px)",
+                  }}
+                >
+                  Sign in
+                </button>
+              </>
+            )}
+          </div>
 
-        <p style={{ color: "#475569", fontSize: "0.85rem", marginTop: "1.5rem" }}>
-          Free to start. 14 career pathways. Results in minutes.
-        </p>
+          <p style={{ color: "#64748b", fontSize: "0.85rem", marginTop: "1.5rem" }}>
+            Free to start. 14 career pathways. Results in minutes.
+          </p>
+        </div>
       </section>
 
       {/* How it works */}
