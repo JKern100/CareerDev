@@ -47,10 +47,11 @@ async def register(data: UserRegister, db: AsyncSession = Depends(get_db)):
     email_sent = await send_verification_email(user.email, token)
 
     if not email_sent:
-        # Auto-verify if email delivery isn't available
-        user.email_verified = True
-        await db.commit()
-        await db.refresh(user)
+        # Only auto-verify if SMTP is not configured at all (dev mode)
+        if not settings.SMTP_HOST:
+            user.email_verified = True
+            await db.commit()
+            await db.refresh(user)
 
     return user
 

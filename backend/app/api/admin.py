@@ -1,6 +1,7 @@
 """Admin API endpoints for managing users, questions, and viewing app stats."""
 
 import csv
+import hmac
 import io
 import json
 import uuid
@@ -173,24 +174,41 @@ async def list_users(
     admin: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(
-        select(User).order_by(User.created_at.desc())
+    # Single query with subqueries instead of N+1
+    answers_sub = (
+        select(Answer.user_id, func.count(Answer.id).label("cnt"))
+        .group_by(Answer.user_id)
+        .subquery()
     )
-    users = result.scalars().all()
+    reports_sub = (
+        select(Report.user_id, func.count(Report.id).label("cnt"))
+        .group_by(Report.user_id)
+        .subquery()
+    )
+    analysis_sub = (
+        select(AnalysisReport.user_id, func.count(AnalysisReport.id).label("cnt"))
+        .group_by(AnalysisReport.user_id)
+        .subquery()
+    )
 
-    out = []
-    for u in users:
-        answers_count = (await db.execute(
-            select(func.count(Answer.id)).where(Answer.user_id == u.id)
-        )).scalar() or 0
-        reports_count = (await db.execute(
-            select(func.count(Report.id)).where(Report.user_id == u.id)
-        )).scalar() or 0
-        has_analysis = (await db.execute(
-            select(func.count(AnalysisReport.id)).where(AnalysisReport.user_id == u.id)
-        )).scalar() or 0
+    query = (
+        select(
+            User,
+            func.coalesce(answers_sub.c.cnt, 0).label("answers_count"),
+            func.coalesce(reports_sub.c.cnt, 0).label("reports_count"),
+            func.coalesce(analysis_sub.c.cnt, 0).label("analysis_count"),
+        )
+        .outerjoin(answers_sub, User.id == answers_sub.c.user_id)
+        .outerjoin(reports_sub, User.id == reports_sub.c.user_id)
+        .outerjoin(analysis_sub, User.id == analysis_sub.c.user_id)
+        .order_by(User.created_at.desc())
+    )
 
-        out.append(AdminUserOut(
+    result = await db.execute(query)
+    rows = result.all()
+
+    return [
+        AdminUserOut(
             id=str(u.id),
             email=u.email,
             full_name=u.full_name,
@@ -201,12 +219,13 @@ async def list_users(
             can_regenerate_summary=u.can_regenerate_summary,
             answers_count=answers_count,
             reports_count=reports_count,
-            has_analysis_report=has_analysis > 0,
+            has_analysis_report=analysis_count > 0,
             last_login_at=u.last_login_at,
             login_count=u.login_count or 0,
             created_at=u.created_at,
-        ))
-    return out
+        )
+        for u, answers_count, reports_count, analysis_count in rows
+    ]
 
 
 @router.get("/users/{user_id}", response_model=AdminUserOut)
@@ -570,8 +589,16 @@ async def admin_setup(
     data: AdminSetupRequest,
     db: AsyncSession = Depends(get_db),
 ):
-    """One-time endpoint to create the first admin. Requires SECRET_KEY."""
-    if data.secret_key != settings.SECRET_KEY:
+    """One-time endpoint to create the first admin. Requires SECRET_KEY.
+    Disabled once any admin exists."""
+    # Block if any admin already exists
+    existing = (await db.execute(
+        select(func.count(User.id)).where(User.role == UserRole.ADMIN)
+    )).scalar() or 0
+    if existing > 0:
+        raise HTTPException(status_code=403, detail="Admin already exists. Use an existing admin to promote users.")
+
+    if not hmac.compare_digest(data.secret_key, settings.SECRET_KEY):
         raise HTTPException(status_code=403, detail="Invalid secret key")
 
     result = await db.execute(select(User).where(User.email == data.email))
