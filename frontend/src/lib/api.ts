@@ -559,10 +559,10 @@ export interface CoachGoal {
   completed_at: string | null;
 }
 
-export async function sendCoachMessage(message: string) {
+export async function sendCoachMessage(message: string, language?: string) {
   return request<{ reply: string }>("/coach/chat", {
     method: "POST",
-    body: JSON.stringify({ message }),
+    body: JSON.stringify({ message, language }),
   });
 }
 

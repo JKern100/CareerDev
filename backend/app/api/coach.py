@@ -25,6 +25,7 @@ router = APIRouter(prefix="/coach", tags=["coach"])
 
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=5000)
+    language: str | None = None  # e.g. "en", "uk", "es", "ar"
 
 
 class ChatResponse(BaseModel):
@@ -76,7 +77,7 @@ async def send_chat_message(
 ):
     """Send a message to the AI career coach and get a response."""
     try:
-        reply = await chat_with_coach(user.id, data.message.strip(), db)
+        reply = await chat_with_coach(user.id, data.message.strip(), db, language=data.language)
         await log_activity(db, user, "coach_chat", f"Sent message ({len(data.message)} chars)")
         await db.commit()
         return ChatResponse(reply=reply)

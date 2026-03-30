@@ -2,8 +2,20 @@
   "_meta": {
     "language": "uk",
     "label": "Українська",
+    "dir": "ltr",
     "coverage": "Tier 1 + Tier 2 questions (40 questions)"
   },
+  "nav": {
+    "dashboard": "Панель",
+    "action_plan": "План дій",
+    "career_coach": "Кар'єрний коуч",
+    "advisor": "Консультант",
+    "admin_panel": "Адмін панель",
+    "log_out": "Вийти",
+    "viewing_as": "Переглядаю як",
+    "back_to_admin": "Повернутися до адмін"
+  },
+  "pages": {},
   "ui": {
     "loading": "Завантаження питань...",
     "next": "Далі",

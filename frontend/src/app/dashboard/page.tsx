@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getMe, getSummary, getCareerReport, getProgress } from "@/lib/api";
 import FlowerSpinner from "@/components/FlowerSpinner";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface UserState {
   fullName: string | null;
@@ -21,6 +22,7 @@ interface UserState {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [user, setUser] = useState<UserState | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -74,109 +76,105 @@ export default function DashboardPage() {
     );
   }
 
-  const greeting = user.fullName
-    ? (user.progressPct > 0 ? `Welcome back, ${user.fullName.split(" ")[0]}` : `Welcome, ${user.fullName.split(" ")[0]}`)
-    : (user.progressPct > 0 ? "Welcome back" : "Welcome");
+  const d = (key: string) => t(`pages.dashboard.${key}`);
+  const firstName = user.fullName?.split(" ")[0] || "";
+  const greeting = user.progressPct > 0
+    ? d("welcome_back").replace("{name}", firstName || "")
+    : d("welcome").replace("{name}", firstName || "");
 
-  const qStatus = user.tier3Complete || user.questionnaireCompleted ? "All 3 Stages Complete"
-    : user.tier2Complete ? "Stage 2 Complete"
-    : user.tier1Complete ? "Stage 1 Complete"
-    : user.progressPct > 0 ? "In Progress" : "Not Started";
+  const qStatus = user.tier3Complete || user.questionnaireCompleted ? d("all_stages_complete")
+    : user.tier2Complete ? d("stage2_complete")
+    : user.tier1Complete ? d("stage1_complete")
+    : user.progressPct > 0 ? d("in_progress") : d("not_started");
 
   const pro = user.isPremium;
 
   const cards = [
     {
       id: "questionnaire",
-      title: "Questionnaire",
+      title: d("questionnaire"),
       description: user.tier3Complete || user.questionnaireCompleted
-        ? "All 3 stages complete. Your AI report has maximum detail. Review or update your answers any time."
+        ? d("q_all_done")
         : user.tier2Complete
-        ? pro
-          ? "Stages 1 & 2 complete. Personalise your report with Stage 3 (~40 questions, ~10 min)."
-          : "Stages 1 & 2 complete. Upgrade to Pro to personalise your report with Stage 3."
+        ? pro ? d("q_t2_done_pro") : d("q_t2_done_free")
         : user.tier1Complete
-        ? pro
-          ? "Stage 1 complete. Answer ~20 more questions in Stage 2 to unlock full career analysis."
-          : "Stage 1 complete. Upgrade to Pro to continue with Stage 2 and unlock your full career analysis."
-        : "Start with 18 quick questions (~5 min) to discover your best career pathways.",
+        ? pro ? d("q_t1_done_pro") : d("q_t1_done_free")
+        : d("q_not_started"),
       cta: user.tier3Complete || user.questionnaireCompleted
-        ? "Review Answers"
+        ? d("q_cta_review")
         : user.tier1Complete && !pro
-        ? "Upgrade to Continue"
-        : user.progressPct > 0 ? "Continue Questionnaire" : "Start Questionnaire",
+        ? d("q_cta_upgrade")
+        : user.progressPct > 0 ? d("q_cta_continue") : d("q_cta_start"),
       enabled: true,
       href: user.tier1Complete && !pro
         ? "/pricing"
         : user.tier1Complete && !user.tier2Complete ? "/questionnaire?start=tier2" : "/questionnaire",
       accent: "#3b82f6",
-      step: "STEP 1",
+      step: d("step1"),
       status: qStatus,
       statusColor: user.tier3Complete || user.questionnaireCompleted ? "#22c55e" : user.progressPct > 0 ? "#f59e0b" : "#64748b",
     },
     {
       id: "summary",
-      title: "Profile Report",
+      title: d("profile_report"),
       description: user.hasSummary
-        ? "Your personal narrative summary is ready."
+        ? d("summary_ready")
         : user.tier1Complete
-        ? "Stage 1 is done — your profile summary is ready to generate."
-        : "Complete Stage 1 (18 questions) to unlock your profile summary.",
-      cta: user.hasSummary ? "View Profile Report" : user.tier1Complete ? "Generate Profile Report" : "Locked",
+        ? d("summary_generate")
+        : d("summary_locked"),
+      cta: user.hasSummary ? d("summary_cta_view") : user.tier1Complete ? d("summary_cta_gen") : d("locked"),
       enabled: user.hasSummary || user.tier1Complete,
       href: "/summary",
       accent: "#8b5cf6",
-      step: "STEP 2",
-      status: user.hasSummary ? "Ready" : user.tier1Complete ? "Ready to Generate" : "Locked",
+      step: d("step2"),
+      status: user.hasSummary ? d("ready") : user.tier1Complete ? d("ready_to_generate") : d("locked"),
       statusColor: user.hasSummary ? "#22c55e" : user.tier1Complete ? "#f59e0b" : "#64748b",
     },
     {
       id: "analysis",
-      title: "Career Analysis",
+      title: d("career_analysis"),
       description: !pro
-        ? "Upgrade to Pro to unlock your full AI-powered career analysis — ranked pathways, salary data, and a transition plan."
+        ? d("analysis_upgrade")
         : user.hasAnalysis
-        ? "Your full career analysis is ready — ranked pathways, salary data, credentials, and a transition plan."
+        ? d("analysis_ready")
         : user.tier2Complete
-        ? "Stages 1 & 2 are done — generate your AI-powered pathway rankings, salary benchmarks, and transition plan."
-        : "Complete Stages 1 & 2 of the questionnaire to unlock your full career analysis.",
-      cta: !pro ? "Upgrade to Pro" : user.hasAnalysis ? "View Career Analysis" : user.tier2Complete ? "Generate Analysis" : "Locked",
+        ? d("analysis_generate")
+        : d("analysis_locked"),
+      cta: !pro ? t("ui.upgrade_to_pro") : user.hasAnalysis ? d("analysis_cta_view") : user.tier2Complete ? d("analysis_cta_gen") : d("locked"),
       enabled: !pro ? true : (user.hasAnalysis || user.tier2Complete),
       href: !pro ? "/pricing" : "/results",
       accent: "#2563eb",
-      step: "STEP 3",
-      status: !pro ? "Pro" : user.hasAnalysis ? "Ready" : user.tier2Complete ? "Ready to Generate" : "Locked",
+      step: d("step3"),
+      status: !pro ? d("pro") : user.hasAnalysis ? d("ready") : user.tier2Complete ? d("ready_to_generate") : d("locked"),
       statusColor: !pro ? "#3b82f6" : user.hasAnalysis ? "#22c55e" : user.tier2Complete ? "#f59e0b" : "#64748b",
       featured: true,
     },
     {
       id: "plan",
-      title: "Action Plan",
+      title: d("action_plan"),
       description: !pro
-        ? "Upgrade to Pro to get a structured action plan with trackable next steps for your top career pathways."
+        ? d("plan_upgrade")
         : user.hasAnalysis
-        ? "Your step-by-step action plan — track credentials, weekly priorities, and first steps for your top pathways."
-        : "Generate your career analysis first to unlock a structured action plan with trackable next steps.",
-      cta: !pro ? "Upgrade to Pro" : user.hasAnalysis ? "View Action Plan" : "Locked",
+        ? d("plan_ready")
+        : d("plan_locked"),
+      cta: !pro ? t("ui.upgrade_to_pro") : user.hasAnalysis ? d("plan_cta_view") : d("locked"),
       enabled: !pro ? true : user.hasAnalysis,
       href: !pro ? "/pricing" : "/plan",
       accent: "#22c55e",
-      step: "STEP 4",
-      status: !pro ? "Pro" : user.hasAnalysis ? "Available" : "Locked",
+      step: d("step4"),
+      status: !pro ? d("pro") : user.hasAnalysis ? d("available") : d("locked"),
       statusColor: !pro ? "#3b82f6" : user.hasAnalysis ? "#22c55e" : "#64748b",
     },
     {
       id: "coach",
-      title: "Career Coach",
-      description: !pro
-        ? "Upgrade to Pro to chat with your AI career coach — personalised advice on interviews, resumes, and your transition."
-        : "Chat with your AI career coach — get personalised advice on interviews, resumes, salary negotiation, and your transition plan.",
-      cta: !pro ? "Upgrade to Pro" : "Talk to Coach",
+      title: d("career_coach"),
+      description: !pro ? d("coach_upgrade") : d("coach_ready"),
+      cta: !pro ? t("ui.upgrade_to_pro") : d("coach_cta"),
       enabled: !pro ? true : user.tier1Complete,
       href: !pro ? "/pricing" : "/coach",
       accent: "#eab308",
-      step: "ANYTIME",
-      status: !pro ? "Pro" : user.tier1Complete ? "Available" : "Locked",
+      step: d("anytime"),
+      status: !pro ? d("pro") : user.tier1Complete ? d("available") : d("locked"),
       statusColor: !pro ? "#3b82f6" : user.tier1Complete ? "#22c55e" : "#64748b",
     },
   ];
@@ -191,14 +189,14 @@ export default function DashboardPage() {
         </div>
         <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
           <a href="/" style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.9rem" }}>
-            Home
+            {d("home")}
           </a>
           {(user.role === "admin" || user.role === "auditor") && (
             <button
               style={{ ...styles.logoutBtn, borderColor: "#f59e0b", color: "#fbbf24" }}
               onClick={() => router.push("/admin")}
             >
-              Admin Panel
+              {t("nav.admin_panel")}
             </button>
           )}
           {user.role === "advisor" && (
@@ -206,7 +204,7 @@ export default function DashboardPage() {
               style={{ ...styles.logoutBtn, borderColor: "#3b82f6", color: "#60a5fa" }}
               onClick={() => router.push("/advisor")}
             >
-              Advisor Dashboard
+              {d("advisor_dashboard")}
             </button>
           )}
           <button
@@ -218,7 +216,7 @@ export default function DashboardPage() {
               router.push("/");
             }}
           >
-            Log out
+            {t("nav.log_out")}
           </button>
         </div>
       </nav>
@@ -228,7 +226,7 @@ export default function DashboardPage() {
         <div style={styles.heroSection}>
           <h1 style={styles.greeting}>{greeting}</h1>
           <p style={styles.subtitle}>
-            {user.progressPct > 0 ? "Your career journey at a glance. Pick up where you left off." : "Your career transition starts here."}
+            {user.progressPct > 0 ? d("subtitle_returning") : d("subtitle_new")}
           </p>
         </div>
 

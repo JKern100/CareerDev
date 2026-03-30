@@ -1,0 +1,280 @@
+{
+  "_meta": {
+    "language": "es",
+    "label": "Español",
+    "dir": "ltr"
+  },
+  "ui": {
+    "loading": "Cargando preguntas...",
+    "next": "Siguiente",
+    "see_results": "Ver mis resultados",
+    "see_full_results": "Ver resultados completos",
+    "saving": "Guardando...",
+    "not_sure": "No estoy seguro/a",
+    "examples": "ejemplos",
+    "hide_examples": "ocultar ejemplos",
+    "step_of": "Paso {n} de {total}",
+    "quick_match": "Coincidencia rápida",
+    "sharpening": "Afinando resultados",
+    "personalising": "Personalizando tu informe",
+    "min_left": "~{n} min restantes",
+    "tier1_done_title": "¡Tus resultados iniciales están listos!",
+    "tier1_done_body": "Basándonos en tu evaluación rápida, te hemos emparejado con rutas profesionales. Puedes ver tus resultados ahora o afinarlos con ~20 preguntas más (~5 min).",
+    "tier1_done_see": "Ver mis resultados",
+    "tier1_done_sharpen": "Afinar mis resultados (~5 min)",
+    "tier2_done_title": "Tus rankings de carrera están definidos",
+    "tier2_done_body": "Has respondido todas las preguntas que determinan tus puntuaciones. Puedes ver tus resultados ahora o desbloquear un informe mucho más personalizado.",
+    "tier2_done_see": "Ver resultados ahora",
+    "tier2_done_deep": "Comenzar la personalización",
+    "welcome_title": "Bienvenido/a a tu evaluación profesional",
+    "welcome_body": "Empezaremos con <strong>18 preguntas rápidas (~5 min)</strong> para mostrarte qué carreras te convienen. Luego tú decides hasta dónde profundizar.",
+    "welcome_step1": "<strong>Paso 1: Coincidencia rápida (5 min).</strong> 18 preguntas para obtener tu ranking inicial de rutas profesionales.",
+    "welcome_step2": "<strong>Paso 2: Afinar (5 min, opcional).</strong> 20 preguntas más que evalúan completamente habilidades, preferencias y limitaciones.",
+    "welcome_step3": "<strong>Paso 3: Personalizar (~10 min, opcional).</strong> 40 preguntas enfocadas que añaden contexto para un informe de IA más completo.",
+    "welcome_start": "¡Empecemos!",
+    "required_missing": "{n} pregunta(s) obligatoria(s) aún necesita(n) respuesta.",
+    "try_again": "Intentar de nuevo",
+    "back_to_dashboard": "Volver al panel",
+    "questionnaire_complete_title": "Cuestionario completado",
+    "questionnaire_complete_body": "Has respondido todas las preguntas. Tu coach de carrera con IA está completamente informado sobre tu perfil y listo para ayudarte.",
+    "view_profile_summary": "Ver mi resumen de perfil",
+    "talk_to_coach": "Hablar con el coach",
+    "upgrade_to_pro": "Actualizar a Pro",
+    "upgrade_title": "¡Tus resultados iniciales están listos!",
+    "upgrade_body": "Has completado la Etapa 1 y tus mejores rutas profesionales han sido identificadas. Actualiza a Pro para continuar con las Etapas 2 y 3, desbloquear tu análisis completo de carrera, coach de IA y plan de acción.",
+    "upgrade_see_free": "Ver resultados gratuitos",
+    "upgrade_cta": "Actualizar a Pro — $9/mes",
+    "upgrade_note": "Pro desbloquea Etapas 2 y 3, análisis completo de carrera, coach de IA y plan de acción."
+  },
+  "nav": {
+    "dashboard": "Panel",
+    "action_plan": "Plan de acción",
+    "career_coach": "Coach de carrera",
+    "advisor": "Asesor",
+    "admin_panel": "Panel de admin",
+    "log_out": "Cerrar sesión",
+    "viewing_as": "Viendo como",
+    "back_to_admin": "Volver a admin"
+  },
+  "pages": {
+    "dashboard": {
+      "welcome": "Bienvenido/a, {name}",
+      "welcome_back": "Hola de nuevo, {name}",
+      "subtitle_new": "Tu transición profesional comienza aquí.",
+      "subtitle_returning": "Tu camino profesional de un vistazo. Retoma donde lo dejaste.",
+      "questionnaire": "Cuestionario",
+      "profile_report": "Informe de perfil",
+      "career_analysis": "Análisis de carrera",
+      "action_plan": "Plan de acción",
+      "career_coach": "Coach de carrera",
+      "step1": "PASO 1",
+      "step2": "PASO 2",
+      "step3": "PASO 3",
+      "step4": "PASO 4",
+      "anytime": "CUANDO QUIERAS",
+      "locked": "Bloqueado",
+      "ready": "Listo",
+      "available": "Disponible",
+      "pro": "Pro",
+      "ready_to_generate": "Listo para generar",
+      "current_plan": "Plan actual",
+      "all_stages_complete": "3 Etapas completas",
+      "stage1_complete": "Etapa 1 completa",
+      "stage2_complete": "Etapa 2 completa",
+      "in_progress": "En progreso",
+      "not_started": "Sin comenzar",
+      "home": "Inicio"
+    },
+    "pricing": {
+      "title": "Precios simples, claridad profesional total",
+      "subtitle": "Comienza gratis para ver tus mejores rutas. Actualiza a Pro para el kit completo de transición profesional.",
+      "free": "Gratis",
+      "free_desc": "Descubre tus mejores rutas profesionales en 5 minutos",
+      "pro": "Pro",
+      "pro_desc": "Tu kit completo de transición profesional",
+      "full_access": "Acceso completo",
+      "current_plan": "Plan actual",
+      "included": "Incluido",
+      "start_pro": "Comenzar Pro — $9/mes",
+      "redirecting": "Redirigiendo...",
+      "cancel_note": "Cancela en cualquier momento. Procesado de forma segura por LemonSqueezy.",
+      "promo_label": "¿Tienes un código de descuento o acceso?",
+      "promo_placeholder": "Ingresa el código",
+      "promo_apply": "Aplicar",
+      "secure_payment": "Pago seguro",
+      "secure_payment_desc": "Procesado por LemonSqueezy. Nunca vemos los datos de tu tarjeta.",
+      "instant_access": "Acceso instantáneo",
+      "instant_access_desc": "Todas las funciones Pro se desbloquean inmediatamente después del pago.",
+      "cancel_anytime": "Cancela cuando quieras",
+      "cancel_anytime_desc": "Sin compromiso. Cancela tu suscripción cuando quieras."
+    },
+    "login": {
+      "title": "Bienvenido/a de nuevo",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "submit": "Iniciar sesión",
+      "forgot": "¿Olvidaste tu contraseña?",
+      "no_account": "¿No tienes cuenta?",
+      "register": "Registrarse"
+    },
+    "register": {
+      "title": "Crea tu cuenta",
+      "full_name": "Nombre completo",
+      "email": "Correo electrónico",
+      "password": "Contraseña (mín. 8 caracteres)",
+      "submit": "Crear cuenta",
+      "have_account": "¿Ya tienes cuenta?",
+      "login": "Iniciar sesión"
+    },
+    "coach": {
+      "title": "Coach de carrera",
+      "placeholder": "Pregúntale cualquier cosa a tu coach de carrera...",
+      "send": "Enviar",
+      "thinking": "Pensando...",
+      "clear": "Borrar historial",
+      "goals": "Mis metas",
+      "suggestions": "Preguntas sugeridas"
+    },
+    "plan": {
+      "title": "Tu plan de acción",
+      "generate": "Generar mi plan de acción",
+      "generate_desc": "Genera un plan de acción estructurado a partir de tu análisis de carrera — pasos concretos, credenciales a obtener y prioridades semanales que puedes seguir.",
+      "generating": "Generando...",
+      "first_steps": "Primeros pasos",
+      "credentials": "Credenciales y formación",
+      "weekly": "Prioridades semanales",
+      "completed_of": "{done} de {total} pasos completados"
+    },
+    "summary": {
+      "title": "Tu resumen de perfil",
+      "generate": "Generar mi resumen",
+      "regenerate": "Regenerar resumen"
+    },
+    "results": {
+      "title": "Tu análisis de carrera",
+      "generate": "Generar análisis de carrera",
+      "regenerate": "Regenerar análisis"
+    }
+  },
+  "questions": {
+    "Q005": {
+      "prompt": "¿Consientes el procesamiento de tus datos profesionales para generar recomendaciones?",
+      "options": {"Yes": "Sí", "No": "No"},
+      "help_text": "Necesitamos tu permiso para analizar tus respuestas y generar recomendaciones de carrera. Seleccionar No detendrá el cuestionario."
+    },
+    "Q001": {
+      "prompt": "¿En qué país vives actualmente?",
+      "options": {
+        "UAE": "EAU", "UK": "Reino Unido", "USA": "EE.UU.", "Canada": "Canadá",
+        "Australia": "Australia", "Germany": "Alemania", "France": "Francia",
+        "Ukraine": "Ucrania", "India": "India", "Philippines": "Filipinas",
+        "South Africa": "Sudáfrica", "Other Europe": "Otra Europa",
+        "Other Asia": "Otra Asia", "Other": "Otro"
+      },
+      "help_text": "Donde vives ahora — esto determina los mercados laborales y los salarios de referencia que te mostramos."
+    },
+    "Q109": {
+      "prompt": "¿Cuál es la razón principal por la que estás explorando un cambio de carrera?",
+      "options": {
+        "Career growth ceiling": "Techo de crecimiento profesional",
+        "Burnout/wellbeing": "Agotamiento/bienestar",
+        "Medical/health": "Médico/salud",
+        "Redundancy or contract ending": "Despido o fin de contrato",
+        "Financial": "Financiero",
+        "Family/lifestyle": "Familia/estilo de vida",
+        "Curiosity": "Curiosidad",
+        "Other": "Otro"
+      },
+      "help_text": "Tu motivación principal determina el tipo de recomendaciones que priorizamos."
+    },
+    "Q009": {
+      "prompt": "¿Qué tan urgente es el cambio? (0=sin urgencia; 10=necesito cambiar ya)",
+      "help_text": "Esto nos ayuda a entender tu cronograma y si priorizar rutas rápidas o planes a largo plazo."
+    },
+    "Q011": {
+      "prompt": "Años como tripulante de cabina (total)",
+      "help_text": "Años totales volando en todas las aerolíneas. Esto ayuda a evaluar la profundidad de tus habilidades transferibles."
+    },
+    "Q017": {
+      "prompt": "Disfrute: servicio/hospitalidad",
+      "help_text": "1 = no disfruto nada; 5 = me encanta. Las puntuaciones altas apuntan a carreras orientadas al cliente."
+    },
+    "Q019": {
+      "prompt": "Disfrute: trabajo en equipo/liderazgo a bordo",
+      "help_text": "1 = no disfruto nada; 5 = me encanta. El disfrute del liderazgo abre rutas de gestión."
+    },
+    "Q016": {
+      "prompt": "Disfrute: responsabilidades de seguridad",
+      "help_text": "1 = no disfruto nada; 5 = me encanta. Te emparejamos con carreras que se alinean con lo que disfrutas."
+    },
+    "Q047": {
+      "prompt": "Entorno preferido",
+      "options": {
+        "Structured": "Estructurado", "Fast-changing": "Cambiante",
+        "Creative": "Creativo", "Analytical": "Analítico",
+        "Mission-driven": "Con misión", "Luxury/service": "Lujo/servicio"
+      },
+      "help_text": "Selecciona todos los que te atraigan. Emparejaremos carreras que se ajusten a tu cultura laboral preferida."
+    },
+    "Q028": {
+      "prompt": "Habilidad de comunicación oral",
+      "help_text": "Califica tu nivel: 1 = básico; 5 = experto."
+    },
+    "Q034": {
+      "prompt": "Capacitación/instrucción a otros",
+      "help_text": "Califica tu nivel: 1 = básico; 5 = experto. Puntuar 3+ desbloquea un análisis más profundo de la carrera en L&D."
+    },
+    "Q042": {
+      "prompt": "Comodidad con computadoras",
+      "options": {"Low": "Baja", "Medium": "Media", "High": "Alta"},
+      "help_text": "Tu nivel de comodidad con la tecnología afecta los roles y rutas de capacitación que recomendamos."
+    },
+    "Q054": {
+      "prompt": "Aspiración de liderazgo",
+      "options": {
+        "Individual contributor": "Contribuidor individual",
+        "Manager": "Gerente",
+        "Senior leader": "Líder senior",
+        "Unsure": "No estoy seguro/a"
+      },
+      "help_text": "Dónde te ves te ayuda a apuntar al nivel de antigüedad correcto en las recomendaciones."
+    },
+    "Q060": {
+      "prompt": "Tolerancia al riesgo (0=baja; 10=alta)",
+      "help_text": "Bajo riesgo = priorizamos rutas de empleo estable. Alto riesgo = incluimos opciones emprendedoras."
+    },
+    "Q048": {
+      "prompt": "Modo de trabajo preferido",
+      "options": {"Onsite": "Presencial", "Hybrid": "Híbrido", "Remote": "Remoto"},
+      "help_text": "Esto filtra las opciones de carrera — algunas rutas requieren presencia física."
+    },
+    "Q071": {
+      "prompt": "Disposición a comenzar en nivel de entrada en un campo nuevo",
+      "options": {"Yes": "Sí", "No": "No", "Maybe": "Tal vez"},
+      "help_text": "Estar abierto a roles de nivel de entrada amplía significativamente las rutas disponibles."
+    },
+    "Q089": {
+      "prompt": "Salario mensual deseado (en tu moneda elegida)",
+      "help_text": "Tu salario deseado — no el mínimo. Este es el punto de referencia que usamos para evaluar opciones."
+    },
+    "Q106": {
+      "prompt": "Familias de carrera preferidas",
+      "options": {
+        "L&D": "Capacitación y desarrollo",
+        "HR": "Recursos humanos",
+        "CX": "Experiencia del cliente",
+        "Operations": "Operaciones",
+        "Safety": "Seguridad",
+        "Tech": "Tecnología",
+        "Entrepreneurship": "Emprendimiento",
+        "Creative & Design": "Diseño creativo",
+        "Media & Communications": "Medios y comunicaciones",
+        "Healthcare": "Salud",
+        "Education & Coaching": "Educación y coaching",
+        "Hospitality": "Hospitalidad",
+        "Sales": "Ventas"
+      },
+      "help_text": "Selecciona todas las áreas que te interesan. Analizaremos tu ajuste y viabilidad para cada una."
+    }
+  }
+}

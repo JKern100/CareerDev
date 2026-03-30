@@ -4,9 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getMe, createCheckout, validatePromo, redeemPromo, PromoValidation } from "@/lib/api";
 import AppHeader from "@/components/AppHeader";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function PricingPage() {
   const router = useRouter();
+  const { t } = useTranslation();
+  const p = (key: string) => t(`pages.pricing.${key}`);
   const [currentPlan, setCurrentPlan] = useState<string>("free");
   const [isPremium, setIsPremium] = useState(false);
   const [loading, setLoading] = useState<string | null>(null);
@@ -80,30 +83,30 @@ export default function PricingPage() {
       {loggedIn && <AppHeader />}
       <div style={styles.container}>
         <div style={styles.hero}>
-          <h1 style={styles.title}>Simple pricing, full career clarity</h1>
+          <h1 style={styles.title}>{p("title")}</h1>
           <p style={styles.subtitle}>
-            Start free to see your top pathways. Upgrade to Pro for the complete career transition toolkit.
+            {p("subtitle")}
           </p>
         </div>
 
         <div style={styles.grid}>
           {/* Free tier */}
           <div style={{ ...styles.card, borderColor: "#1e293b" }}>
-            <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.25rem" }}>Free</h2>
+            <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.25rem" }}>{p("free")}</h2>
             <div style={styles.priceRow}>
               <span style={{ fontSize: "2rem", fontWeight: 800 }}>$0</span>
             </div>
             <p style={{ color: "#94a3b8", fontSize: "0.88rem", marginBottom: "1.25rem", lineHeight: 1.5 }}>
-              Discover your best career pathways in 5 minutes
+              {p("free_desc")}
             </p>
 
             <ul style={styles.featureList}>
-              <li style={styles.featureItem}><span style={styles.checkMark}>+</span> Stage 1 questionnaire (18 questions)</li>
-              <li style={styles.featureItem}><span style={styles.checkMark}>+</span> Teaser profile report</li>
-              <li style={styles.featureItem}><span style={styles.checkMark}>+</span> Top pathway matches (preview)</li>
-              <li style={styles.featureLocked}><span style={styles.lockIcon}>-</span> Full career analysis</li>
-              <li style={styles.featureLocked}><span style={styles.lockIcon}>-</span> AI Career Coach</li>
-              <li style={styles.featureLocked}><span style={styles.lockIcon}>-</span> Action Plan</li>
+              <li style={styles.featureItem}><span style={styles.checkMark}>+</span> {p("feat_stage1")}</li>
+              <li style={styles.featureItem}><span style={styles.checkMark}>+</span> {p("feat_teaser")}</li>
+              <li style={styles.featureItem}><span style={styles.checkMark}>+</span> {p("feat_preview")}</li>
+              <li style={styles.featureLocked}><span style={styles.lockIcon}>-</span> {p("feat_full_analysis")}</li>
+              <li style={styles.featureLocked}><span style={styles.lockIcon}>-</span> {p("feat_coach")}</li>
+              <li style={styles.featureLocked}><span style={styles.lockIcon}>-</span> {p("feat_plan")}</li>
             </ul>
 
             <button
@@ -117,31 +120,31 @@ export default function PricingPage() {
                 cursor: "default",
               }}
             >
-              {alreadyPro ? "Included" : "Current Plan"}
+              {alreadyPro ? p("included") : p("current_plan")}
             </button>
           </div>
 
           {/* Pro tier */}
           <div style={{ ...styles.card, ...styles.popularCard, borderColor: "#3b82f6" }}>
-            <div style={styles.popularBadge}>Full Access</div>
+            <div style={styles.popularBadge}>{p("full_access")}</div>
 
-            <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.25rem" }}>Pro</h2>
+            <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.25rem" }}>{p("pro")}</h2>
             <div style={styles.priceRow}>
               <span style={{ fontSize: "2rem", fontWeight: 800 }}>$9</span>
               <span style={{ color: "#64748b", fontSize: "0.9rem", marginLeft: "0.25rem" }}>/month</span>
             </div>
             <p style={{ color: "#94a3b8", fontSize: "0.88rem", marginBottom: "1.25rem", lineHeight: 1.5 }}>
-              Your complete career transition toolkit
+              {p("pro_desc")}
             </p>
 
             <ul style={styles.featureList}>
-              <li style={styles.featureItem}><span style={styles.checkBlue}>+</span> Everything in Free</li>
-              <li style={styles.featureItem}><span style={styles.checkBlue}>+</span> Full questionnaire (Stages 2 & 3)</li>
-              <li style={styles.featureItem}><span style={styles.checkBlue}>+</span> Complete career analysis with salary data</li>
-              <li style={styles.featureItem}><span style={styles.checkBlue}>+</span> AI Career Coach (unlimited)</li>
-              <li style={styles.featureItem}><span style={styles.checkBlue}>+</span> Structured Action Plan with tracking</li>
-              <li style={styles.featureItem}><span style={styles.checkBlue}>+</span> Report regeneration</li>
-              <li style={styles.featureItem}><span style={styles.checkBlue}>+</span> Credential recommendations with links</li>
+              <li style={styles.featureItem}><span style={styles.checkBlue}>+</span> {p("feat_everything_free")}</li>
+              <li style={styles.featureItem}><span style={styles.checkBlue}>+</span> {p("feat_full_questionnaire")}</li>
+              <li style={styles.featureItem}><span style={styles.checkBlue}>+</span> {p("feat_full_analysis_salary")}</li>
+              <li style={styles.featureItem}><span style={styles.checkBlue}>+</span> {p("feat_coach_unlimited")}</li>
+              <li style={styles.featureItem}><span style={styles.checkBlue}>+</span> {p("feat_plan_tracking")}</li>
+              <li style={styles.featureItem}><span style={styles.checkBlue}>+</span> {p("feat_regen")}</li>
+              <li style={styles.featureItem}><span style={styles.checkBlue}>+</span> {p("feat_credentials")}</li>
             </ul>
 
             <button
@@ -156,11 +159,11 @@ export default function PricingPage() {
                 cursor: alreadyPro ? "default" : "pointer",
               }}
             >
-              {loading === "monthly" ? "Redirecting..." : alreadyPro ? "Current Plan" : "Start Pro — $9/month"}
+              {loading === "monthly" ? p("redirecting") : alreadyPro ? p("current_plan") : p("start_pro")}
             </button>
             {!alreadyPro && (
               <p style={{ color: "#475569", fontSize: "0.78rem", marginTop: "0.5rem", textAlign: "center" }}>
-                Cancel anytime. Processed securely by LemonSqueezy.
+                {p("cancel_note")}
               </p>
             )}
           </div>
@@ -169,7 +172,7 @@ export default function PricingPage() {
         {/* Promo Code */}
         <div style={styles.promoSection}>
           <p style={{ color: "#94a3b8", fontSize: "0.9rem", marginBottom: "0.75rem" }}>
-            Have a discount or access code?
+            {p("promo_label")}
           </p>
           <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center", maxWidth: "400px", margin: "0 auto" }}>
             <input
@@ -177,7 +180,7 @@ export default function PricingPage() {
               value={promoInput}
               onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
               onKeyDown={(e) => e.key === "Enter" && handlePromoValidate()}
-              placeholder="Enter code"
+              placeholder={p("promo_placeholder")}
               style={styles.promoInput}
             />
             <button
@@ -185,7 +188,7 @@ export default function PricingPage() {
               disabled={promoLoading || !promoInput.trim()}
               style={{ ...styles.promoBtn, opacity: promoLoading || !promoInput.trim() ? 0.5 : 1 }}
             >
-              {promoLoading ? "..." : "Apply"}
+              {promoLoading ? "..." : p("promo_apply")}
             </button>
           </div>
           {promoError && (
@@ -206,16 +209,16 @@ export default function PricingPage() {
         {/* Trust signals */}
         <div style={styles.trustSection}>
           <div style={styles.trustItem}>
-            <strong>Secure Payment</strong>
-            <span>Processed by LemonSqueezy. We never see your card details.</span>
+            <strong>{p("secure_payment")}</strong>
+            <span>{p("secure_payment_desc")}</span>
           </div>
           <div style={styles.trustItem}>
-            <strong>Instant Access</strong>
-            <span>All Pro features unlock immediately after payment.</span>
+            <strong>{p("instant_access")}</strong>
+            <span>{p("instant_access_desc")}</span>
           </div>
           <div style={styles.trustItem}>
-            <strong>Cancel Anytime</strong>
-            <span>No lock-in. Cancel your subscription whenever you want.</span>
+            <strong>{p("cancel_anytime")}</strong>
+            <span>{p("cancel_anytime_desc")}</span>
           </div>
         </div>
       </div>

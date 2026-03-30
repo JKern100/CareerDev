@@ -4,9 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { login, getMe, resendVerification } from "@/lib/api";
 import FlowerSpinner from "@/components/FlowerSpinner";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useTranslation();
+  const p = (key: string) => t(`pages.login.${key}`);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -57,15 +60,15 @@ export default function LoginPage() {
     <div className="container" style={{ maxWidth: "400px" }}>
       <div style={{ textAlign: "center", marginTop: "2rem" }}>
         <FlowerSpinner size={48} />
-        <h1 style={{ marginTop: "0.75rem" }}>Sign In</h1>
+        <h1 style={{ marginTop: "0.75rem" }}>{p("title")}</h1>
         <p className="text-muted text-sm mb-3">
-          Continue your career journey
+          {p("subtitle") !== "pages.login.subtitle" ? p("subtitle") : "Continue your career journey"}
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="card flex flex-col gap-1">
         <div>
-          <label className="text-sm">Email</label>
+          <label className="text-sm">{p("email")}</label>
           <input
             type="email"
             value={email}
@@ -75,7 +78,7 @@ export default function LoginPage() {
           />
         </div>
         <div>
-          <label className="text-sm">Password</label>
+          <label className="text-sm">{p("password")}</label>
           <input
             type="password"
             value={password}
@@ -109,17 +112,17 @@ export default function LoginPage() {
             href="/forgot-password"
             style={{ color: "var(--primary)", fontSize: "0.85rem", textDecoration: "none" }}
           >
-            Forgot password?
+            {p("forgot")}
           </a>
         </div>
         <button className="btn btn-primary mt-2" disabled={loading} type="submit">
-          {loading ? "Signing in..." : "Sign In"}
+          {loading ? `${p("submit")}...` : p("submit")}
         </button>
       </form>
 
       <p className="text-sm text-muted mt-2" style={{ textAlign: "center" }}>
-        No account yet?{" "}
-        <a href="/register" style={{ color: "var(--primary)" }}>Create one</a>
+        {p("no_account")}{" "}
+        <a href="/register" style={{ color: "var(--primary)" }}>{p("register")}</a>
       </p>
     </div>
   );

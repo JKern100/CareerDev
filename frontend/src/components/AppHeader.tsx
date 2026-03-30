@@ -3,12 +3,15 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getMe } from "@/lib/api";
+import { useTranslation, LANGUAGES, LangCode } from "@/hooks/useTranslation";
 
 export default function AppHeader() {
   const router = useRouter();
+  const { lang, setLang, t } = useTranslation();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isAdvisor, setIsAdvisor] = useState(false);
   const [impersonating, setImpersonating] = useState<string | null>(null);
+  const [langOpen, setLangOpen] = useState(false);
 
   useEffect(() => {
     const imp = localStorage.getItem("impersonating");
@@ -60,7 +63,7 @@ export default function AppHeader() {
             gap: "0.5rem",
           }}
         >
-          <span>Viewing as: <strong>{impersonating}</strong></span>
+          <span>{t("nav.viewing_as")}: <strong>{impersonating}</strong></span>
           <button
             onClick={handleBackToAdmin}
             style={{
@@ -73,7 +76,7 @@ export default function AppHeader() {
               fontSize: "0.8rem",
             }}
           >
-            Back to Admin
+            {t("nav.back_to_admin")}
           </button>
         </div>
       )}
@@ -103,6 +106,61 @@ export default function AppHeader() {
         <span style={{ fontWeight: 600, fontSize: "1rem" }}>CareerDev</span>
       </a>
       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+        {/* Language selector */}
+        <div style={{ position: "relative" }}>
+          <button
+            onClick={() => setLangOpen(!langOpen)}
+            style={{
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid var(--border)",
+              color: "var(--foreground)",
+              padding: "0.4rem 0.75rem",
+              borderRadius: "8px",
+              cursor: "pointer",
+              fontSize: "0.8rem",
+              fontWeight: 600,
+              minWidth: "3rem",
+            }}
+          >
+            {LANGUAGES.find((l) => l.code === lang)?.flag || "EN"}
+          </button>
+          {langOpen && (
+            <div
+              style={{
+                position: "absolute",
+                top: "calc(100% + 4px)",
+                right: 0,
+                background: "var(--card-bg, #1e293b)",
+                border: "1px solid var(--border)",
+                borderRadius: "8px",
+                overflow: "hidden",
+                zIndex: 100,
+                minWidth: "140px",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
+              }}
+            >
+              {LANGUAGES.map((l) => (
+                <button
+                  key={l.code}
+                  onClick={() => { setLang(l.code as LangCode); setLangOpen(false); }}
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    padding: "0.5rem 0.75rem",
+                    background: lang === l.code ? "rgba(59,130,246,0.15)" : "transparent",
+                    border: "none",
+                    color: lang === l.code ? "#60a5fa" : "var(--foreground, #e2e8f0)",
+                    fontSize: "0.85rem",
+                    cursor: "pointer",
+                    textAlign: "start",
+                  }}
+                >
+                  {l.flag} {l.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <a
           href="/dashboard"
           style={{
@@ -116,7 +174,7 @@ export default function AppHeader() {
             cursor: "pointer",
           }}
         >
-          Dashboard
+          {t("nav.dashboard")}
         </a>
         <a
           href="/plan"
@@ -131,7 +189,7 @@ export default function AppHeader() {
             cursor: "pointer",
           }}
         >
-          Action Plan
+          {t("nav.action_plan")}
         </a>
         <a
           href="/coach"
@@ -146,7 +204,7 @@ export default function AppHeader() {
             cursor: "pointer",
           }}
         >
-          Career Coach
+          {t("nav.career_coach")}
         </a>
         {isAdvisor && (
           <a
@@ -162,7 +220,7 @@ export default function AppHeader() {
               cursor: "pointer",
             }}
           >
-            Advisor
+            {t("nav.advisor")}
           </a>
         )}
         {isAdmin && (
@@ -179,7 +237,7 @@ export default function AppHeader() {
               cursor: "pointer",
             }}
           >
-            Admin Panel
+            {t("nav.admin_panel")}
           </a>
         )}
         <button
@@ -194,7 +252,7 @@ export default function AppHeader() {
             fontSize: "0.85rem",
           }}
         >
-          Log out
+          {t("nav.log_out")}
         </button>
       </div>
     </nav>
