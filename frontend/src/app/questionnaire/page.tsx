@@ -558,7 +558,7 @@ function QuestionnaireContent() {
             <div style={{
               background: "#f8fafc", borderRadius: "10px",
               padding: "1rem 1.25rem", margin: "1.25rem 0",
-              textAlign: "left", lineHeight: 1.75, fontSize: "0.875rem",
+              textAlign: "start", lineHeight: 1.75, fontSize: "0.875rem",
               color: "#475569",
             }}>
               <p>
