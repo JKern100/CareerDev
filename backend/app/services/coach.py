@@ -232,10 +232,19 @@ async def load_conversation_history(user_id: "UUID", db: AsyncSession, limit: in
     return [{"role": m.role, "content": m.content} for m in messages]
 
 
+LANGUAGE_NAMES = {
+    "en": "English",
+    "uk": "Ukrainian",
+    "es": "Spanish",
+    "ar": "Egyptian Arabic",
+}
+
+
 async def chat_with_coach(
     user_id: "UUID",
     user_message: str,
     db: AsyncSession,
+    language: str | None = None,
 ) -> str:
     """Send a message to the AI coach and get a response.
 
@@ -259,6 +268,10 @@ async def chat_with_coach(
     # Build context
     career_context = await load_user_career_context(user_id, db)
     system_prompt = COACH_SYSTEM_PROMPT.format(career_context=career_context)
+
+    # Add language instruction if not English
+    if language and language != "en" and language in LANGUAGE_NAMES:
+        system_prompt += f"\n\nIMPORTANT: Respond in {LANGUAGE_NAMES[language]}. The user's interface is set to {LANGUAGE_NAMES[language]}, so reply in that language."
 
     # Load conversation history
     history = await load_conversation_history(user_id, db)

@@ -82,6 +82,13 @@ def build_summary_prompt(answers: dict, user_name: str | None = None) -> str:
     # Extract user's name for personalization
     name_line = f"The user's name is {user_name}. Address them by name occasionally." if user_name else ""
 
+    # Extract language preference
+    lang_pref = "English"
+    q007 = answers.get("Q007")
+    if q007:
+        lang_pref = q007.get("value", "English")
+    lang_instruction = f"\n\nLANGUAGE: Write the entire report in {lang_pref}." if lang_pref != "English" else ""
+
     formatted_answers = _format_answers_for_prompt(answers)
 
     return f"""You are a career advisor writing a personalized summary report for someone transitioning out of cabin crew work.
@@ -89,7 +96,7 @@ def build_summary_prompt(answers: dict, user_name: str | None = None) -> str:
 {name_line}
 
 COMMUNICATION STYLE: {style_pref}
-{style_instruction}
+{style_instruction}{lang_instruction}
 
 Below are their questionnaire responses across all modules. Write a flowing narrative report (NOT tables or bullet points) that:
 

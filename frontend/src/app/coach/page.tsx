@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
   getMe,
   sendCoachMessage,
@@ -26,6 +27,7 @@ function tempId(suffix = "") {
 
 export default function CoachPage() {
   const router = useRouter();
+  const { lang } = useTranslation();
   const [messages, setMessages] = useState<CoachMessage[]>([]);
   const [goals, setGoals] = useState<CoachGoal[]>([]);
   const [input, setInput] = useState("");
@@ -88,7 +90,7 @@ export default function CoachPage() {
     setMessages((prev) => [...prev, tempUserMsg]);
 
     try {
-      const { reply } = await sendCoachMessage(text);
+      const { reply } = await sendCoachMessage(text, lang);
       setMessages((prev) => [
         ...prev,
         { id: tempId("a"), role: "assistant", content: reply, created_at: new Date().toISOString() },
