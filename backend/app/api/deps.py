@@ -36,6 +36,8 @@ async def get_current_user(
     user = result.scalar_one_or_none()
     if user is None:
         raise credentials_exception
+    # Tag user object with impersonation flag from JWT claim
+    user._impersonated = payload.get("imp", False)
     return user
 
 
@@ -53,6 +55,10 @@ async def require_premium(
     db: AsyncSession = Depends(get_db),
 ) -> User:
     """Dependency that requires an active paid subscription."""
+    # Admin impersonation bypasses premium check
+    if getattr(user, "_impersonated", False):
+        return user
+
     from app.models.payment import Subscription
     from app.services.payment import is_premium
 

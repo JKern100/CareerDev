@@ -598,7 +598,7 @@ async def impersonate_user(
     if not target:
         raise HTTPException(status_code=404, detail="User not found")
 
-    token = create_access_token(data={"sub": str(target.id)})
+    token = create_access_token(data={"sub": str(target.id), "imp": True})
     return {
         "access_token": token,
         "token_type": "bearer",

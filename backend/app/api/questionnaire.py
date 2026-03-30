@@ -148,7 +148,7 @@ async def get_next_core(
             select(Subscription).where(Subscription.user_id == user.id)
         )
         sub = sub_result.scalar_one_or_none()
-        if not is_premium(sub):
+        if not is_premium(sub) and not getattr(user, "_impersonated", False):
             return CoreScreenOut(
                 screen_id="upgrade_required",
                 screen_label="Upgrade to Pro",

@@ -144,6 +144,8 @@ async def me(
     result = await db.execute(select(Subscription).where(Subscription.user_id == user.id))
     sub = result.scalar_one_or_none()
 
+    impersonated = getattr(user, "_impersonated", False)
+
     return {
         "id": str(user.id),
         "email": user.email,
@@ -152,8 +154,8 @@ async def me(
         "questionnaire_completed": user.questionnaire_completed,
         "current_module": user.current_module,
         "can_regenerate_summary": user.can_regenerate_summary,
-        "plan": sub.plan if sub else "free",
-        "is_premium": _is_premium(sub),
+        "plan": "pro" if impersonated else (sub.plan if sub else "free"),
+        "is_premium": True if impersonated else _is_premium(sub),
     }
 
 
