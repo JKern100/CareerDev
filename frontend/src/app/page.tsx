@@ -85,148 +85,37 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* Hero */}
+      {/* Hero Banner */}
+      <section
+        style={{
+          position: "relative",
+          width: "100%",
+          maxWidth: "1200px",
+          margin: "0 auto",
+          padding: "0 1rem",
+        }}
+      >
+        <img
+          src="/hero-banner.png"
+          alt="CrewTransition.com — Built for flight attendants. Plan your career takeoff."
+          style={{
+            width: "100%",
+            height: "auto",
+            borderRadius: "16px",
+            display: "block",
+          }}
+        />
+      </section>
+
+      {/* CTA Buttons */}
       <section
         style={{
           textAlign: "center",
-          padding: "3rem 1rem 2.5rem",
+          padding: "2rem 1rem 2.5rem",
           maxWidth: "800px",
           margin: "0 auto",
         }}
       >
-        <div
-          style={{
-            display: "inline-block",
-            background: "rgba(37, 99, 235, 0.15)",
-            color: "#60a5fa",
-            padding: "0.4rem 1.25rem",
-            borderRadius: "20px",
-            fontSize: "0.8rem",
-            fontWeight: 600,
-            marginBottom: "1.5rem",
-            border: "1px solid rgba(37, 99, 235, 0.3)",
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-          }}
-        >
-          Built for flight attendants
-        </div>
-
-        {/* Brand logo text */}
-        <div style={{ marginBottom: "1.5rem" }}>
-          <span
-            style={{
-              fontFamily: "'Georgia', 'Times New Roman', serif",
-              fontSize: "clamp(2.5rem, 6vw, 4rem)",
-              fontWeight: 400,
-              fontStyle: "italic",
-              color: "#f1f5f9",
-            }}
-          >
-            Crew
-          </span>
-          <span
-            style={{
-              fontSize: "clamp(2.5rem, 6vw, 4rem)",
-              fontWeight: 700,
-              color: "#2563eb",
-            }}
-          >
-            Transition
-          </span>
-          <span
-            style={{
-              fontSize: "clamp(1.5rem, 3vw, 2rem)",
-              fontWeight: 400,
-              color: "#94a3b8",
-            }}
-          >
-            .com
-          </span>
-        </div>
-
-        <h1
-          style={{
-            fontSize: "clamp(1.75rem, 4.5vw, 3rem)",
-            fontWeight: 700,
-            lineHeight: 1.15,
-            marginBottom: "1.5rem",
-            letterSpacing: "0.02em",
-            textTransform: "uppercase",
-          }}
-        >
-          Plan your{" "}
-          <span
-            style={{
-              background: "linear-gradient(135deg, #38bdf8, #2563eb)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
-          >
-            career
-          </span>{" "}
-          takeoff.
-        </h1>
-
-        <p
-          style={{
-            fontSize: "1.15rem",
-            color: "#94a3b8",
-            maxWidth: "550px",
-            margin: "0 auto 2rem",
-            lineHeight: 1.7,
-          }}
-        >
-          AI-powered guidance, real career pathways,
-          and clear next steps — for life beyond the cabin.
-        </p>
-
-        {/* Feature pills */}
-        <div
-          style={{
-            display: "flex",
-            gap: "1.5rem",
-            justifyContent: "center",
-            flexWrap: "wrap",
-            marginBottom: "2.5rem",
-          }}
-        >
-          {[
-            { icon: "\u2728", label: "AI-powered guidance" },
-            { icon: "\uD83D\uDE80", label: "New career pathways" },
-            { icon: "\uD83D\uDCCA", label: "Compare salaries" },
-          ].map((item) => (
-            <div
-              key={item.label}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                color: "#cbd5e1",
-                fontSize: "0.9rem",
-                fontWeight: 500,
-              }}
-            >
-              <span
-                style={{
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "8px",
-                  background: "rgba(37, 99, 235, 0.15)",
-                  border: "1px solid rgba(37, 99, 235, 0.3)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "0.9rem",
-                }}
-              >
-                {item.icon}
-              </span>
-              {item.label}
-            </div>
-          ))}
-        </div>
-
         <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
           {isLoggedIn ? (
             <button

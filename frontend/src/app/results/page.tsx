@@ -11,9 +11,12 @@ import FlowerSpinner from "@/components/FlowerSpinner";
 import InstagramShareModal from "@/components/InstagramShareModal";
 import InstagramIcon from "@/components/InstagramIcon";
 import ResourcesSection from "@/components/ResourcesSection";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function ResultsPage() {
   const router = useRouter();
+  const { t } = useTranslation();
+  const p = (key: string) => t("pages.results." + key);
   const [report, setReport] = useState<CareerAnalysis | null>(null);
   const [pathways, setPathways] = useState<PathwayResult[]>([]);
   const [loading, setLoading] = useState(true);
@@ -99,7 +102,7 @@ export default function ResultsPage() {
         ) : (
           <div className="container" style={{ textAlign: "center", marginTop: "4rem" }}>
             <FlowerSpinner size={48} />
-            <h2 style={{ marginTop: "1rem" }}>Loading...</h2>
+            <h2 style={{ marginTop: "1rem" }}>{t("ui.loading_short")}</h2>
           </div>
         )}
       </>
@@ -116,15 +119,15 @@ export default function ResultsPage() {
           <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
             {isTierError ? (
               <button className="btn btn-primary" onClick={() => router.push("/questionnaire")}>
-                Continue Questionnaire
+                {p("continue_questionnaire")}
               </button>
             ) : (
               <button className="btn btn-outline" onClick={() => router.push("/questionnaire")}>
-                Back to Questionnaire
+                {p("back_to_questionnaire")}
               </button>
             )}
             <button className="btn btn-outline" onClick={() => router.push("/dashboard")}>
-              Back to Dashboard
+              {p("back_to_dashboard")}
             </button>
           </div>
         </div>
@@ -148,7 +151,7 @@ export default function ResultsPage() {
             {" · "}Model: {report?.model_name ?? "—"}
           </p>
           <p className="text-sm text-muted" style={{ textAlign: "center" }}>
-            This report is informational only. For visa/labor decisions, consult official sources in your country.
+            {p("disclaimer")}
           </p>
           <div style={{ display: "flex", justifyContent: "center", gap: "12px", marginTop: "1rem", flexWrap: "wrap" }}>
             {pathways.length > 0 && (
@@ -172,7 +175,7 @@ export default function ResultsPage() {
                 onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
               >
                 <InstagramIcon size={18} color="#fff" />
-                Share on Instagram
+                {p("share_instagram")}
               </button>
             )}
             {report?.can_regenerate && (
@@ -181,7 +184,7 @@ export default function ResultsPage() {
                 onClick={handleRegenerate}
                 disabled={generating}
               >
-                {generating ? "Regenerating..." : "Regenerate Report"}
+                {generating ? t("ui.regenerating") : p("regenerate")}
               </button>
             )}
           </div>
@@ -203,9 +206,9 @@ export default function ResultsPage() {
           gap: "1rem",
         }}>
           <div>
-            <h3 style={{ fontSize: "1rem", marginBottom: "0.25rem" }}>Ready to take action?</h3>
+            <h3 style={{ fontSize: "1rem", marginBottom: "0.25rem" }}>{p("take_action")}</h3>
             <p className="text-muted" style={{ fontSize: "0.875rem" }}>
-              Turn this analysis into a step-by-step action plan — track credentials, first steps, and weekly priorities.
+              {p("take_action_text")}
             </p>
           </div>
           <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
@@ -214,14 +217,14 @@ export default function ResultsPage() {
               style={{ padding: "0.6rem 1.5rem", fontSize: "0.9rem", whiteSpace: "nowrap" }}
               onClick={() => router.push("/plan")}
             >
-              View Action Plan
+              {p("view_plan")}
             </button>
             <button
               className="btn btn-outline"
               style={{ padding: "0.6rem 1.5rem", fontSize: "0.9rem", borderColor: "rgba(234, 179, 8, 0.4)", color: "#eab308", whiteSpace: "nowrap" }}
               onClick={() => router.push("/coach")}
             >
-              Ask Coach
+              {p("ask_coach")}
             </button>
           </div>
         </div>
@@ -235,18 +238,16 @@ export default function ResultsPage() {
             borderRadius: "12px",
             textAlign: "center",
           }}>
-            <h3 style={{ fontSize: "1rem", marginBottom: "0.5rem" }}>Want a more detailed analysis?</h3>
+            <h3 style={{ fontSize: "1rem", marginBottom: "0.5rem" }}>{p("want_detailed")}</h3>
             <p className="text-muted" style={{ fontSize: "0.875rem", marginBottom: "1rem", lineHeight: 1.6 }}>
-              Your report is based on partial questionnaire data. Answering more questions will make
-              the recommendations more personalised and the analysis more confident.
-              Your progress is saved &mdash; pick up where you left off.
+              {p("partial_data_text")}
             </p>
             <button
               className="btn btn-outline"
               style={{ padding: "0.6rem 1.5rem", fontSize: "0.9rem", borderColor: "var(--primary)", color: "var(--primary)" }}
               onClick={() => router.push("/questionnaire")}
             >
-              Continue Questionnaire
+              {p("continue_questionnaire")}
             </button>
           </div>
         )}

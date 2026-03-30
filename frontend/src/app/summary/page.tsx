@@ -7,9 +7,12 @@ import AppHeader from "@/components/AppHeader";
 import FlowerSpinner from "@/components/FlowerSpinner";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function SummaryPage() {
   const router = useRouter();
+  const { t } = useTranslation();
+  const p = (key: string) => t("pages.summary." + key);
   const [summary, setSummary] = useState<SummaryReport | null>(null);
   const [canRegenerate, setCanRegenerate] = useState(false);
   const [tier2Complete, setTier2Complete] = useState(false);
@@ -101,12 +104,10 @@ export default function SummaryPage() {
           <FlowerSpinner size={56} />
         </div>
         <h2 style={{ marginBottom: "1rem" }}>
-          {generating ? "Writing your personal summary..." : "Loading..."}
+          {generating ? p("generating_title") : t("ui.loading_short")}
         </h2>
         <p className="text-muted">
-          {generating
-            ? "We're crafting a narrative based on everything you shared. This may take a moment."
-            : "Retrieving your summary report..."}
+          {generating ? p("generating_text") : p("loading_text")}
         </p>
       </div>
     );
@@ -117,7 +118,7 @@ export default function SummaryPage() {
       <div className="container" style={{ textAlign: "center", marginTop: "4rem" }}>
         <p style={{ color: "var(--error)" }}>{error}</p>
         <button className="btn btn-outline mt-2" onClick={() => router.push("/questionnaire")}>
-          Back to Questionnaire
+          {p("back_to_questionnaire")}
         </button>
       </div>
     );
@@ -133,9 +134,9 @@ export default function SummaryPage() {
         {APP_VERSION}
       </p>
 
-      <h1 style={{ marginBottom: "0.25rem" }}>Your Career Profile Summary</h1>
+      <h1 style={{ marginBottom: "0.25rem" }}>{p("title")}</h1>
       <p className="text-muted" style={{ marginBottom: "2rem" }}>
-        A personalized reflection based on your questionnaire responses.
+        {p("subtitle")}
       </p>
 
       {/* Render the summary as formatted markdown */}
@@ -166,13 +167,10 @@ export default function SummaryPage() {
         {tier2Complete ? (
           <>
             <h3 style={{ marginBottom: "0.5rem" }}>
-              {hasAnalysisReport ? "Your Career Analysis" : "Ready for the next step?"}
+              {hasAnalysisReport ? p("your_analysis") : p("next_step")}
             </h3>
             <p className="text-muted" style={{ marginBottom: "1.5rem" }}>
-              {hasAnalysisReport
-                ? "Your career analysis report is ready with pathway rankings, salary data, and credential recommendations."
-                : "Your Career Analysis Report will score and rank specific career pathways based on your profile, with salary data, credential recommendations, and a realistic transition timeline."
-              }
+              {hasAnalysisReport ? p("analysis_ready_text") : p("analysis_generate_text")}
             </p>
             <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
               <button
@@ -180,7 +178,7 @@ export default function SummaryPage() {
                 style={{ fontSize: "1rem", padding: "0.75rem 2rem" }}
                 onClick={() => router.push("/results")}
               >
-                {hasAnalysisReport ? "View Career Analysis" : "Generate Career Analysis"}
+                {hasAnalysisReport ? p("view_analysis") : p("generate_analysis")}
               </button>
               {!questionnaireComplete && (
                 <button
@@ -188,29 +186,28 @@ export default function SummaryPage() {
                   style={{ fontSize: "0.9rem", padding: "0.75rem 1.5rem" }}
                   onClick={() => router.push("/questionnaire")}
                 >
-                  Continue Questionnaire
+                  {p("continue_questionnaire")}
                 </button>
               )}
             </div>
             {!questionnaireComplete && (
               <p className="text-muted" style={{ fontSize: "0.8rem", marginTop: "1rem" }}>
-                Answering more questions will make your analysis richer and more personalised.
+                {p("more_questions_note")}
               </p>
             )}
           </>
         ) : (
           <>
-            <h3 style={{ marginBottom: "0.5rem" }}>Want more accurate results?</h3>
+            <h3 style={{ marginBottom: "0.5rem" }}>{p("want_more_accurate")}</h3>
             <p className="text-muted" style={{ marginBottom: "1.5rem" }}>
-              Answer ~20 more questions (~5 min) to fully score all your skills, preferences, and constraints.
-              This unlocks the full Career Analysis Report with pathway rankings, salary data, and a transition plan.
+              {p("sharpen_text")}
             </p>
             <button
               className="btn btn-primary"
               style={{ fontSize: "1rem", padding: "0.75rem 2rem" }}
               onClick={() => router.push("/questionnaire?start=tier2")}
             >
-              Sharpen My Results (~5 min)
+              {p("sharpen_cta")}
             </button>
           </>
         )}
@@ -228,24 +225,22 @@ export default function SummaryPage() {
       >
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
           <span style={{ fontSize: "0.75rem", background: "var(--primary)", color: "white", padding: "0.2rem 0.6rem", borderRadius: "20px", fontWeight: 600 }}>
-            Recommended
+            {p("recommended")}
           </span>
         </div>
-        <h3 style={{ marginBottom: "0.5rem" }}>1-on-1 Human Career Review</h3>
+        <h3 style={{ marginBottom: "0.5rem" }}>{p("human_review_title")}</h3>
         <p className="text-muted" style={{ marginBottom: "1rem", lineHeight: 1.6 }}>
-          Get a personalized 45-minute session with a career advisor who will walk
-          through your profile summary, validate the AI analysis, and help you
-          build an actionable next-steps plan tailored to your situation.
+          {p("human_review_text")}
         </p>
         <button
           className="btn btn-outline"
           style={{ fontSize: "0.95rem", padding: "0.65rem 1.5rem" }}
           onClick={() => router.push("/book")}
         >
-          Book a review session
+          {p("book_session")}
         </button>
         <p className="text-sm text-muted" style={{ marginTop: "0.75rem" }}>
-          Available worldwide. Sessions conducted via Zoom.
+          {p("sessions_note")}
         </p>
       </div>
 
@@ -265,9 +260,9 @@ export default function SummaryPage() {
         }}
       >
         <div>
-          <h3 style={{ marginBottom: "0.25rem" }}>Want to explore this further?</h3>
+          <h3 style={{ marginBottom: "0.25rem" }}>{p("explore_further")}</h3>
           <p className="text-muted" style={{ fontSize: "0.875rem" }}>
-            Chat with your AI Career Coach — ask questions about your profile, get interview advice, or plan your next move.
+            {p("explore_coach_text")}
           </p>
         </div>
         <button
@@ -275,7 +270,7 @@ export default function SummaryPage() {
           style={{ padding: "0.6rem 1.5rem", fontSize: "0.9rem", borderColor: "rgba(234, 179, 8, 0.4)", color: "#eab308", whiteSpace: "nowrap" }}
           onClick={() => router.push("/coach")}
         >
-          Talk to Coach
+          {p("talk_to_coach")}
         </button>
       </div>
 
@@ -285,7 +280,7 @@ export default function SummaryPage() {
         style={{ display: "flex", justifyContent: "space-between", padding: "1rem 0" }}
       >
         <button className="btn btn-outline" onClick={() => router.push("/questionnaire")}>
-          Back to Questionnaire
+          {p("back_to_questionnaire")}
         </button>
         {canRegenerate && (
           <button
@@ -293,7 +288,7 @@ export default function SummaryPage() {
             onClick={handleRegenerate}
             disabled={generating}
           >
-            {generating ? "Regenerating..." : "Regenerate Summary"}
+            {generating ? t("ui.regenerating") : p("regenerate")}
           </button>
         )}
       </div>
@@ -303,8 +298,8 @@ export default function SummaryPage() {
         style={{ textAlign: "center", marginTop: "1rem", marginBottom: "2rem" }}
       >
         {summary.generated_with_ai
-          ? "This summary was generated using AI based on your responses."
-          : "This summary was generated from your responses."}
+          ? p("generated_ai")
+          : p("generated_plain")}
       </p>
     </div>
     </>

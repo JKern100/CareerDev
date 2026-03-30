@@ -27,7 +27,8 @@ function tempId(suffix = "") {
 
 export default function CoachPage() {
   const router = useRouter();
-  const { lang } = useTranslation();
+  const { lang, t } = useTranslation();
+  const p = (key: string) => t("pages.coach." + key);
   const [messages, setMessages] = useState<CoachMessage[]>([]);
   const [goals, setGoals] = useState<CoachGoal[]>([]);
   const [input, setInput] = useState("");
@@ -99,7 +100,7 @@ export default function CoachPage() {
       // Remove the optimistic user message on failure
       setMessages((prev) => prev.filter((m) => m.id !== userMsgId));
       setInput(text); // Restore their input
-      setError("Failed to send message. Please try again.");
+      setError(p("error_send"));
     } finally {
       setSending(false);
       inputRef.current?.focus();
@@ -114,12 +115,12 @@ export default function CoachPage() {
   }
 
   async function handleClearHistory() {
-    if (!confirm("Clear all chat history? This cannot be undone.")) return;
+    if (!confirm(p("clear_confirm"))) return;
     try {
       await clearCoachHistory();
       setMessages([]);
     } catch {
-      setError("Failed to clear history. Please try again.");
+      setError(p("error_send"));
     }
   }
 
@@ -132,7 +133,7 @@ export default function CoachPage() {
       setNewGoalTitle("");
       setNewGoalDate("");
     } catch {
-      setError("Failed to create goal.");
+      setError(p("error_send"));
     } finally {
       setGoalBusy(false);
     }
@@ -145,7 +146,7 @@ export default function CoachPage() {
       const updated = await updateCoachGoal(goal.id, { completed: !goal.completed });
       setGoals((prev) => prev.map((g) => (g.id === goal.id ? updated : g)));
     } catch {
-      setError("Failed to update goal.");
+      setError(p("error_send"));
     } finally {
       setGoalBusy(false);
     }
@@ -158,7 +159,7 @@ export default function CoachPage() {
       await deleteCoachGoal(goalId);
       setGoals((prev) => prev.filter((g) => g.id !== goalId));
     } catch {
-      setError("Failed to delete goal.");
+      setError(p("error_send"));
     } finally {
       setGoalBusy(false);
     }
@@ -185,15 +186,15 @@ export default function CoachPage() {
         {/* Header */}
         <div style={styles.header}>
           <div>
-            <h1 style={styles.title}>Career Coach</h1>
+            <h1 style={styles.title}>{p("title")}</h1>
             <p style={styles.subtitle}>
-              Your AI career advisor — powered by your questionnaire data and career analysis.
+              {p("subtitle")}
             </p>
           </div>
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <button
               onClick={() => setShowGoals(!showGoals)}
-              aria-label={showGoals ? "Hide goals panel" : "Show goals panel"}
+              aria-label={showGoals ? p("hide_goals") : p("show_goals")}
               style={{
                 ...styles.headerBtn,
                 background: showGoals ? "rgba(234, 179, 8, 0.15)" : "rgba(255,255,255,0.05)",
@@ -201,11 +202,11 @@ export default function CoachPage() {
                 color: showGoals ? "#facc15" : "#94a3b8",
               }}
             >
-              Goals ({activeGoals.length})
+              {p("goals")} ({activeGoals.length})
             </button>
             {messages.length > 0 && (
               <button onClick={handleClearHistory} style={styles.headerBtn}>
-                Clear Chat
+                {p("clear")}
               </button>
             )}
           </div>
@@ -216,7 +217,7 @@ export default function CoachPage() {
           <div style={styles.errorBanner}>
             <span>{error}</span>
             <button onClick={() => setError("")} style={styles.errorDismiss}>
-              Dismiss
+              {t("ui.dismiss")}
             </button>
           </div>
         )}
@@ -225,7 +226,7 @@ export default function CoachPage() {
           {/* Goals Panel */}
           {showGoals && (
             <div style={styles.goalsPanel}>
-              <h3 style={styles.goalsPanelTitle}>Career Goals</h3>
+              <h3 style={styles.goalsPanelTitle}>{p("goals_title")}</h3>
 
               {/* Add goal form */}
               <div style={styles.addGoalForm}>
@@ -233,7 +234,7 @@ export default function CoachPage() {
                   type="text"
                   value={newGoalTitle}
                   onChange={(e) => setNewGoalTitle(e.target.value)}
-                  placeholder="Add a new goal..."
+                  placeholder={p("goal_placeholder")}
                   style={styles.goalInput}
                   onKeyDown={(e) => e.key === "Enter" && handleAddGoal()}
                   aria-label="New goal title"
@@ -253,14 +254,14 @@ export default function CoachPage() {
                     opacity: goalBusy || !newGoalTitle.trim() ? 0.5 : 1,
                   }}
                 >
-                  {goalBusy ? "..." : "Add"}
+                  {goalBusy ? "..." : t("ui.add")}
                 </button>
               </div>
 
               {/* Active goals */}
               {activeGoals.length === 0 && completedGoals.length === 0 && (
                 <p style={styles.noGoals}>
-                  No goals yet. Set career goals to track your progress.
+                  {p("no_goals")}
                 </p>
               )}
               {activeGoals.map((goal) => (
@@ -291,7 +292,7 @@ export default function CoachPage() {
               {/* Completed goals */}
               {completedGoals.length > 0 && (
                 <>
-                  <p style={styles.completedLabel}>Completed ({completedGoals.length})</p>
+                  <p style={styles.completedLabel}>{t("pages.coach.completed_goals", { count: String(completedGoals.length) })}</p>
                   {completedGoals.map((goal) => (
                     <div key={goal.id} style={{ ...styles.goalItem, opacity: 0.5 }}>
                       <button
@@ -323,18 +324,16 @@ export default function CoachPage() {
             <div style={styles.messagesContainer}>
               {messages.length === 0 && !sending && (
                 <div style={styles.emptyState}>
-                  <h2 style={styles.emptyTitle}>Start a conversation</h2>
+                  <h2 style={styles.emptyTitle}>{p("empty_title")}</h2>
                   <p style={styles.emptyText}>
-                    Ask me anything about your career transition — interview prep,
-                    resume tips, salary negotiation, skill gaps, or just talk through
-                    your next move.
+                    {p("empty_text")}
                   </p>
                   <div style={styles.suggestionsGrid}>
                     {[
-                      "What are my strongest transferable skills?",
-                      "Help me prepare for a product manager interview",
-                      "Review my career analysis — what should I focus on first?",
-                      "What salary should I target in my top pathway?",
+                      p("suggestion_1"),
+                      p("suggestion_2"),
+                      p("suggestion_3"),
+                      p("suggestion_4"),
                     ].map((suggestion) => (
                       <button
                         key={suggestion}
@@ -366,7 +365,7 @@ export default function CoachPage() {
                     }}
                   >
                     <div style={styles.messageRole}>
-                      {msg.role === "user" ? "You" : "Coach"}
+                      {msg.role === "user" ? p("you") : p("coach")}
                     </div>
                     {msg.role === "assistant" ? (
                       <div style={styles.markdownContent}>
@@ -384,10 +383,10 @@ export default function CoachPage() {
               {sending && (
                 <div style={styles.messageRow}>
                   <div style={{ ...styles.messageBubble, ...styles.assistantBubble }}>
-                    <div style={styles.messageRole}>Coach</div>
+                    <div style={styles.messageRole}>{p("coach")}</div>
                     <div style={styles.typing}>
                       <FlowerSpinner size={20} />
-                      <span style={{ marginLeft: "0.5rem", color: "#64748b" }}>Thinking...</span>
+                      <span style={{ marginLeft: "0.5rem", color: "#64748b" }}>{p("thinking")}</span>
                     </div>
                   </div>
                 </div>
@@ -403,7 +402,7 @@ export default function CoachPage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask your career coach anything..."
+                placeholder={p("placeholder")}
                 aria-label="Message to career coach"
                 style={styles.textarea}
                 rows={1}
@@ -417,7 +416,7 @@ export default function CoachPage() {
                   opacity: !input.trim() || sending ? 0.4 : 1,
                 }}
               >
-                Send
+                {p("send")}
               </button>
             </div>
           </div>
