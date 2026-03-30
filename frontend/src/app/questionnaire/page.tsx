@@ -38,7 +38,8 @@ function QuestionnaireContent() {
   const startParam = searchParams.get("start"); // ?start=tier2
 
   // Phase: "tier1" → "tier1_done" → "tier2" → "tier2_done" → "tier3" → "complete"
-  const [phase, setPhase] = useState<"tier1" | "tier1_done" | "tier2" | "tier2_done" | "tier3" | "complete">(
+  // "upgrade_required" shown when free user tries to access Tier 2/3
+  const [phase, setPhase] = useState<"tier1" | "tier1_done" | "tier2" | "tier2_done" | "tier3" | "complete" | "upgrade_required">(
     startParam === "tier2" ? "tier2" : "tier1"
   );
   const phaseRef = useRef(phase);
@@ -102,6 +103,13 @@ function QuestionnaireContent() {
       // Tier 2 done but not yet in tier3 — show tier2_done milestone
       if (screen.tier1_complete && screen.tier2_complete && !screen.tier3_complete && screen.questions.length === 0 && currentPhase !== "tier3") {
         setPhase("tier2_done");
+        setLoading(false);
+        return;
+      }
+
+      // Subscription gate — backend returns this when free user hits Tier 2/3
+      if (screen.screen_id === "upgrade_required") {
+        setPhase("upgrade_required" as typeof phase);
         setLoading(false);
         return;
       }
@@ -312,6 +320,57 @@ function QuestionnaireContent() {
           <p style={{ color: "var(--muted)", fontSize: "0.8rem", marginTop: "1.5rem" }}>
             The &quot;Sharpen&quot; questions cover all scoring-relevant skills, preferences, and constraints.
             Your career rankings will be fully accurate after this step.
+          </p>
+        </div>
+      </>
+    );
+  }
+
+  // ── Render: Upgrade required (free user hit Tier 2/3 paywall) ──
+  if (phase === "upgrade_required") {
+    return (
+      <>
+        <AppHeader />
+        <div className="container" style={{ textAlign: "center", marginTop: "4rem", maxWidth: "560px" }}>
+          <div style={{
+            width: "64px", height: "64px", borderRadius: "50%",
+            background: "#dbeafe",
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            fontSize: "1.75rem", marginBottom: "1.5rem",
+          }}>
+            &#127775;
+          </div>
+          <h1 style={{ fontSize: "1.5rem", marginBottom: "0.75rem" }}>
+            Your initial results are ready!
+          </h1>
+          <p style={{ color: "var(--muted)", lineHeight: 1.7, fontSize: "0.95rem", marginBottom: "1.5rem" }}>
+            You&apos;ve completed Stage 1 and your top career pathways are matched.
+            Upgrade to Pro to continue with Stages 2 &amp; 3, unlock your full career analysis,
+            AI career coach, and action plan.
+          </p>
+          <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
+            <button
+              className="btn btn-primary"
+              onClick={() => router.push("/summary")}
+              style={{ padding: "0.75rem 2rem" }}
+            >
+              See Free Results
+            </button>
+            <button
+              className="btn btn-outline"
+              onClick={() => router.push("/pricing")}
+              style={{
+                padding: "0.75rem 2rem",
+                borderColor: "#3b82f6",
+                color: "#3b82f6",
+                fontWeight: 600,
+              }}
+            >
+              Upgrade to Pro — $9/mo
+            </button>
+          </div>
+          <p style={{ color: "var(--muted)", fontSize: "0.8rem", marginTop: "1.5rem" }}>
+            Pro unlocks Stages 2 &amp; 3, full career analysis, AI coach, and action plan.
           </p>
         </div>
       </>
