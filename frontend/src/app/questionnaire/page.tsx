@@ -247,7 +247,7 @@ function QuestionnaireContent() {
     return (
       <div className="container" style={{ textAlign: "center", marginTop: "4rem" }}>
         <FlowerSpinner size={48} />
-        <p className="text-muted" style={{ marginTop: "1rem" }}>Loading questions...</p>
+        <p className="text-muted" style={{ marginTop: "1rem" }}>{t("ui.loading")}</p>
       </div>
     );
   }
@@ -259,10 +259,10 @@ function QuestionnaireContent() {
         <p style={{ color: "#ef4444", marginBottom: "1rem" }}>{error}</p>
         <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
           <button className="btn btn-primary" onClick={() => loadCoreScreen()}>
-            Try Again
+            {t("ui.try_again")}
           </button>
           <button className="btn btn-outline" onClick={() => router.push("/dashboard")}>
-            Back to Dashboard
+            {t("ui.back_to_dashboard")}
           </button>
         </div>
       </div>
@@ -329,12 +329,10 @@ function QuestionnaireContent() {
             &#127775;
           </div>
           <h1 style={{ fontSize: "1.5rem", marginBottom: "0.75rem" }}>
-            Your initial results are ready!
+            {t("ui.upgrade_title")}
           </h1>
           <p style={{ color: "var(--muted)", lineHeight: 1.7, fontSize: "0.95rem", marginBottom: "1.5rem" }}>
-            You&apos;ve completed Stage 1 and your top career pathways are matched.
-            Upgrade to Pro to continue with Stages 2 &amp; 3, unlock your full career analysis,
-            AI career coach, and action plan.
+            {t("ui.upgrade_body")}
           </p>
           <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
             <button
@@ -342,7 +340,7 @@ function QuestionnaireContent() {
               onClick={() => router.push("/summary")}
               style={{ padding: "0.75rem 2rem" }}
             >
-              See Free Results
+              {t("ui.upgrade_see_free")}
             </button>
             <button
               className="btn btn-outline"
@@ -354,11 +352,11 @@ function QuestionnaireContent() {
                 fontWeight: 600,
               }}
             >
-              Upgrade to Pro — $9/mo
+              {t("ui.upgrade_cta")}
             </button>
           </div>
           <p style={{ color: "var(--muted)", fontSize: "0.8rem", marginTop: "1.5rem" }}>
-            Pro unlocks Stages 2 &amp; 3, full career analysis, AI coach, and action plan.
+            {t("ui.upgrade_note")}
           </p>
         </div>
       </>
@@ -507,20 +505,20 @@ function QuestionnaireContent() {
         }}>
           ✓
         </div>
-        <h1 style={{ fontSize: "1.5rem", marginBottom: "0.75rem" }}>Questionnaire Complete</h1>
+        <h1 style={{ fontSize: "1.5rem", marginBottom: "0.75rem" }}>{t("ui.questionnaire_complete_title")}</h1>
         <p className="text-muted mb-3" style={{ lineHeight: 1.7 }}>
-          You&apos;ve answered all the questions. Your AI career coach is now fully briefed on your profile and ready to help.
+          {t("ui.questionnaire_complete_body")}
         </p>
         <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
           <button className="btn btn-primary" onClick={handleComplete} style={{ padding: "0.75rem 2rem" }}>
-            View My Profile Summary
+            {t("ui.view_profile_summary")}
           </button>
           <button
             className="btn btn-outline"
             style={{ padding: "0.75rem 1.5rem", borderColor: "rgba(234, 179, 8, 0.4)", color: "#eab308" }}
             onClick={() => router.push("/coach")}
           >
-            Talk to Coach
+            {t("ui.talk_to_coach")}
           </button>
         </div>
       </div>
