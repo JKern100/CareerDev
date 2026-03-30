@@ -14,14 +14,9 @@ import {
 import QuestionField from "@/components/QuestionField";
 import AppHeader from "@/components/AppHeader";
 import FlowerSpinner from "@/components/FlowerSpinner";
-import ukTranslations from "@/translations/uk.json";
+import { useTranslation } from "@/hooks/useTranslation";
 
 type AnswerMap = Record<string, { value: string | number | string[]; confidence: number }>;
-
-// Available translation packs
-const TRANSLATIONS: Record<string, typeof ukTranslations> = {
-  uk: ukTranslations,
-};
 
 
 export default function QuestionnairePage() {
@@ -45,19 +40,12 @@ function QuestionnaireContent() {
   const phaseRef = useRef(phase);
   phaseRef.current = phase; // always current — avoids stale closures
 
-  // Language
-  const [lang, setLang] = useState<string>(() => {
-    if (typeof window !== "undefined") return localStorage.getItem("questionnaire_lang") || "en";
-    return "en";
-  });
-  const tr = lang !== "en" ? TRANSLATIONS[lang] : null;
-  const ui = tr?.ui as Record<string, string> | undefined;
-  const qTr = tr?.questions as Record<string, { prompt?: string; options?: Record<string, string>; help_text?: string }> | undefined;
+  // Language — uses the global useTranslation hook
+  const { t, getQuestionTranslation, lang } = useTranslation();
+  // Backward-compat aliases for the template
+  const ui = lang !== "en" ? { step_of: t("ui.step_of"), quick_match: t("ui.quick_match"), sharpening: t("ui.sharpening"), tier1_done_title: t("ui.tier1_done_title"), tier1_done_body: t("ui.tier1_done_body"), tier1_done_see: t("ui.tier1_done_see"), tier1_done_sharpen: t("ui.tier1_done_sharpen") } as Record<string, string> : undefined;
+  const qTr = lang !== "en" ? new Proxy({} as Record<string, { prompt?: string; options?: Record<string, string>; help_text?: string }>, { get: (_, qid: string) => getQuestionTranslation(qid) }) : undefined;
 
-  function toggleLang(newLang: string) {
-    setLang(newLang);
-    localStorage.setItem("questionnaire_lang", newLang);
-  }
 
   // Core phase state
   const [coreScreen, setCoreScreen] = useState<CoreScreen | null>(null);
@@ -600,11 +588,7 @@ function QuestionnaireContent() {
       )}
       <AppHeader />
       <div className="container">
-        <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "0.75rem", marginBottom: "0.25rem" }}>
-          <div style={{ display: "flex", gap: "0.25rem", fontSize: "0.75rem" }}>
-            <button onClick={() => toggleLang("en")} style={{ background: lang === "en" ? "var(--primary)" : "transparent", color: lang === "en" ? "white" : "var(--muted)", border: "1px solid var(--border)", borderRadius: "4px", padding: "0.15rem 0.5rem", cursor: "pointer", fontSize: "0.75rem" }}>EN</button>
-            <button onClick={() => toggleLang("uk")} style={{ background: lang === "uk" ? "var(--primary)" : "transparent", color: lang === "uk" ? "white" : "var(--muted)", border: "1px solid var(--border)", borderRadius: "4px", padding: "0.15rem 0.5rem", cursor: "pointer", fontSize: "0.75rem" }}>UA</button>
-          </div>
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0.25rem" }}>
           <p className="text-sm text-muted">{APP_VERSION}</p>
         </div>
 
@@ -612,7 +596,7 @@ function QuestionnaireContent() {
         <div className="flex justify-between items-center mb-1">
           <div>
             <p className="text-sm text-muted">
-              {ui?.step_of?.replace("{n}", String(coreScreen.screen_number)).replace("{total}", String(coreScreen.total_screens)) || `Step ${coreScreen.screen_number} of ${coreScreen.total_screens}`}: {phase === "tier1" ? (ui?.quick_match || "Quick Match") : phase === "tier2" ? (ui?.sharpening || "Sharpening Results") : "Personalising Your Report"}
+              {t("ui.step_of", { n: String(coreScreen.screen_number), total: String(coreScreen.total_screens) })}: {phase === "tier1" ? t("ui.quick_match") : phase === "tier2" ? t("ui.sharpening") : t("ui.personalising")}
             </p>
           </div>
           <p className="text-sm text-muted">

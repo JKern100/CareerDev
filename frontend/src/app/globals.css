@@ -388,3 +388,46 @@ h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.25rem; }
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* ── RTL Support ───────────────────────────────────── */
+[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+[dir="rtl"] .markdown-report th {
+  text-align: right;
+}
+
+[dir="rtl"] .markdown-report ul,
+[dir="rtl"] .markdown-report ol {
+  padding-left: 0;
+  padding-right: 1.5rem;
+}
+
+[dir="rtl"] .progress-bar-fill {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+/* Flip flex layouts for RTL */
+[dir="rtl"] .flex.justify-between {
+  flex-direction: row-reverse;
+}
+
+/* Ensure buttons and inputs work in RTL */
+[dir="rtl"] input,
+[dir="rtl"] textarea,
+[dir="rtl"] select {
+  text-align: right;
+}
+
+[dir="rtl"] input[type="number"] {
+  text-align: left; /* Numbers stay LTR */
+}
+
+/* RTL animation fix */
+[dir="rtl"] @keyframes stepSlideIn {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
