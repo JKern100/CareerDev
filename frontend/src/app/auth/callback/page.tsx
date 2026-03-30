@@ -26,6 +26,7 @@ function AuthCallbackContent() {
 
   useEffect(() => {
     const code = searchParams.get("code");
+    const state = searchParams.get("state");
     if (!code) {
       setError("No authorization code received from Google.");
       return;
@@ -36,7 +37,7 @@ function AuthCallbackContent() {
         const res = await fetch(`${API_BASE}/auth/google/callback`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code }),
+          body: JSON.stringify({ code, state }),
         });
 
         if (!res.ok) {

@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import String, Boolean, Integer, DateTime, Text, ForeignKey, JSON, Uuid, Date, Time
+from sqlalchemy import String, Boolean, Integer, DateTime, Text, ForeignKey, JSON, Uuid, Date, Time, Index
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -41,10 +41,13 @@ class AvailabilitySlot(Base):
 class Booking(Base):
     """A booked session between a user and an advisor."""
     __tablename__ = "bookings"
+    __table_args__ = (
+        Index("ix_bookings_advisor_date", "advisor_id", "date"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"), nullable=False)
-    advisor_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("advisors.id"), nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"), nullable=False, index=True)
+    advisor_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("advisors.id"), nullable=False, index=True)
     date: Mapped[str] = mapped_column(String(10), nullable=False)  # "2026-03-15"
     start_time: Mapped[str] = mapped_column(String(5), nullable=False)  # "10:00"
     end_time: Mapped[str] = mapped_column(String(5), nullable=False)  # "11:00"

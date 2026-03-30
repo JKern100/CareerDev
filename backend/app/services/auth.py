@@ -67,3 +67,22 @@ def decode_email_verification_token(token: str) -> str | None:
         return payload.get("sub")
     except jwt.JWTError:
         return None
+
+
+def create_oauth_state_token() -> str:
+    """Create a short-lived signed token to prevent CSRF in OAuth flows."""
+    expire = datetime.utcnow() + timedelta(minutes=10)
+    return jwt.encode(
+        {"purpose": "oauth_state", "exp": expire},
+        settings.SECRET_KEY,
+        algorithm=settings.ALGORITHM,
+    )
+
+
+def verify_oauth_state_token(token: str) -> bool:
+    """Return True if the state token is valid and not expired."""
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        return payload.get("purpose") == "oauth_state"
+    except jwt.JWTError:
+        return False

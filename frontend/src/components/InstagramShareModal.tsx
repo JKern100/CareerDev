@@ -5,6 +5,7 @@ import { PathwayResult } from "@/lib/api";
 import ShareCard from "./ShareCard";
 import InstagramIcon from "./InstagramIcon";
 import { shareToInstagram, downloadShareImage, isMobileDevice } from "@/utils/shareImage";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface InstagramShareModalProps {
   pathways: PathwayResult[];
@@ -13,12 +14,14 @@ interface InstagramShareModalProps {
 }
 
 export default function InstagramShareModal({ pathways, open, onClose }: InstagramShareModalProps) {
+  const { t } = useTranslation();
+  const p = (key: string) => t(`pages.instagram_share.${key}`);
   const [format, setFormat] = useState<"story" | "post">("story");
   const [sharing, setSharing] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const CAPTION = `Just discovered my top career paths beyond flying! ✈️\n\nCreated by crew for crew — find yours at career-dev.vercel.app\n\n#cabincrew #flightattendant #careerchange #crewlife #aviation #cabincrewlife #newchapter`;
+  const CAPTION = p("default_caption");
 
   const handleCopyCaption = useCallback(async () => {
     try {
@@ -132,9 +135,9 @@ export default function InstagramShareModal({ pathways, open, onClose }: Instagr
             <InstagramIcon size={20} color="#fff" />
           </div>
           <div>
-            <div style={{ fontWeight: 600, fontSize: "16px" }}>Share on Instagram</div>
+            <div style={{ fontWeight: 600, fontSize: "16px" }}>{p("title")}</div>
             <div style={{ fontSize: "13px", color: "var(--muted)" }}>
-              Share your career matches with friends
+              {p("subtitle")}
             </div>
           </div>
         </div>
@@ -168,7 +171,7 @@ export default function InstagramShareModal({ pathways, open, onClose }: Instagr
                 transition: "all 0.15s",
               }}
             >
-              {f === "story" ? "Story (9:16)" : "Post (1:1)"}
+              {f === "story" ? p("story") : p("post")}
             </button>
           ))}
         </div>
@@ -210,7 +213,7 @@ export default function InstagramShareModal({ pathways, open, onClose }: Instagr
             }}
           >
             <InstagramIcon size={18} color="#fff" />
-            {sharing ? "Preparing..." : mobile ? "Share to Instagram" : "Download & Share"}
+            {sharing ? p("preparing") : mobile ? p("share_mobile") : p("download_share")}
           </button>
 
           <button
@@ -219,7 +222,7 @@ export default function InstagramShareModal({ pathways, open, onClose }: Instagr
             className="btn btn-outline"
             style={{ width: "100%" }}
           >
-            {downloaded ? "Downloaded!" : "Download Image"}
+            {downloaded ? p("downloaded") : p("download_image")}
           </button>
 
           {/* Caption section */}
@@ -233,7 +236,7 @@ export default function InstagramShareModal({ pathways, open, onClose }: Instagr
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-              <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--fg)" }}>Caption for your post</span>
+              <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--fg)" }}>{p("caption_label")}</span>
               <button
                 onClick={handleCopyCaption}
                 style={{
@@ -248,7 +251,7 @@ export default function InstagramShareModal({ pathways, open, onClose }: Instagr
                   transition: "background 0.15s",
                 }}
               >
-                {copied ? "Copied!" : "Copy"}
+                {copied ? p("copied") : p("copy")}
               </button>
             </div>
             <p
@@ -266,7 +269,7 @@ export default function InstagramShareModal({ pathways, open, onClose }: Instagr
 
           {!mobile && (
             <p style={{ fontSize: "12px", color: "var(--muted)", textAlign: "center", marginTop: "4px" }}>
-              Save the image, copy the caption, then share on Instagram from your phone
+              {p("save_hint")}
             </p>
           )}
         </div>

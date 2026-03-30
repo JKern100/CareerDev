@@ -3,8 +3,11 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { verifyEmail } from "@/lib/api";
+import { useTranslation } from "@/hooks/useTranslation";
 
 function VerifyEmailContent() {
+  const { t } = useTranslation();
+  const p = (key: string) => t(`pages.verify_email.${key}`);
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
@@ -13,7 +16,7 @@ function VerifyEmailContent() {
   useEffect(() => {
     if (!token) {
       setStatus("error");
-      setMessage("No verification token provided.");
+      setMessage(p("no_token"));
       return;
     }
 
@@ -24,8 +27,9 @@ function VerifyEmailContent() {
       })
       .catch((err) => {
         setStatus("error");
-        setMessage(err instanceof Error ? err.message : "Verification failed");
+        setMessage(err instanceof Error ? err.message : p("failed_title"));
       });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   return (
@@ -42,34 +46,34 @@ function VerifyEmailContent() {
 
       {status === "loading" && (
         <>
-          <h1>Verifying your email...</h1>
-          <p className="text-muted mt-2">Just a moment.</p>
+          <h1>{p("verifying")}</h1>
+          <p className="text-muted mt-2">{p("verifying_text")}</p>
         </>
       )}
 
       {status === "success" && (
         <>
-          <h1>Email verified</h1>
+          <h1>{p("success_title")}</h1>
           <p className="text-muted" style={{ marginTop: "0.5rem", lineHeight: 1.7 }}>
-            {message}. You&apos;re all set — sign in to start your career assessment.
+            {message}. {p("success_text")}
           </p>
           <a href="/login" className="btn btn-primary" style={{ marginTop: "1.5rem", display: "inline-flex" }}>
-            Sign in
+            {p("sign_in")}
           </a>
         </>
       )}
 
       {status === "error" && (
         <>
-          <h1>Verification failed</h1>
+          <h1>{p("failed_title")}</h1>
           <p className="text-muted" style={{ marginTop: "0.5rem", lineHeight: 1.7 }}>
             {message}
           </p>
           <p className="text-sm text-muted mt-3">
-            The link may have expired.{" "}
-            <a href="/register" style={{ color: "var(--primary)" }}>Register again</a>
-            {" "}or{" "}
-            <a href="/login" style={{ color: "var(--primary)" }}>sign in</a> if you&apos;ve already verified.
+            {p("failed_text")}{" "}
+            <a href="/register" style={{ color: "var(--primary)" }}>{p("register_again")}</a>
+            {" "}{p("or")}{" "}
+            <a href="/login" style={{ color: "var(--primary)" }}>{p("sign_in_if_verified")}</a> {p("already_verified")}
           </p>
         </>
       )}
@@ -78,12 +82,14 @@ function VerifyEmailContent() {
 }
 
 export default function VerifyEmailPage() {
+  const { t } = useTranslation();
+  const p = (key: string) => t(`pages.verify_email.${key}`);
   return (
     <Suspense fallback={
       <div className="container" style={{ maxWidth: "460px", textAlign: "center" }}>
         <div style={{ marginTop: "3rem" }}>
-          <h1>Verifying your email...</h1>
-          <p className="text-muted mt-2">Just a moment.</p>
+          <h1>{p("verifying")}</h1>
+          <p className="text-muted mt-2">{p("verifying_text")}</p>
         </div>
       </div>
     }>

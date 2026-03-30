@@ -1,12 +1,15 @@
 "use client";
 
 import { PathwayResult } from "@/lib/api";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface ResourcesSectionProps {
   pathways: PathwayResult[];
 }
 
 export default function ResourcesSection({ pathways }: ResourcesSectionProps) {
+  const { t } = useTranslation();
+  const p = (key: string) => t(`pages.resources.${key}`);
   if (pathways.length === 0) return null;
 
   // Collect credentials from all matched pathways (already sorted by score)
@@ -34,15 +37,15 @@ export default function ResourcesSection({ pathways }: ResourcesSectionProps) {
 
   return (
     <div className="card" style={{ marginTop: "1rem", padding: "1.25rem" }}>
-      <h3 style={{ margin: "0 0 0.25rem", fontSize: "1.1rem" }}>Resources &amp; References</h3>
+      <h3 style={{ margin: "0 0 0.25rem", fontSize: "1.1rem" }}>{p("title")}</h3>
       <p className="text-sm text-muted" style={{ marginBottom: "1.25rem" }}>
-        Credentials and sources relevant to your top career matches
+        {p("subtitle")}
       </p>
 
       {/* Credentials grouped by pathway */}
       {credentials.length > 0 && (
         <div style={{ marginBottom: "1.25rem" }}>
-          <h4 style={{ fontSize: "0.95rem", margin: "0 0 0.75rem" }}>Recommended Credentials</h4>
+          <h4 style={{ fontSize: "0.95rem", margin: "0 0 0.75rem" }}>{p("credentials")}</h4>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             {credentials.map((c) => (
               <a
@@ -92,7 +95,7 @@ export default function ResourcesSection({ pathways }: ResourcesSectionProps) {
       {/* Salary data sources */}
       {salarySources.size > 0 && (
         <div>
-          <h4 style={{ fontSize: "0.95rem", margin: "0 0 0.5rem" }}>Salary Data Sources</h4>
+          <h4 style={{ fontSize: "0.95rem", margin: "0 0 0.5rem" }}>{p("salary_sources")}</h4>
           <ul style={{ margin: 0, paddingLeft: "1.25rem" }}>
             {[...salarySources].map((src) => (
               <li key={src} className="text-sm text-muted" style={{ marginBottom: "4px" }}>

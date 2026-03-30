@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import { forgotPassword } from "@/lib/api";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function ForgotPasswordPage() {
+  const { t } = useTranslation();
+  const p = (key: string) => t(`pages.forgot_password.${key}`);
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [emailNotSent, setEmailNotSent] = useState(false);
@@ -31,20 +34,19 @@ export default function ForgotPasswordPage() {
     return (
       <div className="container" style={{ maxWidth: "400px", textAlign: "center" }}>
         <h1 style={{ marginTop: "2rem" }}>
-          {emailNotSent ? "Password reset unavailable" : "Check your email"}
+          {emailNotSent ? p("unavailable") : p("check_email")}
         </h1>
         {emailNotSent ? (
           <p className="text-muted" style={{ marginTop: "1rem", lineHeight: 1.6 }}>
-            Email delivery is not configured yet. Please contact the site administrator to reset your password.
+            {p("unavailable_text")}
           </p>
         ) : (
           <>
             <p className="text-muted" style={{ marginTop: "1rem", lineHeight: 1.6 }}>
-              If an account exists for <strong>{email}</strong>, we&apos;ve sent a password
-              reset link. It expires in 30 minutes.
+              <span dangerouslySetInnerHTML={{ __html: t("pages.forgot_password.check_email_text", { email: email.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;") }) }} />
             </p>
             <p className="text-sm text-muted mt-2">
-              Didn&apos;t get it? Check your spam folder or{" "}
+              {p("didnt_get_it")}{" "}
               <button
                 onClick={() => { setSubmitted(false); setEmailNotSent(false); }}
                 style={{
@@ -56,14 +58,14 @@ export default function ForgotPasswordPage() {
                   fontSize: "inherit",
                 }}
               >
-                try again
+                {p("try_again")}
               </button>
               .
             </p>
           </>
         )}
         <a href="/login" className="btn btn-outline mt-2" style={{ display: "inline-block" }}>
-          Back to Sign In
+          {p("back_to_signin")}
         </a>
       </div>
     );
@@ -71,31 +73,31 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="container" style={{ maxWidth: "400px" }}>
-      <h1 style={{ textAlign: "center", marginTop: "2rem" }}>Forgot password?</h1>
+      <h1 style={{ textAlign: "center", marginTop: "2rem" }}>{p("title")}</h1>
       <p className="text-muted text-sm mb-3" style={{ textAlign: "center" }}>
-        Enter your email and we&apos;ll send you a reset link.
+        {p("subtitle")}
       </p>
 
       <form onSubmit={handleSubmit} className="card flex flex-col gap-1">
         <div>
-          <label className="text-sm">Email</label>
+          <label className="text-sm">{p("email")}</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
+            placeholder={p("placeholder")}
             required
           />
         </div>
         {error && <p style={{ color: "var(--error)", fontSize: "0.875rem" }}>{error}</p>}
         <button className="btn btn-primary mt-2" disabled={loading} type="submit">
-          {loading ? "Sending..." : "Send reset link"}
+          {loading ? p("sending") : p("submit")}
         </button>
       </form>
 
       <p className="text-sm text-muted mt-2" style={{ textAlign: "center" }}>
-        Remember your password?{" "}
-        <a href="/login" style={{ color: "var(--primary)" }}>Sign in</a>
+        {p("remember")}{" "}
+        <a href="/login" style={{ color: "var(--primary)" }}>{p("sign_in")}</a>
       </p>
     </div>
   );

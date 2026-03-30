@@ -2,21 +2,20 @@
 
 import { useEffect, useState, useRef } from "react";
 import FlowerSpinner from "./FlowerSpinner";
+import { useTranslation } from "@/hooks/useTranslation";
 
-const ANALYSIS_STEPS = [
-  { icon: "📋", label: "Parsing questionnaire responses", duration: 3000 },
-  { icon: "🧠", label: "Analyzing career profile & experience", duration: 4000 },
-  { icon: "🔄", label: "Mapping transferable skills", duration: 3500 },
-  { icon: "🌍", label: "Scanning global labour market data", duration: 3000 },
-  { icon: "🎯", label: "Matching career pathways", duration: 4500 },
-  { icon: "📊", label: "Calculating compatibility scores", duration: 3000 },
-  { icon: "🎓", label: "Evaluating credential requirements", duration: 2500 },
-  { icon: "💰", label: "Assessing financial feasibility", duration: 3000 },
-  { icon: "🗺️", label: "Building personalised action plans", duration: 4000 },
-  { icon: "📝", label: "Compiling your career report", duration: 5000 },
-];
+const STEP_ICONS = ["📋", "🧠", "🔄", "🌍", "🎯", "📊", "🎓", "💰", "🗺️", "📝"];
+const STEP_DURATIONS = [3000, 4000, 3500, 3000, 4500, 3000, 2500, 3000, 4000, 5000];
 
 export default function AnalysisLoader() {
+  const { t } = useTranslation();
+  const p = (key: string) => t(`pages.analysis_loader.${key}`);
+
+  const ANALYSIS_STEPS = STEP_ICONS.map((icon, i) => ({
+    icon,
+    label: p(`step_${i + 1}`),
+    duration: STEP_DURATIONS[i],
+  }));
   const [activeStep, setActiveStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [elapsedMs, setElapsedMs] = useState(0);
@@ -70,9 +69,9 @@ export default function AnalysisLoader() {
         <div style={{ marginBottom: "0.75rem" }}>
           <FlowerSpinner size={56} />
         </div>
-        <h2 className="analysis-loader-title">Generating Your Career Report</h2>
+        <h2 className="analysis-loader-title">{p("title")}</h2>
         <p className="text-muted text-sm" style={{ marginTop: "0.25rem" }}>
-          Deep analysis in progress — {elapsedSec}s elapsed
+          {t("pages.analysis_loader.elapsed", { seconds: String(elapsedSec) })}
         </p>
       </div>
 
@@ -124,7 +123,7 @@ export default function AnalysisLoader() {
       </div>
 
       <p className="text-muted text-sm" style={{ textAlign: "center", marginTop: "1.5rem" }}>
-        Sit tight — our AI is cross-referencing your profile against market data, credential frameworks, and career pathways.
+        {p("description")}
       </p>
     </div>
   );

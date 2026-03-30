@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import String, Integer, Boolean, Float, DateTime, Text, ForeignKey, JSON, Uuid
+from sqlalchemy import String, Integer, Boolean, Float, DateTime, Text, ForeignKey, JSON, Uuid, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -25,9 +25,12 @@ class Question(Base):
 
 class Answer(Base):
     __tablename__ = "answers"
+    __table_args__ = (
+        Index("ix_answers_user_question", "user_id", "question_id"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"), nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"), nullable=False, index=True)
     question_id: Mapped[str] = mapped_column(String(10), ForeignKey("questions.id"), nullable=False)
     value_json: Mapped[dict] = mapped_column(JSON, nullable=False)  # the actual answer
     confidence: Mapped[int] = mapped_column(Integer, default=100)  # 0-100
