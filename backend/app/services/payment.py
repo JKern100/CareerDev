@@ -49,8 +49,8 @@ def verify_webhook_signature(payload: bytes, signature: str) -> bool:
     """Verify LemonSqueezy webhook HMAC-SHA256 signature."""
     secret = settings.LEMONSQUEEZY_WEBHOOK_SECRET
     if not secret:
-        logger.warning("LEMONSQUEEZY_WEBHOOK_SECRET not set — skipping verification")
-        return True
+        logger.warning("LEMONSQUEEZY_WEBHOOK_SECRET not set — rejecting webhook")
+        return False
     expected = hmac.new(secret.encode(), payload, hashlib.sha256).hexdigest()
     return hmac.compare_digest(expected, signature)
 
