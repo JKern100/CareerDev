@@ -12,25 +12,13 @@ import {
 } from "@/lib/api";
 import AppHeader from "@/components/AppHeader";
 import FlowerSpinner from "@/components/FlowerSpinner";
-
-const STATUS_LABELS: Record<string, string> = {
-  todo: "To Do",
-  in_progress: "In Progress",
-  done: "Done",
-  skipped: "Skipped",
-};
+import { useTranslation } from "@/hooks/useTranslation";
 
 const STATUS_COLORS: Record<string, string> = {
   todo: "#64748b",
   in_progress: "#eab308",
   done: "#22c55e",
   skipped: "#475569",
-};
-
-const CATEGORY_LABELS: Record<string, string> = {
-  this_week: "This Week",
-  first_step: "First Steps (30-90 Days)",
-  credential: "Credentials to Pursue",
 };
 
 function nextStatus(current: string): string {
@@ -41,6 +29,19 @@ function nextStatus(current: string): string {
 
 export default function PlanPage() {
   const router = useRouter();
+  const { t } = useTranslation();
+  const p = (key: string) => t("pages.plan." + key);
+  const STATUS_LABELS: Record<string, string> = {
+    todo: p("status_todo"),
+    in_progress: p("status_in_progress"),
+    done: p("status_done"),
+    skipped: p("status_skipped"),
+  };
+  const CATEGORY_LABELS: Record<string, string> = {
+    this_week: p("cat_this_week"),
+    first_step: p("cat_first_step"),
+    credential: p("cat_credential"),
+  };
   const [plan, setPlan] = useState<ActionPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -159,18 +160,16 @@ export default function PlanPage() {
         <AppHeader />
         <div style={styles.container}>
           <div style={styles.emptyState}>
-            <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.75rem" }}>Your Action Plan</h1>
+            <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.75rem" }}>{p("title")}</h1>
             <p style={{ color: "#94a3b8", marginBottom: "1.5rem", maxWidth: "500px", lineHeight: 1.6 }}>
-              {error
-                ? error
-                : "Generate a structured action plan from your career analysis — concrete steps, credentials to pursue, and weekly priorities you can track."}
+              {error ? error : p("generate_desc")}
             </p>
             <button
               onClick={handleGenerate}
               disabled={generating}
               style={{ ...styles.primaryBtn, opacity: generating ? 0.6 : 1 }}
             >
-              {generating ? "Generating..." : "Generate My Action Plan"}
+              {generating ? p("generating") : p("generate")}
             </button>
             {generating && (
               <div style={{ marginTop: "1rem" }}>
@@ -202,18 +201,18 @@ export default function PlanPage() {
         {/* Header */}
         <div style={styles.header}>
           <div>
-            <h1 style={styles.title}>Your Action Plan</h1>
+            <h1 style={styles.title}>{p("title")}</h1>
             <p style={styles.subtitle}>
-              {plan.done} of {plan.total} steps completed
-              {plan.in_progress > 0 && ` · ${plan.in_progress} in progress`}
+              {t("pages.plan.completed_of", { done: String(plan.done), total: String(plan.total) })}
+              {plan.in_progress > 0 && ` · ${plan.in_progress} ${p("status_in_progress").toLowerCase()}`}
             </p>
           </div>
           <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
             <button onClick={() => router.push("/coach")} style={styles.headerBtn}>
-              Ask Coach
+              {p("ask_coach")}
             </button>
             <button onClick={handleGenerate} disabled={generating} style={styles.headerBtn}>
-              {generating ? "..." : "Regenerate"}
+              {generating ? "..." : p("regenerate")}
             </button>
           </div>
         </div>
@@ -221,7 +220,7 @@ export default function PlanPage() {
         {error && (
           <div style={styles.errorBanner}>
             <span>{error}</span>
-            <button onClick={() => setError("")} style={styles.errorDismiss}>Dismiss</button>
+            <button onClick={() => setError("")} style={styles.errorDismiss}>{t("ui.dismiss")}</button>
           </div>
         )}
 
@@ -232,7 +231,7 @@ export default function PlanPage() {
             <div style={{ ...styles.progressFill, width: `${activePct - progressPct}%`, background: "#eab308", left: `${progressPct}%` }} />
           </div>
           <div style={styles.progressStats}>
-            <span style={{ color: "#22c55e", fontWeight: 600 }}>{progressPct}% complete</span>
+            <span style={{ color: "#22c55e", fontWeight: 600 }}>{t("pages.plan.percent_complete", { pct: String(progressPct) })}</span>
             <div style={{ display: "flex", gap: "1rem" }}>
               {(["all", "todo", "in_progress", "done", "skipped"] as const).map((f) => (
                 <button
@@ -244,7 +243,7 @@ export default function PlanPage() {
                     borderColor: filter === f ? "#475569" : "transparent",
                   }}
                 >
-                  {f === "all" ? "All" : STATUS_LABELS[f]}
+                  {f === "all" ? p("filter_all") : STATUS_LABELS[f]}
                 </button>
               ))}
             </div>
@@ -360,7 +359,7 @@ export default function PlanPage() {
                           <div style={styles.notesArea}>
                             <textarea
                               defaultValue={step.notes || ""}
-                              placeholder="Add notes..."
+                              placeholder={p("add_notes")}
                               style={styles.notesInput}
                               onBlur={async (e) => {
                                 const val = e.target.value.trim();

@@ -40,9 +40,9 @@ export default function RegisterPage() {
     setResendMsg("");
     try {
       await resendVerification(email);
-      setResendMsg("Verification email sent! Check your inbox.");
+      setResendMsg(p("verification_resent"));
     } catch {
-      setResendMsg("Failed to resend. Please try again.");
+      setResendMsg(p("resend_failed"));
     } finally {
       setResending(false);
     }
@@ -61,12 +61,12 @@ export default function RegisterPage() {
               &#10003;
             </div>
           </div>
-          <h1>Account created</h1>
+          <h1>{p("account_created")}</h1>
           <p className="text-muted" style={{ marginTop: "0.5rem", lineHeight: 1.7 }}>
-            Your account is ready. Sign in to start your career assessment.
+            {p("account_ready")}
           </p>
           <a href="/login" className="btn btn-primary" style={{ marginTop: "1.5rem", display: "inline-flex" }}>
-            Sign in
+            {p("sign_in")}
           </a>
         </div>
       );
@@ -83,11 +83,9 @@ export default function RegisterPage() {
             &#9993;
           </div>
         </div>
-        <h1>Check your email</h1>
+        <h1>{p("check_email")}</h1>
         <p className="text-muted" style={{ marginTop: "0.5rem", lineHeight: 1.7 }}>
-          We&apos;ve sent a verification link to <strong style={{ color: "var(--fg)" }}>{email}</strong>.
-          <br />
-          Click the link in the email to activate your account, then sign in to get started.
+          <span dangerouslySetInnerHTML={{ __html: t("pages.register.verification_sent", { email }) }} />
         </p>
         <div style={{ marginTop: "1.5rem" }}>
           <button
@@ -96,7 +94,7 @@ export default function RegisterPage() {
             disabled={resending}
             style={{ fontSize: "0.85rem" }}
           >
-            {resending ? "Sending..." : "Resend verification email"}
+            {resending ? p("sending") : p("resend_verification")}
           </button>
         </div>
         {resendMsg && (
@@ -105,7 +103,7 @@ export default function RegisterPage() {
           </p>
         )}
         <p className="text-sm text-muted mt-3">
-          <a href="/login" style={{ color: "var(--primary)" }}>Go to sign in</a>
+          <a href="/login" style={{ color: "var(--primary)" }}>{p("go_to_signin")}</a>
         </p>
       </div>
     );
@@ -117,7 +115,7 @@ export default function RegisterPage() {
         <FlowerSpinner size={48} />
         <h1 style={{ marginTop: "0.75rem" }}>{p("title")}</h1>
         <p className="text-muted text-sm mb-3">
-          {p("subtitle") !== "pages.register.subtitle" ? p("subtitle") : "Start your career transition journey"}
+          {p("subtitle")}
         </p>
       </div>
 
