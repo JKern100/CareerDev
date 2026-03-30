@@ -17,6 +17,11 @@ from app.models.questionnaire import Answer, Question
 from app.models.report import Report, AnalysisReport
 from app.models.pathway import PathwayScore
 from app.models.activity import ActivityEvent
+from app.models.coach import CoachMessage, CoachGoal
+from app.models.action_plan import ActionStep
+from app.models.payment import Payment, Subscription
+from app.models.promo import PromoRedemption
+from app.models.advisor import Advisor, AdvisorSession
 from app.api.deps import get_admin_user
 from app.services.auth import hash_password, create_access_token
 from app.config import settings
@@ -294,12 +299,20 @@ async def delete_user(
     if str(u.id) == str(admin.id):
         raise HTTPException(status_code=400, detail="Cannot delete yourself")
 
-    # Delete related data
+    # Delete all related data (order matters for FK constraints)
+    await db.execute(delete(CoachMessage).where(CoachMessage.user_id == u.id))
+    await db.execute(delete(CoachGoal).where(CoachGoal.user_id == u.id))
+    await db.execute(delete(ActionStep).where(ActionStep.user_id == u.id))
     await db.execute(delete(Answer).where(Answer.user_id == u.id))
     await db.execute(delete(Report).where(Report.user_id == u.id))
     await db.execute(delete(AnalysisReport).where(AnalysisReport.user_id == u.id))
     await db.execute(delete(PathwayScore).where(PathwayScore.user_id == u.id))
     await db.execute(delete(ActivityEvent).where(ActivityEvent.user_id == u.id))
+    await db.execute(delete(Payment).where(Payment.user_id == u.id))
+    await db.execute(delete(Subscription).where(Subscription.user_id == u.id))
+    await db.execute(delete(PromoRedemption).where(PromoRedemption.user_id == u.id))
+    await db.execute(delete(AdvisorSession).where(AdvisorSession.user_id == u.id))
+    await db.execute(delete(Advisor).where(Advisor.user_id == u.id))
     await db.delete(u)
     await db.commit()
     return {"detail": "User deleted"}
