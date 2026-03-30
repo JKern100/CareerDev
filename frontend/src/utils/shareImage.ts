@@ -145,7 +145,7 @@ export async function renderShareCard(
   ctx.textAlign = "center";
   ctx.fillStyle = ACCENT_LIGHT;
   ctx.font = `700 ${isStory ? 48 : 40}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-  ctx.fillText("CareerDev", W / 2, y + 40);
+  ctx.fillText("CrewTransition", W / 2, y + 40);
   y += isStory ? 56 : 48;
 
   // ── Tagline ──
@@ -353,7 +353,7 @@ export async function shareToInstagram(pathways: PathwayResult[], format: "story
   if (navigator.share && navigator.canShare?.({ files: [file] })) {
     await navigator.share({
       files: [file],
-      title: "My CareerDev Results",
+      title: "My CrewTransition Results",
       text: "Just discovered my top career paths beyond flying! Created by crew for crew \u2708\uFE0F Check yours at career-dev.vercel.app",
     });
     return true;

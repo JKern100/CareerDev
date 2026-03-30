@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { APP_VERSION } from "@/lib/api";
 
 export const metadata: Metadata = {
-  title: "CareerDev — Flight Crew Career Transition",
-  description: "AI-powered career advice for flight crew",
+  title: "CrewTransition — Plan Your Career Takeoff",
+  description: "AI-powered guidance, real career pathways, and clear next steps — for life beyond the cabin.",
 };
 
 export default function RootLayout({

@@ -184,8 +184,8 @@ export default function DashboardPage() {
       {/* Header */}
       <nav style={styles.nav}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <img src="/logo.svg" alt="CareerDev" width={36} height={36} />
-          <span style={{ fontWeight: 600, fontSize: "1.1rem" }}>CareerDev</span>
+          <img src="/logo.svg" alt="CrewTransition" width={36} height={36} />
+          <span style={{ fontWeight: 600, fontSize: "1.1rem" }}>Crew<span style={{ color: "#2563eb", fontWeight: 700 }}>Transition</span></span>
         </div>
         <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
           <a href="/" style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.9rem" }}>
