@@ -199,7 +199,7 @@ export default function Home() {
                 display: "block",
                 margin: "0 auto",
                 borderRadius: "16px",
-                border: "1px solid rgba(255,255,255,0.1)",
+                border: "none",
                 boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
               }}
             />
