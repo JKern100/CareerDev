@@ -275,6 +275,116 @@
         "Sales": "Ventas"
       },
       "help_text": "Selecciona todas las áreas que te interesan. Analizaremos tu ajuste y viabilidad para cada una."
+    },
+    "Q027": {
+      "prompt": "Orientación al servicio público",
+      "help_text": "Califica tu nivel: 1 = básico; 5 = experto."
+    },
+    "Q029": {
+      "prompt": "Escucha activa y empatía",
+      "help_text": "Califica tu nivel: 1 = básico; 5 = experto. Clave para roles de coaching y gestión de personas."
+    },
+    "Q030": {
+      "prompt": "Resolución de conflictos/negociación",
+      "help_text": "Califica tu nivel: 1 = básico; 5 = experto. Valioso en HR y gestión de stakeholders."
+    },
+    "Q033": {
+      "prompt": "Coordinación de equipos y briefings",
+      "help_text": "Califica tu nivel: 1 = básico; 5 = experto. Importante para gestión de proyectos."
+    },
+    "Q035": {
+      "prompt": "Documentación/redacción de informes",
+      "help_text": "Califica tu nivel: 1 = básico; 5 = experto. Relevante para roles de cumplimiento y administrativos."
+    },
+    "Q036": {
+      "prompt": "Planificación operativa (tiempos, flujos, prioridades)",
+      "help_text": "Califica tu nivel: 1 = básico; 5 = experto. Habilidad clave para operaciones."
+    },
+    "Q031": {
+      "prompt": "Cumplimiento y evaluación de estándares",
+      "help_text": "Califica tu nivel: 1 = básico; 5 = experto. Corresponde a roles de control de calidad."
+    },
+    "Q037": {
+      "prompt": "Manejo de datos (hojas de cálculo, checklists, seguimiento)",
+      "help_text": "Califica tu nivel: 1 = básico; 5 = experto. Incluso habilidades básicas abren puertas."
+    },
+    "Q050": {
+      "prompt": "Preferencia por trabajo en equipo vs independiente",
+      "help_text": "1 = prefiero trabajar solo; 5 = prefiero colaboración en equipo."
+    },
+    "Q051": {
+      "prompt": "Preferencia por interacción pública vs trabajo interno",
+      "help_text": "1 = prefiero trabajo detrás de escena; 5 = prefiero roles públicos."
+    },
+    "Q053": {
+      "prompt": "Tolerancia a la ambigüedad",
+      "help_text": "1 = necesito reglas claras y estructura; 5 = cómodo con la incertidumbre."
+    },
+    "Q061": {
+      "prompt": "¿Cuál es tu estatus actual de autorización laboral en tu país de residencia?",
+      "options": {
+        "Employer-sponsored visa": "Visa patrocinada por empleador",
+        "Permanent residency": "Residencia permanente",
+        "Citizen": "Ciudadano/a",
+        "Family/spouse visa": "Visa familiar/cónyuge",
+        "Self-sponsored visa": "Visa autopatrocinada",
+        "Student visa": "Visa de estudiante",
+        "Not sure": "No estoy seguro/a"
+      },
+      "help_text": "Esto determina si cambiar de empleador o industria es sencillo o requiere planificación de visa."
+    },
+    "Q062": {
+      "prompt": "¿Necesitarás patrocinio de empleador para tu próximo rol?",
+      "options": {"Yes": "Sí", "No": "No", "Not sure": "No estoy seguro/a"},
+      "help_text": "Los requisitos de patrocinio reducen las opciones realistas de empleadores e industrias."
+    },
+    "Q063": {
+      "prompt": "¿Estás dispuesto/a a cambiar de empleador en tu país actual?",
+      "options": {"Yes": "Sí", "No": "No", "Maybe": "Tal vez"},
+      "help_text": "Algunas personas prefieren hacer la transición dentro de su grupo de aerolínea primero."
+    },
+    "Q064": {
+      "prompt": "Período de aviso en tu contrato actual (días)",
+      "help_text": "Tu período de aviso afecta el cronograma de cualquier plan de transición."
+    },
+    "Q065": {
+      "prompt": "Colchón de ahorros (meses)",
+      "help_text": "¿Cuántos meses podrías mantenerte sin ingresos? Esto determina si una pausa para estudiar es viable."
+    },
+    "Q066": {
+      "prompt": "Ingreso mínimo mensual necesario (en tu moneda elegida)",
+      "help_text": "El mínimo para cubrir gastos esenciales. Este es tu piso financiero."
+    },
+    "Q018": {
+      "prompt": "Disfrute: resolución de conflictos/desescalación",
+      "help_text": "1 = no disfruto nada; 5 = me encanta. Disfrutar esto sugiere roles en HR o gestión de personas."
+    },
+    "Q020": {
+      "prompt": "Disfrute: cumplimiento estricto/checklists",
+      "help_text": "1 = no disfruto nada; 5 = me encanta. Disfrutar la estructura corresponde a roles de QA y auditoría."
+    },
+    "Q049": {
+      "prompt": "Horario preferido",
+      "options": {
+        "Monday-Friday": "Lunes a viernes",
+        "Shift work": "Trabajo por turnos",
+        "Flexible": "Flexible"
+      },
+      "help_text": "Después de trabajar por turnos, esto suele ser una preferencia fuerte."
+    },
+    "Q056": {
+      "prompt": "Deseo de tener proyectos propios (0=bajo; 10=alto)",
+      "help_text": "Alto deseo corresponde a rutas emprendedoras y de gestión de proyectos."
+    },
+    "Q070": {
+      "prompt": "Disposición a pausar ingresos para estudiar",
+      "options": {
+        "No": "No",
+        "Up to 1 month": "Hasta 1 mes",
+        "Up to 3 months": "Hasta 3 meses",
+        "6+ months": "6+ meses"
+      },
+      "help_text": "Algunas rutas profesionales requieren tiempo de estudio dedicado."
     }
   }
 }
