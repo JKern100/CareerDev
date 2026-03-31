@@ -49,6 +49,8 @@ export default function PlanPage() {
   const [filter, setFilter] = useState<string>("all");
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
 
+  const [needsUpgrade, setNeedsUpgrade] = useState(false);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) { router.push("/login"); return; }
@@ -58,8 +60,11 @@ export default function PlanPage() {
         await getMe();
         const data = await getActionPlan();
         if (data.total > 0) setPlan(data);
-      } catch {
-        // No plan yet — that's fine
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "";
+        if (msg.includes("paid plan") || msg.includes("pricing")) {
+          setNeedsUpgrade(true);
+        }
       } finally {
         setLoading(false);
       }
@@ -149,6 +154,43 @@ export default function PlanPage() {
       <div style={styles.page}>
         <AppHeader />
         <div style={styles.center}><FlowerSpinner size={48} /></div>
+      </div>
+    );
+  }
+
+  // Needs upgrade — show centered upgrade CTA
+  if (needsUpgrade) {
+    return (
+      <div style={styles.page}>
+        <AppHeader />
+        <div style={{ ...styles.container, textAlign: "center", paddingTop: "4rem" }}>
+          <div style={{
+            width: "64px", height: "64px", borderRadius: "50%",
+            background: "linear-gradient(135deg, rgba(37,99,235,0.15), rgba(139,92,246,0.15))",
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            fontSize: "1.75rem", marginBottom: "1.5rem",
+          }}>
+            &#128274;
+          </div>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.75rem" }}>{p("title")}</h1>
+          <p style={{ color: "#94a3b8", maxWidth: "460px", margin: "0 auto 1.5rem", lineHeight: 1.7 }}>
+            Your action plan turns your career analysis into concrete next steps. Upgrade to Pro to unlock this feature along with the AI career coach and full career analysis.
+          </p>
+          <button
+            onClick={() => router.push("/pricing")}
+            style={styles.primaryBtn}
+          >
+            Upgrade to Pro
+          </button>
+          <div style={{ marginTop: "1rem" }}>
+            <button
+              onClick={() => router.push("/dashboard")}
+              style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", fontSize: "0.85rem", textDecoration: "underline" }}
+            >
+              Back to dashboard
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

@@ -45,6 +45,8 @@ export default function CoachPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  const [needsUpgrade, setNeedsUpgrade] = useState(false);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -54,7 +56,12 @@ export default function CoachPage() {
 
     async function load() {
       try {
-        await getMe();
+        const me = await getMe();
+        if (!me.is_premium && me.role !== "admin" && me.role !== "auditor") {
+          setNeedsUpgrade(true);
+          setLoading(false);
+          return;
+        }
         const [historyResult, goalsResult, quotaResult] = await Promise.allSettled([
           getCoachHistory(),
           getCoachGoals(),
@@ -182,6 +189,48 @@ export default function CoachPage() {
         <AppHeader />
         <div style={styles.center}>
           <FlowerSpinner size={48} />
+        </div>
+      </div>
+    );
+  }
+
+  if (needsUpgrade) {
+    return (
+      <div style={styles.page}>
+        <AppHeader />
+        <div style={{ maxWidth: "500px", margin: "0 auto", textAlign: "center", paddingTop: "4rem", padding: "4rem 1rem 0" }}>
+          <div style={{
+            width: "64px", height: "64px", borderRadius: "50%",
+            background: "linear-gradient(135deg, rgba(234,179,8,0.15), rgba(234,179,8,0.05))",
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            fontSize: "1.75rem", marginBottom: "1.5rem",
+          }}>
+            &#128274;
+          </div>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.75rem", color: "#f1f5f9" }}>
+            {p("title")}
+          </h1>
+          <p style={{ color: "#94a3b8", maxWidth: "460px", margin: "0 auto 1.5rem", lineHeight: 1.7 }}>
+            Your AI career coach helps you explore options, set goals, and stay on track with your career transition. Upgrade to Pro to start chatting.
+          </p>
+          <button
+            onClick={() => router.push("/pricing")}
+            style={{
+              background: "#2563eb", border: "none", color: "white",
+              padding: "0.75rem 2rem", borderRadius: "10px", cursor: "pointer",
+              fontSize: "1rem", fontWeight: 600,
+            }}
+          >
+            Upgrade to Pro
+          </button>
+          <div style={{ marginTop: "1rem" }}>
+            <button
+              onClick={() => router.push("/dashboard")}
+              style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", fontSize: "0.85rem", textDecoration: "underline" }}
+            >
+              Back to dashboard
+            </button>
+          </div>
         </div>
       </div>
     );
