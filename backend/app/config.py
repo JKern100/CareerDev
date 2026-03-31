@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     APP_NAME: str = "CareerDev"
     DEBUG: bool = False
+    SQL_ECHO: bool = False
 
     DATABASE_URL: str = "sqlite+aiosqlite:///./careerdev.db"
     DATABASE_URL_SYNC: str = "sqlite:///./careerdev.db"

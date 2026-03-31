@@ -109,6 +109,7 @@ export default function Home() {
           <img
             src="/hero-plane.png"
             alt=""
+            role="presentation"
             style={{
               width: "100%",
               height: "100%",
@@ -325,7 +326,7 @@ export default function Home() {
             )}
           </div>
 
-          <p style={{ color: "#64748b", fontSize: "0.85rem", marginTop: "1.5rem" }}>
+          <p style={{ color: "#94a3b8", fontSize: "0.85rem", marginTop: "1.5rem" }}>
             Free to start. 14 career pathways. Results in minutes.
           </p>
         </div>
@@ -796,7 +797,7 @@ export default function Home() {
               >
                 {item.stat}
               </div>
-              <div style={{ color: "#64748b", fontSize: "0.8rem", fontWeight: 500 }}>
+              <div style={{ color: "#94a3b8", fontSize: "0.8rem", fontWeight: 500 }}>
                 {item.label}
               </div>
             </div>

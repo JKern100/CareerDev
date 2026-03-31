@@ -4,7 +4,7 @@ Validates, applies, and redeems promotional codes.
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 
 from sqlalchemy import select, func
@@ -50,7 +50,7 @@ async def validate_code(
     if not promo.is_active:
         raise PromoValidationError("This promo code is no longer active")
 
-    if promo.expires_at and promo.expires_at < datetime.utcnow():
+    if promo.expires_at and promo.expires_at < datetime.now(timezone.utc):
         raise PromoValidationError("This promo code has expired")
 
     # Check applies_to
@@ -143,7 +143,7 @@ async def redeem_full_unlock(
     if plan_rank.get(target_plan, 0) >= plan_rank.get(sub.plan, 0):
         sub.plan = target_plan
         sub.is_active = True
-        sub.activated_at = datetime.utcnow()
+        sub.activated_at = datetime.now(timezone.utc)
         sub.cancelled_at = None
 
     # Record redemption

@@ -4,7 +4,7 @@ Tracks user purchases and subscriptions via LemonSqueezy.
 """
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import String, Text, DateTime, Boolean, Integer, Uuid, ForeignKey, Index
 from sqlalchemy.orm import Mapped, mapped_column
@@ -34,7 +34,7 @@ class Payment(Base):
     currency: Mapped[str] = mapped_column(String(10), default="USD")
     status: Mapped[str] = mapped_column(String(30), nullable=False)  # "paid", "refunded"
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class Subscription(Base):
@@ -57,5 +57,5 @@ class Subscription(Base):
     expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)  # null = lifetime for one-time
     cancelled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))

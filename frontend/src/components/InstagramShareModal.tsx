@@ -74,6 +74,9 @@ export default function InstagramShareModal({ pathways, open, onClose }: Instagr
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Share to Instagram"
       style={{
         position: "fixed",
         inset: 0,

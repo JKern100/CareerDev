@@ -5,7 +5,7 @@ import hmac
 import io
 import json
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
@@ -130,7 +130,7 @@ async def get_dashboard_stats(
     admin: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     week_ago = now - timedelta(days=7)
     month_ago = now - timedelta(days=30)
 
@@ -686,7 +686,7 @@ async def get_activity(
     db: AsyncSession = Depends(get_db),
 ):
     """Get activity events with optional filters."""
-    cutoff = datetime.utcnow() - timedelta(days=days)
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
     query = select(ActivityEvent).where(ActivityEvent.created_at >= cutoff)
 
     if role:
@@ -722,7 +722,7 @@ async def get_user_activity(
     db: AsyncSession = Depends(get_db),
 ):
     """Get activity events for a specific user."""
-    cutoff = datetime.utcnow() - timedelta(days=days)
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
     user_uuid = uuid.UUID(user_id)
     query = (
         select(ActivityEvent)

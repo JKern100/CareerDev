@@ -5,7 +5,7 @@ career analysis, with progress tracking.
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -150,11 +150,11 @@ async def update_step(
         old_status = step.status
         step.status = data.status
         if data.status == "in_progress" and old_status == "todo":
-            step.started_at = datetime.utcnow()
+            step.started_at = datetime.now(timezone.utc)
         elif data.status == "done":
-            step.completed_at = datetime.utcnow()
+            step.completed_at = datetime.now(timezone.utc)
             if not step.started_at:
-                step.started_at = datetime.utcnow()
+                step.started_at = datetime.now(timezone.utc)
         elif data.status == "todo":
             step.completed_at = None
 

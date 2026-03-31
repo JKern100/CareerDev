@@ -1,6 +1,6 @@
 """Authentication utilities."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from jose import jwt
 from passlib.context import CryptContext
@@ -20,7 +20,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
@@ -30,7 +30,7 @@ def decode_access_token(token: str) -> dict:
 
 
 def create_reset_token(email: str) -> str:
-    expire = datetime.utcnow() + timedelta(minutes=settings.RESET_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.RESET_TOKEN_EXPIRE_MINUTES)
     return jwt.encode(
         {"sub": email, "purpose": "password_reset", "exp": expire},
         settings.SECRET_KEY,
@@ -50,7 +50,7 @@ def decode_reset_token(token: str) -> str | None:
 
 
 def create_email_verification_token(email: str) -> str:
-    expire = datetime.utcnow() + timedelta(hours=24)
+    expire = datetime.now(timezone.utc) + timedelta(hours=24)
     return jwt.encode(
         {"sub": email, "purpose": "email_verification", "exp": expire},
         settings.SECRET_KEY,
@@ -71,7 +71,7 @@ def decode_email_verification_token(token: str) -> str | None:
 
 def create_oauth_state_token() -> str:
     """Create a short-lived signed token to prevent CSRF in OAuth flows."""
-    expire = datetime.utcnow() + timedelta(minutes=10)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=10)
     return jwt.encode(
         {"purpose": "oauth_state", "exp": expire},
         settings.SECRET_KEY,

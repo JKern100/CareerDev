@@ -42,9 +42,15 @@ class ScoredPathway:
     risks_unknowns: list[str]
 
 
+_pathways_cache: list[dict] | None = None
+
+
 def load_pathways() -> list[dict]:
-    with open(PATHWAYS_PATH, "r") as f:
-        return json.load(f)
+    global _pathways_cache
+    if _pathways_cache is None:
+        with open(PATHWAYS_PATH, "r") as f:
+            _pathways_cache = json.load(f)
+    return _pathways_cache
 
 
 def _is_not_sure(answer: dict) -> bool:

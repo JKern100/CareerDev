@@ -1,6 +1,6 @@
 """Scheduling API: advisor availability, user booking, calendar views."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -249,17 +249,13 @@ async def get_my_bookings_as_advisor(
     """Get bookings for the current advisor."""
     advisor = await _get_or_create_advisor(user, db)
     result = await db.execute(
-        select(Booking)
+        select(Booking, User)
+        .join(User, Booking.user_id == User.id)
         .where(Booking.advisor_id == advisor.id, Booking.status != "cancelled")
         .order_by(Booking.date, Booking.start_time)
     )
-    bookings = result.scalars().all()
-
-    out = []
-    for b in bookings:
-        u_result = await db.execute(select(User).where(User.id == b.user_id))
-        u = u_result.scalar_one_or_none()
-        out.append(BookingOut(
+    return [
+        BookingOut(
             id=str(b.id),
             user_id=str(b.user_id),
             user_name=u.full_name if u else None,
@@ -272,8 +268,9 @@ async def get_my_bookings_as_advisor(
             status=b.status,
             notes=b.notes,
             created_at=b.created_at,
-        ))
-    return out
+        )
+        for b, u in result.all()
+    ]
 
 
 # ── User-facing: list advisors, view slots, book ────────────────────────
@@ -284,12 +281,13 @@ async def list_advisors(
     db: AsyncSession = Depends(get_db),
 ):
     """List all active advisors."""
-    result = await db.execute(select(Advisor).where(Advisor.active == True))
-    advisors = result.scalars().all()
+    result = await db.execute(
+        select(Advisor, User)
+        .join(User, Advisor.user_id == User.id)
+        .where(Advisor.active == True)
+    )
     out = []
-    for a in advisors:
-        u_result = await db.execute(select(User).where(User.id == a.user_id))
-        u = u_result.scalar_one_or_none()
+    for a, u in result.all():
         out.append(AdvisorOut(
             id=str(a.id),
             user_id=str(a.user_id),
@@ -324,7 +322,7 @@ async def get_available_slots(
         return []
 
     # Load existing bookings in the date range
-    today = datetime.utcnow().date()
+    today = datetime.now(timezone.utc).date()
     end_date = today + timedelta(days=days_ahead)
     result = await db.execute(
         select(Booking).where(
@@ -364,7 +362,7 @@ async def get_available_slots(
                 if (date_str, slot_start) not in booked_set:
                     # Skip past slots for today
                     if date == today:
-                        now_minutes = datetime.utcnow().hour * 60 + datetime.utcnow().minute
+                        now_minutes = datetime.now(timezone.utc).hour * 60 + datetime.now(timezone.utc).minute
                         if current_minutes <= now_minutes:
                             current_minutes += duration
                             continue
@@ -449,30 +447,32 @@ async def get_my_bookings_as_user(
     db: AsyncSession = Depends(get_db),
 ):
     """Get bookings for the current user (not as advisor)."""
+    # Alias User to distinguish booking-user from advisor-user
+    AdvisorUser = User.__table__.alias("advisor_user")
     result = await db.execute(
-        select(Booking)
+        select(Booking, Advisor, AdvisorUser.c.full_name.label("advisor_name"))
+        .join(Advisor, Booking.advisor_id == Advisor.id)
+        .outerjoin(AdvisorUser, Advisor.user_id == AdvisorUser.c.id)
         .where(Booking.user_id == user.id, Booking.status != "cancelled")
         .order_by(Booking.date, Booking.start_time)
     )
-    bookings = result.scalars().all()
-    out = []
-    for b in bookings:
-        advisor, advisor_user = await _get_advisor_with_user(str(b.advisor_id), db)
-        out.append(BookingOut(
-            id=str(b.id),
-            user_id=str(b.user_id),
+    return [
+        BookingOut(
+            id=str(row.Booking.id),
+            user_id=str(row.Booking.user_id),
             user_name=user.full_name,
             user_email=user.email,
-            advisor_id=str(b.advisor_id),
-            advisor_name=advisor_user.full_name if advisor_user else None,
-            date=b.date,
-            start_time=b.start_time,
-            end_time=b.end_time,
-            status=b.status,
-            notes=b.notes,
-            created_at=b.created_at,
-        ))
-    return out
+            advisor_id=str(row.Booking.advisor_id),
+            advisor_name=row.advisor_name,
+            date=row.Booking.date,
+            start_time=row.Booking.start_time,
+            end_time=row.Booking.end_time,
+            status=row.Booking.status,
+            notes=row.Booking.notes,
+            created_at=row.Booking.created_at,
+        )
+        for row in result.all()
+    ]
 
 
 @router.post("/cancel/{booking_id}")
@@ -510,27 +510,34 @@ async def get_all_bookings(
     db: AsyncSession = Depends(get_db),
 ):
     """Admin view: all bookings across all advisors."""
+    BookingUser = User.__table__.alias("booking_user")
+    AdvisorUser = User.__table__.alias("advisor_user")
     result = await db.execute(
-        select(Booking).order_by(Booking.date.desc(), Booking.start_time)
+        select(
+            Booking,
+            BookingUser.c.full_name.label("user_name"),
+            BookingUser.c.email.label("user_email"),
+            AdvisorUser.c.full_name.label("advisor_name"),
+        )
+        .outerjoin(BookingUser, Booking.user_id == BookingUser.c.id)
+        .outerjoin(Advisor, Booking.advisor_id == Advisor.id)
+        .outerjoin(AdvisorUser, Advisor.user_id == AdvisorUser.c.id)
+        .order_by(Booking.date.desc(), Booking.start_time)
     )
-    bookings = result.scalars().all()
-    out = []
-    for b in bookings:
-        u_result = await db.execute(select(User).where(User.id == b.user_id))
-        u = u_result.scalar_one_or_none()
-        advisor, advisor_user = await _get_advisor_with_user(str(b.advisor_id), db)
-        out.append(BookingOut(
-            id=str(b.id),
-            user_id=str(b.user_id),
-            user_name=u.full_name if u else None,
-            user_email=u.email if u else None,
-            advisor_id=str(b.advisor_id),
-            advisor_name=advisor_user.full_name if advisor_user else None,
-            date=b.date,
-            start_time=b.start_time,
-            end_time=b.end_time,
-            status=b.status,
-            notes=b.notes,
-            created_at=b.created_at,
-        ))
-    return out
+    return [
+        BookingOut(
+            id=str(row.Booking.id),
+            user_id=str(row.Booking.user_id),
+            user_name=row.user_name,
+            user_email=row.user_email,
+            advisor_id=str(row.Booking.advisor_id),
+            advisor_name=row.advisor_name,
+            date=row.Booking.date,
+            start_time=row.Booking.start_time,
+            end_time=row.Booking.end_time,
+            status=row.Booking.status,
+            notes=row.Booking.notes,
+            created_at=row.Booking.created_at,
+        )
+        for row in result.all()
+    ]

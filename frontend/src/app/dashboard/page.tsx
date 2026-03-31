@@ -118,6 +118,9 @@ export default function DashboardPage() {
           <div style={{ position: "relative" }}>
             <button
               onClick={(e) => { e.stopPropagation(); setLangOpen(!langOpen); }}
+              aria-expanded={langOpen}
+              aria-haspopup="listbox"
+              aria-label="Select language"
               style={{
                 background: "rgba(255,255,255,0.05)", border: "1px solid #334155",
                 color: "#f1f5f9", padding: "0.4rem 0.75rem", borderRadius: "8px",
@@ -127,7 +130,7 @@ export default function DashboardPage() {
               {LANGUAGES.find((l) => l.code === lang)?.flag || "EN"}
             </button>
             {langOpen && (
-              <div style={{
+              <div role="listbox" aria-label="Language options" style={{
                 position: "absolute", top: "calc(100% + 4px)", right: 0,
                 background: "#1e293b", border: "1px solid #334155", borderRadius: "8px",
                 overflow: "hidden", zIndex: 100, minWidth: "140px", boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
@@ -135,6 +138,8 @@ export default function DashboardPage() {
                 {LANGUAGES.map((l) => (
                   <button
                     key={l.code}
+                    role="option"
+                    aria-selected={lang === l.code}
                     onClick={() => { setLang(l.code as LangCode); setLangOpen(false); }}
                     style={{
                       display: "block", width: "100%", padding: "0.5rem 0.75rem",
@@ -189,7 +194,7 @@ export default function DashboardPage() {
         <div style={{ margin: "0 auto 2.5rem", maxWidth: "600px" }}>
           <div style={{
             display: "flex", justifyContent: "space-between", alignItems: "center",
-            marginBottom: "0.5rem", fontSize: "0.75rem", color: "#64748b", fontWeight: 600,
+            marginBottom: "0.5rem", fontSize: "0.75rem", color: "#94a3b8", fontWeight: 600,
           }}>
             <span>{d("step1")}</span>
             <span>{d("step2")}</span>
@@ -360,7 +365,7 @@ function StepCard({ step, title, description, cta, done, active, locked, accent,
         <span style={{
           fontSize: "0.72rem", fontWeight: 600, padding: "0.2rem 0.6rem", borderRadius: "20px",
           background: done ? "rgba(34,197,94,0.15)" : proTag ? "rgba(59,130,246,0.15)" : active ? `${accent}18` : "rgba(100,116,139,0.15)",
-          color: done ? "#22c55e" : proTag ? "#3b82f6" : active ? accent : "#64748b",
+          color: done ? "#22c55e" : proTag ? "#3b82f6" : active ? accent : "#94a3b8",
         }}>
           {done ? "\u2713" : proTag ? "Pro" : active ? "\u2022 Active" : locked ? "\uD83D\uDD12" : "\u2014"}
         </span>
