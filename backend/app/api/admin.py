@@ -14,11 +14,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.user import User, UserRole
-from app.models.questionnaire import Answer, Question
+from app.models.questionnaire import Answer, Question, Evidence
 from app.models.report import Report, AnalysisReport
 from app.models.pathway import PathwayScore
 from app.models.activity import ActivityEvent
-from app.models.coach import CoachMessage
+from app.models.coach import CoachMessage, CoachGoal
+from app.models.action_plan import ActionStep
+from app.models.advisor import Advisor, AvailabilitySlot, Booking
+from app.models.payment import Payment, Subscription
+from app.models.promo import PromoRedemption
 from app.api.deps import get_admin_user
 from app.services.auth import hash_password, create_access_token
 from app.config import settings
@@ -314,11 +318,36 @@ async def delete_user(
     if str(u.id) == str(admin.id):
         raise HTTPException(status_code=400, detail="Cannot delete yourself")
 
-    # Delete related data
-    await db.execute(delete(Answer).where(Answer.user_id == u.id))
-    await db.execute(delete(Report).where(Report.user_id == u.id))
+    # Delete related data — order matters for foreign key constraints
+    # 1. Advisor-related (AvailabilitySlot → Advisor, Booking → Advisor)
+    advisor_result = await db.execute(select(Advisor.id).where(Advisor.user_id == u.id))
+    advisor_row = advisor_result.scalar_one_or_none()
+    if advisor_row:
+        await db.execute(delete(AvailabilitySlot).where(AvailabilitySlot.advisor_id == advisor_row))
+        await db.execute(delete(Booking).where(Booking.advisor_id == advisor_row))
+        await db.execute(delete(Advisor).where(Advisor.user_id == u.id))
+
+    # 2. Bookings where user is the booker (not advisor)
+    await db.execute(delete(Booking).where(Booking.user_id == u.id))
+
+    # 3. Coach data
+    await db.execute(delete(CoachMessage).where(CoachMessage.user_id == u.id))
+    await db.execute(delete(CoachGoal).where(CoachGoal.user_id == u.id))
+
+    # 4. Action plan, payments, promo
+    await db.execute(delete(ActionStep).where(ActionStep.user_id == u.id))
+    await db.execute(delete(Payment).where(Payment.user_id == u.id))
+    await db.execute(delete(Subscription).where(Subscription.user_id == u.id))
+    await db.execute(delete(PromoRedemption).where(PromoRedemption.user_id == u.id))
+
+    # 5. Questionnaire and reports
     await db.execute(delete(AnalysisReport).where(AnalysisReport.user_id == u.id))
     await db.execute(delete(PathwayScore).where(PathwayScore.user_id == u.id))
+    await db.execute(delete(Report).where(Report.user_id == u.id))
+    await db.execute(delete(Evidence).where(Evidence.user_id == u.id))
+    await db.execute(delete(Answer).where(Answer.user_id == u.id))
+
+    # 6. Activity log and user
     await db.execute(delete(ActivityEvent).where(ActivityEvent.user_id == u.id))
     await db.delete(u)
     await db.commit()
