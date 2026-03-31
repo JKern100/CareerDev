@@ -3,8 +3,11 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { resetPassword } from "@/lib/api";
+import { useTranslation } from "@/hooks/useTranslation";
 
 function ResetPasswordForm() {
+  const { t } = useTranslation();
+  const p = (key: string) => t(`pages.reset_password.${key}`);
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
@@ -20,15 +23,15 @@ function ResetPasswordForm() {
     setError("");
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters");
+      setError(p("min_length_error"));
       return;
     }
     if (password !== confirm) {
-      setError("Passwords do not match");
+      setError(p("mismatch_error"));
       return;
     }
     if (!token) {
-      setError("Invalid reset link — no token found");
+      setError(p("no_token_error"));
       return;
     }
 
@@ -37,7 +40,7 @@ function ResetPasswordForm() {
       await resetPassword(token, password);
       setSuccess(true);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to reset password");
+      setError(err instanceof Error ? err.message : p("failed_error"));
     } finally {
       setLoading(false);
     }
@@ -46,15 +49,15 @@ function ResetPasswordForm() {
   if (success) {
     return (
       <div className="container" style={{ maxWidth: "400px", textAlign: "center" }}>
-        <h1 style={{ marginTop: "2rem" }}>Password updated</h1>
+        <h1 style={{ marginTop: "2rem" }}>{p("success_title")}</h1>
         <p className="text-muted" style={{ marginTop: "1rem" }}>
-          Your password has been reset. You can now sign in with your new password.
+          {p("success_text")}
         </p>
         <button
           className="btn btn-primary mt-2"
           onClick={() => router.push("/login")}
         >
-          Sign in
+          {p("sign_in")}
         </button>
       </div>
     );
@@ -62,24 +65,24 @@ function ResetPasswordForm() {
 
   return (
     <div className="container" style={{ maxWidth: "400px" }}>
-      <h1 style={{ textAlign: "center", marginTop: "2rem" }}>Set new password</h1>
+      <h1 style={{ textAlign: "center", marginTop: "2rem" }}>{p("title")}</h1>
       <p className="text-muted text-sm mb-3" style={{ textAlign: "center" }}>
-        Enter your new password below.
+        {p("subtitle")}
       </p>
 
       <form onSubmit={handleSubmit} className="card flex flex-col gap-1">
         <div>
-          <label className="text-sm">New password</label>
+          <label className="text-sm">{p("new_password")}</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="At least 6 characters"
+            placeholder={p("new_password_placeholder")}
             required
           />
         </div>
         <div>
-          <label className="text-sm">Confirm password</label>
+          <label className="text-sm">{p("confirm_password")}</label>
           <input
             type="password"
             value={confirm}
@@ -89,7 +92,7 @@ function ResetPasswordForm() {
         </div>
         {error && <p style={{ color: "var(--error)", fontSize: "0.875rem" }}>{error}</p>}
         <button className="btn btn-primary mt-2" disabled={loading} type="submit">
-          {loading ? "Resetting..." : "Reset password"}
+          {loading ? p("resetting") : p("submit")}
         </button>
       </form>
     </div>
@@ -97,11 +100,12 @@ function ResetPasswordForm() {
 }
 
 export default function ResetPasswordPage() {
+  const { t } = useTranslation();
   return (
     <Suspense
       fallback={
         <div className="container" style={{ textAlign: "center", marginTop: "4rem" }}>
-          <p className="text-muted">Loading...</p>
+          <p className="text-muted">{t("pages.reset_password.loading")}</p>
         </div>
       }
     >

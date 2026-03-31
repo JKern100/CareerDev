@@ -85,7 +85,7 @@ export default function RegisterPage() {
         </div>
         <h1>{p("check_email")}</h1>
         <p className="text-muted" style={{ marginTop: "0.5rem", lineHeight: 1.7 }}>
-          <span dangerouslySetInnerHTML={{ __html: t("pages.register.verification_sent", { email }) }} />
+          <span dangerouslySetInnerHTML={{ __html: t("pages.register.verification_sent", { email: email.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;") }) }} />
         </p>
         <div style={{ marginTop: "1.5rem" }}>
           <button

@@ -1,7 +1,11 @@
 import logging
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -30,7 +34,9 @@ router = APIRouter(prefix="/analysis", tags=["analysis"])
 
 
 @router.post("/summary", response_model=SummaryOut)
+@limiter.limit("5/hour")
 async def generate_summary(
+    request: Request,
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -134,7 +140,9 @@ async def get_summary(
 
 
 @router.post("/run", response_model=AnalysisRunOut)
+@limiter.limit("5/hour")
 async def run_analysis(
+    request: Request,
     user: User = Depends(require_premium),
     db: AsyncSession = Depends(get_db),
 ):

@@ -663,7 +663,7 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#94a3b8",
     fontSize: "0.82rem",
     cursor: "pointer",
-    textAlign: "left",
+    textAlign: "start",
     lineHeight: 1.4,
   },
   // Messages

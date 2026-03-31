@@ -1,7 +1,7 @@
 from app.models.user import User
 from app.models.questionnaire import Question, Answer, Evidence
 from app.models.pathway import Pathway, PathwayScore
-from app.models.report import Report
+from app.models.report import Report, AnalysisReport
 from app.models.advisor import Advisor, AvailabilitySlot, Booking
 from app.models.audit import AuditEvent
 from app.models.activity import ActivityEvent
@@ -18,6 +18,7 @@ __all__ = [
     "Pathway",
     "PathwayScore",
     "Report",
+    "AnalysisReport",
     "Advisor",
     "AvailabilitySlot",
     "Booking",

@@ -5,7 +5,7 @@ plus user-defined career goals for accountability tracking.
 """
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import String, Text, DateTime, Boolean, Uuid, ForeignKey, Index
 from sqlalchemy.orm import Mapped, mapped_column
@@ -23,7 +23,7 @@ class CoachMessage(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"), nullable=False, index=True)
     role: Mapped[str] = mapped_column(String(20), nullable=False)  # "user" or "assistant"
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class CoachGoal(Base):
@@ -37,5 +37,5 @@ class CoachGoal(Base):
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     target_date: Mapped[str | None] = mapped_column(String(20), nullable=True)  # ISO date
     completed: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

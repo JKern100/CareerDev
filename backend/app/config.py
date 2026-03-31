@@ -3,7 +3,8 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     APP_NAME: str = "CareerDev"
-    DEBUG: bool = True
+    DEBUG: bool = False
+    SQL_ECHO: bool = False
 
     DATABASE_URL: str = "sqlite+aiosqlite:///./careerdev.db"
     DATABASE_URL_SYNC: str = "sqlite:///./careerdev.db"
@@ -15,7 +16,7 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
 
     # Allowed CORS origins (comma-separated for multiple)
-    ALLOWED_ORIGINS: str = "http://localhost:3000,https://career-dev.vercel.app"
+    ALLOWED_ORIGINS: str = "https://career-dev.vercel.app"
 
     # Password reset
     RESET_TOKEN_EXPIRE_MINUTES: int = 30
@@ -62,3 +63,8 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+if not settings.DEBUG and settings.SECRET_KEY == "change-me-in-production":
+    raise RuntimeError(
+        "FATAL: SECRET_KEY is still the default. Set a secure SECRET_KEY environment variable before running in production."
+    )

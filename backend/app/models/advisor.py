@@ -1,7 +1,7 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
-from sqlalchemy import String, Boolean, Integer, DateTime, Text, ForeignKey, JSON, Uuid, Date, Time
+from sqlalchemy import String, Boolean, Integer, DateTime, Text, ForeignKey, JSON, Uuid, Date, Time, Index
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -20,7 +20,7 @@ class Advisor(Base):
     session_duration_minutes: Mapped[int] = mapped_column(Integer, default=60)
     jurisdiction_scope: Mapped[list | None] = mapped_column(JSON)  # ["UAE", "EU"]
     active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class AvailabilitySlot(Base):
@@ -41,14 +41,17 @@ class AvailabilitySlot(Base):
 class Booking(Base):
     """A booked session between a user and an advisor."""
     __tablename__ = "bookings"
+    __table_args__ = (
+        Index("ix_bookings_advisor_date", "advisor_id", "date"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"), nullable=False)
-    advisor_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("advisors.id"), nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"), nullable=False, index=True)
+    advisor_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("advisors.id"), nullable=False, index=True)
     date: Mapped[str] = mapped_column(String(10), nullable=False)  # "2026-03-15"
     start_time: Mapped[str] = mapped_column(String(5), nullable=False)  # "10:00"
     end_time: Mapped[str] = mapped_column(String(5), nullable=False)  # "11:00"
     status: Mapped[str] = mapped_column(String(20), default="confirmed")  # confirmed, cancelled, completed
     notes: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))

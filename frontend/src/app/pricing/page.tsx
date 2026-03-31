@@ -114,7 +114,7 @@ export default function PricingPage() {
               style={{
                 ...styles.ctaBtn,
                 background: "rgba(255,255,255,0.06)",
-                color: "#64748b",
+                color: "#94a3b8",
                 border: "1px solid #1e293b",
                 opacity: 0.6,
                 cursor: "default",
@@ -131,7 +131,7 @@ export default function PricingPage() {
             <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.25rem" }}>{p("pro")}</h2>
             <div style={styles.priceRow}>
               <span style={{ fontSize: "2rem", fontWeight: 800 }}>$9</span>
-              <span style={{ color: "#64748b", fontSize: "0.9rem", marginLeft: "0.25rem" }}>/month</span>
+              <span style={{ color: "#94a3b8", fontSize: "0.9rem", marginLeft: "0.25rem" }}>/month</span>
             </div>
             <p style={{ color: "#94a3b8", fontSize: "0.88rem", marginBottom: "1.25rem", lineHeight: 1.5 }}>
               {p("pro_desc")}
@@ -283,7 +283,7 @@ const styles: Record<string, React.CSSProperties> = {
     lineHeight: 1.4,
     textDecoration: "line-through",
   },
-  checkMark: { color: "#64748b", marginRight: "0.5rem" },
+  checkMark: { color: "#94a3b8", marginRight: "0.5rem" },
   checkBlue: { color: "#3b82f6", marginRight: "0.5rem" },
   lockIcon: { color: "#334155", marginRight: "0.5rem" },
   ctaBtn: {
@@ -337,6 +337,6 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: "column",
     gap: "0.25rem",
     fontSize: "0.82rem",
-    color: "#64748b",
+    color: "#94a3b8",
   },
 };

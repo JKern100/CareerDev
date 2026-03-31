@@ -433,10 +433,10 @@ function QuestionnaireContent() {
               marginBottom: "1.5rem",
             }}>
               {[
-                { icon: "&#9992;&#65039;", label: "Your aviation story", desc: "How your specific crew experience translates to each career" },
-                { icon: "&#128170;", label: "Evidence-backed skills", desc: "Real examples from your career that prove your strengths" },
-                { icon: "&#127919;", label: "Your dream role", desc: "We'll address what you really want — even if it's ambitious" },
-                { icon: "&#9878;&#65039;", label: "Realistic constraints", desc: "Visa, finances, family — your plan will actually work" },
+                { icon: "\u2708\uFE0F", label: "Your aviation story", desc: "How your specific crew experience translates to each career" },
+                { icon: "\uD83D\uDCAA", label: "Evidence-backed skills", desc: "Real examples from your career that prove your strengths" },
+                { icon: "\uD83C\uDFAF", label: "Your dream role", desc: "We\u2019ll address what you really want \u2014 even if it\u2019s ambitious" },
+                { icon: "\u2696\uFE0F", label: "Realistic constraints", desc: "Visa, finances, family \u2014 your plan will actually work" },
               ].map((item) => (
                 <div key={item.label} style={{
                   background: "white",
@@ -444,7 +444,7 @@ function QuestionnaireContent() {
                   padding: "0.875rem",
                   border: "1px solid var(--border)",
                 }}>
-                  <div dangerouslySetInnerHTML={{ __html: item.icon }} style={{ fontSize: "1.25rem", marginBottom: "0.375rem" }} />
+                  <div style={{ fontSize: "1.25rem", marginBottom: "0.375rem" }}>{item.icon}</div>
                   <p style={{ fontWeight: 600, fontSize: "0.85rem", marginBottom: "0.25rem" }}>{item.label}</p>
                   <p style={{ color: "var(--muted)", fontSize: "0.775rem", lineHeight: 1.5 }}>{item.desc}</p>
                 </div>
@@ -558,7 +558,7 @@ function QuestionnaireContent() {
             <div style={{
               background: "#f8fafc", borderRadius: "10px",
               padding: "1rem 1.25rem", margin: "1.25rem 0",
-              textAlign: "left", lineHeight: 1.75, fontSize: "0.875rem",
+              textAlign: "start", lineHeight: 1.75, fontSize: "0.875rem",
               color: "#475569",
             }}>
               <p>

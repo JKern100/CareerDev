@@ -1,9 +1,13 @@
 import logging
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from sqlalchemy import select, text, inspect
 
 from app.config import settings
@@ -167,7 +171,7 @@ async def _backfill_existing_users_verified():
             select(User).where(
                 User.email_verified == False,  # noqa: E712
                 User.has_logged_in == False,  # noqa: E712
-                User.created_at < datetime.utcnow(),
+                User.created_at < datetime.now(timezone.utc),
             )
         )
         users = result.scalars().all()
@@ -211,12 +215,23 @@ async def lifespan(app: FastAPI):
 
 from app.api import auth, questionnaire, analysis, privacy, admin, scheduling, results, coach, action_plan, payment, promo
 
+limiter = Limiter(key_func=get_remote_address)
+
 app = FastAPI(
     title=settings.APP_NAME,
     description="AI Career-Advice App for Flight Crew",
     version="0.2.0",
     lifespan=lifespan,
 )
+app.state.limiter = limiter
+
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    return JSONResponse(
+        status_code=429,
+        content={"detail": "Too many requests. Please try again later."},
+    )
 
 app.add_middleware(
     CORSMiddleware,

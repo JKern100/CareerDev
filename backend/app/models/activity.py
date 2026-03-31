@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import String, DateTime, JSON, Uuid, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
@@ -18,4 +18,4 @@ class ActivityEvent(Base):
     action: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     detail: Mapped[str | None] = mapped_column(String(500))
     metadata_json: Mapped[dict | None] = mapped_column(JSON)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)

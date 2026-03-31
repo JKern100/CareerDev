@@ -10,6 +10,10 @@ from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -65,7 +69,9 @@ PLAN_TO_VARIANT = {
 
 
 @router.post("/checkout", response_model=CheckoutResponse)
+@limiter.limit("10/minute")
 async def create_checkout(
+    request: Request,
     data: CheckoutRequest,
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),

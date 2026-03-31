@@ -217,9 +217,9 @@ async def load_user_career_context(user_id: "UUID", db: AsyncSession) -> str:
     )
 
 
-async def load_conversation_history(user_id: "UUID", db: AsyncSession, limit: int = 50) -> list[dict]:
+async def load_conversation_history(user_id: "UUID", db: AsyncSession, limit: int = 30) -> list[dict]:
     """Load recent conversation messages for context."""
-    capped = min(limit, 200)
+    capped = min(limit, 100)
     result = await db.execute(
         select(CoachMessage)
         .where(CoachMessage.user_id == user_id)
@@ -307,9 +307,8 @@ async def chat_with_coach(
     if not assistant_reply:
         raise RuntimeError("The AI coach returned an empty response. Please try again.")
 
-    # Store both messages
+    # Store both messages (caller is responsible for committing)
     db.add(CoachMessage(user_id=user_id, role="user", content=user_message))
     db.add(CoachMessage(user_id=user_id, role="assistant", content=assistant_reply))
-    await db.commit()
 
     return assistant_reply

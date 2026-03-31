@@ -40,7 +40,7 @@ export default function QuestionField({
           fontSize: "0.9rem",
           fontStyle: "italic",
         }}>
-          Marked as &quot;Not sure&quot; &mdash; we&apos;ll work with what we have.
+          {uiStrings?.not_sure_note || "Marked as \"Not sure\" \u2014 we\u2019ll work with what we have."}
           <button
             type="button"
             onClick={() => onChange("")}
@@ -54,7 +54,7 @@ export default function QuestionField({
               fontSize: "0.85rem",
             }}
           >
-            Change my answer
+            {uiStrings?.change_answer || "Change my answer"}
           </button>
         </div>
       );
@@ -188,7 +188,7 @@ export default function QuestionField({
             type="text"
             value={typeof value === "string" ? value : ""}
             onChange={(e) => onChange(e.target.value)}
-            placeholder="Your answer..."
+            placeholder={uiStrings?.text_placeholder || "Your answer..."}
           />
         );
 
@@ -197,7 +197,7 @@ export default function QuestionField({
           <textarea
             value={typeof value === "string" ? value : ""}
             onChange={(e) => onChange(e.target.value)}
-            placeholder="Share your experience..."
+            placeholder={uiStrings?.story_placeholder || "Share your experience..."}
             rows={4}
           />
         );
@@ -205,7 +205,7 @@ export default function QuestionField({
       case "file_upload":
         return (
           <div style={{ padding: "1rem", border: "2px dashed var(--border)", borderRadius: "8px", textAlign: "center" }}>
-            <p className="text-sm text-muted">File upload coming soon</p>
+            <p className="text-sm text-muted">{uiStrings?.file_upload || "File upload coming soon"}</p>
           </div>
         );
 

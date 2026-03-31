@@ -1,8 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from urllib.parse import urlencode
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import select
@@ -18,17 +18,23 @@ from app.services.auth import (
     hash_password, verify_password, create_access_token,
     create_reset_token, decode_reset_token,
     create_email_verification_token, decode_email_verification_token,
+    create_oauth_state_token, verify_oauth_state_token,
 )
 from app.services.email import send_reset_email, send_verification_email
 from app.config import settings
 from app.api.deps import get_current_user
 from app.services.activity import log_activity
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-async def register(data: UserRegister, db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def register(request: Request, data: UserRegister, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.email == data.email))
     if result.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -47,10 +53,11 @@ async def register(data: UserRegister, db: AsyncSession = Depends(get_db)):
     email_sent = await send_verification_email(user.email, token)
 
     if not email_sent:
-        # Auto-verify if email delivery isn't available
-        user.email_verified = True
-        await db.commit()
-        await db.refresh(user)
+        # Only auto-verify if SMTP is not configured at all (dev mode)
+        if not settings.SMTP_HOST:
+            user.email_verified = True
+            await db.commit()
+            await db.refresh(user)
 
     return user
 
@@ -98,7 +105,8 @@ async def resend_verification(data: ResendVerificationRequest, db: AsyncSession 
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(data: UserLogin, db: AsyncSession = Depends(get_db)):
+@limiter.limit("10/minute")
+async def login(request: Request, data: UserLogin, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.email == data.email))
     user = result.scalar_one_or_none()
     if not user or not user.hashed_password or not verify_password(data.password, user.hashed_password):
@@ -124,7 +132,7 @@ async def login(data: UserLogin, db: AsyncSession = Depends(get_db)):
         user.has_logged_in = True
 
     # Track login time and count
-    user.last_login_at = datetime.utcnow()
+    user.last_login_at = datetime.now(timezone.utc)
     user.login_count = (user.login_count or 0) + 1
     await log_activity(db, user, "login")
     await db.commit()
@@ -144,6 +152,9 @@ async def me(
     result = await db.execute(select(Subscription).where(Subscription.user_id == user.id))
     sub = result.scalar_one_or_none()
 
+    impersonated = getattr(user, "_impersonated", False)
+    is_admin = user.role in ("admin", "auditor")
+
     return {
         "id": str(user.id),
         "email": user.email,
@@ -152,13 +163,14 @@ async def me(
         "questionnaire_completed": user.questionnaire_completed,
         "current_module": user.current_module,
         "can_regenerate_summary": user.can_regenerate_summary,
-        "plan": sub.plan if sub else "free",
-        "is_premium": _is_premium(sub),
+        "plan": "pro" if (impersonated or is_admin) else (sub.plan if sub else "free"),
+        "is_premium": True if (impersonated or is_admin) else _is_premium(sub),
     }
 
 
 @router.post("/forgot-password")
-async def forgot_password(data: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("3/minute")
+async def forgot_password(request: Request, data: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)):
     # Always return success to avoid leaking which emails exist
     result = await db.execute(select(User).where(User.email == data.email))
     user = result.scalar_one_or_none()
@@ -173,7 +185,8 @@ async def forgot_password(data: ForgotPasswordRequest, db: AsyncSession = Depend
 
 
 @router.post("/reset-password")
-async def reset_password(data: ResetPasswordRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def reset_password(request: Request, data: ResetPasswordRequest, db: AsyncSession = Depends(get_db)):
     email = decode_reset_token(data.token)
     if not email:
         raise HTTPException(status_code=400, detail="Invalid or expired reset link")
@@ -207,6 +220,7 @@ async def google_login():
     if not settings.GOOGLE_CLIENT_ID:
         raise HTTPException(status_code=501, detail="Google OAuth is not configured")
 
+    state = create_oauth_state_token()
     params = {
         "client_id": settings.GOOGLE_CLIENT_ID,
         "redirect_uri": f"{settings.FRONTEND_URL}/auth/callback",
@@ -214,12 +228,14 @@ async def google_login():
         "scope": "openid email profile",
         "access_type": "offline",
         "prompt": "select_account",
+        "state": state,
     }
     return RedirectResponse(f"{GOOGLE_AUTH_URL}?{urlencode(params)}")
 
 
 class GoogleCallbackRequest(BaseModel):
     code: str
+    state: str | None = None
 
 
 @router.post("/google/callback", response_model=TokenResponse)
@@ -227,6 +243,9 @@ async def google_callback(data: GoogleCallbackRequest, db: AsyncSession = Depend
     """Exchange the authorization code for user info and return a JWT."""
     if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
         raise HTTPException(status_code=501, detail="Google OAuth is not configured")
+
+    if not data.state or not verify_oauth_state_token(data.state):
+        raise HTTPException(status_code=400, detail="Invalid or expired OAuth state")
 
     # 1. Exchange code for tokens
     async with httpx.AsyncClient() as client:
@@ -299,7 +318,7 @@ async def google_callback(data: GoogleCallbackRequest, db: AsyncSession = Depend
     is_first_login = not user.has_logged_in
     if is_first_login:
         user.has_logged_in = True
-    user.last_login_at = datetime.utcnow()
+    user.last_login_at = datetime.now(timezone.utc)
     user.login_count = (user.login_count or 0) + 1
     await log_activity(db, user, "login", detail="google_oauth")
     await db.commit()

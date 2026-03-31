@@ -1,10 +1,14 @@
 """AI Career Coach API routes."""
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
 from pydantic import BaseModel, Field
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -70,7 +74,9 @@ def _parse_goal_id(goal_id: str) -> UUID:
 # ── Chat ─────────────────────────────────────────────────────────────────
 
 @router.post("/chat", response_model=ChatResponse)
+@limiter.limit("20/minute")
 async def send_chat_message(
+    request: Request,
     data: ChatRequest,
     user: User = Depends(require_premium),
     db: AsyncSession = Depends(get_db),
@@ -128,7 +134,6 @@ async def clear_chat_history(
     await db.execute(
         delete(CoachMessage).where(CoachMessage.user_id == user.id)
     )
-    await db.commit()
     await log_activity(db, user, "coach_clear_history", f"Cleared {count} messages")
     await db.commit()
     return {"detail": f"Cleared {count} messages"}
@@ -173,10 +178,9 @@ async def create_goal(
         target_date=data.target_date,
     )
     db.add(goal)
-    await db.commit()
-    await db.refresh(goal)
     await log_activity(db, user, "coach_goal_created", data.title[:100])
     await db.commit()
+    await db.refresh(goal)
     return GoalOut(
         id=str(goal.id),
         title=goal.title,
@@ -208,7 +212,7 @@ async def update_goal(
 
     if data.completed is not None:
         goal.completed = data.completed
-        goal.completed_at = datetime.utcnow() if data.completed else None
+        goal.completed_at = datetime.now(timezone.utc) if data.completed else None
     if data.title is not None:
         goal.title = data.title.strip()
     if data.target_date is not None:

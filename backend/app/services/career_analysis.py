@@ -6,7 +6,7 @@ calls the Gemini API, and returns a Markdown career transition report.
 
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from app.config import settings
@@ -237,7 +237,7 @@ def build_user_message(answers: dict, user_name: str | None, completed_at: datet
     language = get_val("Q007") or "English"
     comm_style = get_val("Q008") or "Direct"
     name_display = user_name or "Anonymous"
-    date_display = completed_at.strftime("%Y-%m-%d") if completed_at else datetime.utcnow().strftime("%Y-%m-%d")
+    date_display = completed_at.strftime("%Y-%m-%d") if completed_at else datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
     lines = [
         "Analyse the following questionnaire responses and generate a career transition "

@@ -7,7 +7,7 @@ status management.
 import hashlib
 import hmac
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 
 import httpx
@@ -49,8 +49,8 @@ def verify_webhook_signature(payload: bytes, signature: str) -> bool:
     """Verify LemonSqueezy webhook HMAC-SHA256 signature."""
     secret = settings.LEMONSQUEEZY_WEBHOOK_SECRET
     if not secret:
-        logger.warning("LEMONSQUEEZY_WEBHOOK_SECRET not set — skipping verification")
-        return True
+        logger.warning("LEMONSQUEEZY_WEBHOOK_SECRET not set — rejecting webhook")
+        return False
     expected = hmac.new(secret.encode(), payload, hashlib.sha256).hexdigest()
     return hmac.compare_digest(expected, signature)
 
@@ -160,7 +160,7 @@ async def activate_plan(
     if plan_rank.get(plan, 0) >= plan_rank.get(sub.plan, 0):
         sub.plan = plan
         sub.is_active = True
-        sub.activated_at = datetime.utcnow()
+        sub.activated_at = datetime.now(timezone.utc)
         sub.ls_customer_id = customer_id
         if subscription_id:
             sub.ls_subscription_id = subscription_id
@@ -183,7 +183,7 @@ async def handle_subscription_cancelled(
     )
     sub = result.scalar_one_or_none()
     if sub:
-        sub.cancelled_at = datetime.utcnow()
+        sub.cancelled_at = datetime.now(timezone.utc)
         await db.commit()
 
 
@@ -213,7 +213,7 @@ def is_premium(sub: Subscription | None) -> bool:
         return True
     # Monthly subscription — check expiry
     if sub.plan == "monthly":
-        if sub.expires_at and sub.expires_at < datetime.utcnow():
+        if sub.expires_at and sub.expires_at < datetime.now(timezone.utc):
             return False
         return True
     return False

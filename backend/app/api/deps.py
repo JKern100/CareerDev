@@ -32,10 +32,16 @@ async def get_current_user(
     except JWTError:
         raise credentials_exception
 
-    result = await db.execute(select(User).where(User.id == UUID(user_id)))
+    try:
+        uid = UUID(user_id)
+    except (ValueError, AttributeError):
+        raise credentials_exception
+    result = await db.execute(select(User).where(User.id == uid))
     user = result.scalar_one_or_none()
     if user is None:
         raise credentials_exception
+    # Tag user object with impersonation flag from JWT claim
+    user._impersonated = payload.get("imp", False)
     return user
 
 
@@ -53,6 +59,10 @@ async def require_premium(
     db: AsyncSession = Depends(get_db),
 ) -> User:
     """Dependency that requires an active paid subscription."""
+    # Admin/auditor and impersonation bypass premium check
+    if getattr(user, "_impersonated", False) or user.role in ("admin", "auditor"):
+        return user
+
     from app.models.payment import Subscription
     from app.services.payment import is_premium
 
