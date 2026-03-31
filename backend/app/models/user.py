@@ -71,8 +71,8 @@ class User(Base):
     referral_code: Mapped[str | None] = mapped_column(String(20), unique=True, nullable=True, default=_generate_referral_code)
     referred_by: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("users.id"), nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
     answers: Mapped[list["Answer"]] = relationship("Answer", back_populates="user", lazy="selectin")

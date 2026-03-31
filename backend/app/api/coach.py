@@ -79,7 +79,7 @@ def _parse_goal_id(goal_id: str) -> UUID:
 
 async def _get_daily_message_count(user_id: UUID, db: AsyncSession) -> int:
     """Count user messages sent today (UTC)."""
-    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
     result = await db.execute(
         select(func.count()).select_from(CoachMessage).where(
             CoachMessage.user_id == user_id,
@@ -255,7 +255,7 @@ async def update_goal(
 
     if data.completed is not None:
         goal.completed = data.completed
-        goal.completed_at = datetime.now(timezone.utc) if data.completed else None
+        goal.completed_at = datetime.utcnow() if data.completed else None
     if data.title is not None:
         goal.title = data.title.strip()
     if data.target_date is not None:

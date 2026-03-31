@@ -17,4 +17,4 @@ class AuditEvent(Base):
     metadata_json: Mapped[dict | None] = mapped_column(JSON)
     before_hash: Mapped[str | None] = mapped_column(String(64))
     after_hash: Mapped[str | None] = mapped_column(String(64))
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)

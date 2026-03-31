@@ -18,4 +18,4 @@ class ActivityEvent(Base):
     action: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     detail: Mapped[str | None] = mapped_column(String(500))
     metadata_json: Mapped[dict | None] = mapped_column(JSON)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)

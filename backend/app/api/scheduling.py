@@ -322,7 +322,7 @@ async def get_available_slots(
         return []
 
     # Load existing bookings in the date range
-    today = datetime.now(timezone.utc).date()
+    today = datetime.utcnow().date()
     end_date = today + timedelta(days=days_ahead)
     result = await db.execute(
         select(Booking).where(
@@ -362,7 +362,7 @@ async def get_available_slots(
                 if (date_str, slot_start) not in booked_set:
                     # Skip past slots for today
                     if date == today:
-                        now_minutes = datetime.now(timezone.utc).hour * 60 + datetime.now(timezone.utc).minute
+                        now_minutes = datetime.utcnow().hour * 60 + datetime.utcnow().minute
                         if current_minutes <= now_minutes:
                             current_minutes += duration
                             continue

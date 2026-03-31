@@ -35,8 +35,8 @@ class Answer(Base):
     value_json: Mapped[dict] = mapped_column(JSON, nullable=False)  # the actual answer
     confidence: Mapped[int] = mapped_column(Integer, default=100)  # 0-100
     evidence_refs: Mapped[list | None] = mapped_column(JSON)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     user: Mapped["User"] = relationship("User", back_populates="answers")
 
@@ -50,4 +50,4 @@ class Evidence(Base):
     storage_uri: Mapped[str | None] = mapped_column(String(500))
     content: Mapped[str | None] = mapped_column(Text)
     redaction_status: Mapped[str] = mapped_column(String(20), default="raw")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

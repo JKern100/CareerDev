@@ -36,7 +36,7 @@ class PromoCode(Base):
     # Attribution
     note: Mapped[str | None] = mapped_column(Text, nullable=True)  # admin note: "Influencer X campaign"
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     created_by: Mapped[uuid.UUID | None] = mapped_column(Uuid, nullable=True)  # admin who created it
 
 
@@ -52,4 +52,4 @@ class PromoRedemption(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"), nullable=False)
     plan_applied: Mapped[str] = mapped_column(String(30), nullable=False)  # which plan the code was used on
     discount_applied: Mapped[str] = mapped_column(String(100), nullable=False)  # human-readable: "30% off", "$10 off", "Full unlock (pro)"
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

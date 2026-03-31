@@ -135,7 +135,7 @@ async def get_dashboard_stats(
     admin: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
-    now = datetime.now(timezone.utc)
+    now = datetime.utcnow()
     week_ago = now - timedelta(days=7)
     month_ago = now - timedelta(days=30)
 
@@ -720,7 +720,7 @@ async def get_activity(
     db: AsyncSession = Depends(get_db),
 ):
     """Get activity events with optional filters."""
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    cutoff = datetime.utcnow() - timedelta(days=days)
     query = select(ActivityEvent).where(ActivityEvent.created_at >= cutoff)
 
     if role:
@@ -756,7 +756,7 @@ async def get_user_activity(
     db: AsyncSession = Depends(get_db),
 ):
     """Get activity events for a specific user."""
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    cutoff = datetime.utcnow() - timedelta(days=days)
     user_uuid = uuid.UUID(user_id)
     query = (
         select(ActivityEvent)
@@ -817,7 +817,7 @@ async def get_coach_usage(
     db: AsyncSession = Depends(get_db),
 ):
     """Get overall AI coach usage analytics."""
-    now = datetime.now(timezone.utc)
+    now = datetime.utcnow()
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     week_ago = now - timedelta(days=7)
     month_ago = now - timedelta(days=30)
@@ -901,7 +901,7 @@ async def get_coach_user_usage(
     if not target_user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    now = datetime.now(timezone.utc)
+    now = datetime.utcnow()
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     week_ago = now - timedelta(days=7)
 
