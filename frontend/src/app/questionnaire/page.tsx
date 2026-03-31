@@ -322,11 +322,11 @@ function QuestionnaireContent() {
         <div className="container" style={{ textAlign: "center", marginTop: "4rem", maxWidth: "560px" }}>
           <div style={{
             width: "64px", height: "64px", borderRadius: "50%",
-            background: "#dbeafe",
+            background: "linear-gradient(135deg, #dbeafe, #e0e7ff)",
             display: "inline-flex", alignItems: "center", justifyContent: "center",
             fontSize: "1.75rem", marginBottom: "1.5rem",
           }}>
-            &#127775;
+            &#128274;
           </div>
           <h1 style={{ fontSize: "1.5rem", marginBottom: "0.75rem" }}>
             {t("ui.upgrade_title")}
@@ -337,25 +337,27 @@ function QuestionnaireContent() {
           <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
             <button
               className="btn btn-primary"
-              onClick={() => router.push("/summary")}
-              style={{ padding: "0.75rem 2rem" }}
-            >
-              {t("ui.upgrade_see_free")}
-            </button>
-            <button
-              className="btn btn-outline"
               onClick={() => router.push("/pricing")}
-              style={{
-                padding: "0.75rem 2rem",
-                borderColor: "#3b82f6",
-                color: "#3b82f6",
-                fontWeight: 600,
-              }}
+              style={{ padding: "0.75rem 2rem", fontSize: "1rem" }}
             >
               {t("ui.upgrade_cta")}
             </button>
           </div>
-          <p style={{ color: "var(--muted)", fontSize: "0.8rem", marginTop: "1.5rem" }}>
+          <button
+            onClick={() => router.push("/dashboard")}
+            style={{
+              background: "none",
+              border: "none",
+              color: "var(--muted)",
+              cursor: "pointer",
+              fontSize: "0.85rem",
+              marginTop: "1.25rem",
+              textDecoration: "underline",
+            }}
+          >
+            Back to dashboard
+          </button>
+          <p style={{ color: "var(--muted)", fontSize: "0.8rem", marginTop: "1rem" }}>
             {t("ui.upgrade_note")}
           </p>
         </div>
