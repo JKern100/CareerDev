@@ -1,4 +1,5 @@
 import logging
+import sys
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
@@ -26,8 +27,8 @@ def _add_missing_columns(conn):
     create_all only creates new tables — it won't ALTER existing ones.
     This function inspects each table and adds missing columns with defaults.
 
-    Uses SAVEPOINTs so that one failed ALTER TABLE doesn't abort the
-    entire transaction (required for PostgreSQL).
+    Uses context-manager SAVEPOINTs so that one failed ALTER TABLE doesn't
+    abort the entire transaction (required for PostgreSQL).
     """
     inspector = inspect(conn)
     existing_tables = inspector.get_table_names()
@@ -54,17 +55,16 @@ def _add_missing_columns(conn):
             if column.name not in existing_columns:
                 col_type = type(column.type).__name__.upper()
                 sql_type = type_map.get(col_type, "TEXT")
-                logger.info(f"Adding missing column {table.name}.{column.name} ({sql_type})")
+                print(f"[startup] Adding missing column {table.name}.{column.name} ({sql_type})", flush=True)
                 try:
-                    # Use SAVEPOINT so a failure here doesn't abort the
-                    # outer transaction (PostgreSQL requirement).
-                    nested = conn.begin_nested()
-                    conn.execute(text(
-                        f'ALTER TABLE {table.name} ADD COLUMN "{column.name}" {sql_type}'
-                    ))
-                    nested.commit()
+                    # Context-manager begin_nested() auto-rolls-back the
+                    # SAVEPOINT on exception so the outer txn stays healthy.
+                    with conn.begin_nested():
+                        conn.execute(text(
+                            f'ALTER TABLE {table.name} ADD COLUMN "{column.name}" {sql_type}'
+                        ))
                 except Exception as e:
-                    logger.warning(f"Could not add column {table.name}.{column.name}: {e}")
+                    print(f"[startup] WARN: Could not add column {table.name}.{column.name}: {e}", flush=True)
 
 
 async def _seed_questions():
@@ -230,19 +230,27 @@ async def lifespan(app: FastAPI):
     import app.models.promo  # noqa: F401
 
     try:
+        print("[startup] Connecting to database...", flush=True)
         async with engine.begin() as conn:
+            print("[startup] Running create_all...", flush=True)
             await conn.run_sync(Base.metadata.create_all)
+            print("[startup] Running _add_missing_columns...", flush=True)
             await conn.run_sync(_add_missing_columns)
+        print("[startup] DB schema ready", flush=True)
 
+        print("[startup] Seeding pathways...", flush=True)
         await _seed_pathways()
+        print("[startup] Seeding questions...", flush=True)
         await _seed_questions()
         await _repair_question_data()
         await _backfill_existing_users_verified()
+        print("[startup] Backfilling referral codes...", flush=True)
         await _backfill_referral_codes()
+        print("[startup] All startup tasks complete — app ready", flush=True)
     except Exception:
         import traceback
+        print("[startup] FATAL: Startup failed!", file=sys.stderr, flush=True)
         traceback.print_exc()
-        logger.critical("Startup failed — see traceback above")
         raise
     yield
 
