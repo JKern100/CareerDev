@@ -143,7 +143,7 @@ async def login(request: Request, data: UserLogin, db: AsyncSession = Depends(ge
         user.has_logged_in = True
 
     # Track login time and count
-    user.last_login_at = datetime.now(timezone.utc)
+    user.last_login_at = datetime.utcnow()
     user.login_count = (user.login_count or 0) + 1
     await log_activity(db, user, "login")
     await db.commit()
@@ -341,7 +341,7 @@ async def google_callback(data: GoogleCallbackRequest, db: AsyncSession = Depend
     is_first_login = not user.has_logged_in
     if is_first_login:
         user.has_logged_in = True
-    user.last_login_at = datetime.now(timezone.utc)
+    user.last_login_at = datetime.utcnow()
     user.login_count = (user.login_count or 0) + 1
     await log_activity(db, user, "login", detail="google_oauth")
     await db.commit()

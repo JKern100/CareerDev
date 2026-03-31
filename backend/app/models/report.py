@@ -16,7 +16,7 @@ class Report(Base):
     citations_map: Mapped[dict | None] = mapped_column(JSON)
     version: Mapped[int] = mapped_column(Integer, default=1)
     status: Mapped[str] = mapped_column(String(20), default="pending")  # pending, generating, complete, failed
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     user: Mapped["User"] = relationship("User", back_populates="reports")
 
@@ -29,4 +29,4 @@ class AnalysisReport(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"), nullable=False, index=True)
     markdown_report: Mapped[str] = mapped_column(Text, nullable=False)
     model_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

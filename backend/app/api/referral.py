@@ -116,7 +116,7 @@ async def claim_referral_reward(
     # We track this by counting how many full REFERRALS_FOR_REWARD sets
     # have been applied. We store the count in a simple way: each claim
     # extends by (rewards_deserved * 1 month) from now or current expiry.
-    now = datetime.now(timezone.utc)
+    now = datetime.utcnow()
 
     # Determine base date for extension
     if sub.plan in ("pro", "monthly") and sub.is_active and sub.expires_at and sub.expires_at > now:

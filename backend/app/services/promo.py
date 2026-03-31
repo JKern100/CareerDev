@@ -50,7 +50,7 @@ async def validate_code(
     if not promo.is_active:
         raise PromoValidationError("This promo code is no longer active")
 
-    if promo.expires_at and promo.expires_at < datetime.now(timezone.utc):
+    if promo.expires_at and promo.expires_at < datetime.utcnow():
         raise PromoValidationError("This promo code has expired")
 
     # Check applies_to
@@ -143,7 +143,7 @@ async def redeem_full_unlock(
     if plan_rank.get(target_plan, 0) >= plan_rank.get(sub.plan, 0):
         sub.plan = target_plan
         sub.is_active = True
-        sub.activated_at = datetime.now(timezone.utc)
+        sub.activated_at = datetime.utcnow()
         sub.cancelled_at = None
 
     # Record redemption

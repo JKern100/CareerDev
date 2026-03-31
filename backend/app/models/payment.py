@@ -34,7 +34,7 @@ class Payment(Base):
     currency: Mapped[str] = mapped_column(String(10), default="USD")
     status: Mapped[str] = mapped_column(String(30), nullable=False)  # "paid", "refunded"
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
 class Subscription(Base):
@@ -57,5 +57,5 @@ class Subscription(Base):
     expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)  # null = lifetime for one-time
     cancelled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

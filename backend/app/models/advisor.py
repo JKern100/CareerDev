@@ -20,7 +20,7 @@ class Advisor(Base):
     session_duration_minutes: Mapped[int] = mapped_column(Integer, default=60)
     jurisdiction_scope: Mapped[list | None] = mapped_column(JSON)  # ["UAE", "EU"]
     active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
 class AvailabilitySlot(Base):
@@ -53,5 +53,5 @@ class Booking(Base):
     end_time: Mapped[str] = mapped_column(String(5), nullable=False)  # "11:00"
     status: Mapped[str] = mapped_column(String(20), default="confirmed")  # confirmed, cancelled, completed
     notes: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

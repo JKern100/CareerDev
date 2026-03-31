@@ -52,4 +52,4 @@ class PathwayScore(Base):
     top_evidence_signals: Mapped[list | None] = mapped_column(JSON)
     risks_unknowns: Mapped[list | None] = mapped_column(JSON)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

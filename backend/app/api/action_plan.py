@@ -150,11 +150,11 @@ async def update_step(
         old_status = step.status
         step.status = data.status
         if data.status == "in_progress" and old_status == "todo":
-            step.started_at = datetime.now(timezone.utc)
+            step.started_at = datetime.utcnow()
         elif data.status == "done":
-            step.completed_at = datetime.now(timezone.utc)
+            step.completed_at = datetime.utcnow()
             if not step.started_at:
-                step.started_at = datetime.now(timezone.utc)
+                step.started_at = datetime.utcnow()
         elif data.status == "todo":
             step.completed_at = None
 
