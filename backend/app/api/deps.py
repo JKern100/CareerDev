@@ -59,8 +59,8 @@ async def require_premium(
     db: AsyncSession = Depends(get_db),
 ) -> User:
     """Dependency that requires an active paid subscription."""
-    # Admin impersonation bypasses premium check
-    if getattr(user, "_impersonated", False):
+    # Admin/auditor and impersonation bypass premium check
+    if getattr(user, "_impersonated", False) or user.role in ("admin", "auditor"):
         return user
 
     from app.models.payment import Subscription

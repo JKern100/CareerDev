@@ -153,6 +153,7 @@ async def me(
     sub = result.scalar_one_or_none()
 
     impersonated = getattr(user, "_impersonated", False)
+    is_admin = user.role in ("admin", "auditor")
 
     return {
         "id": str(user.id),
@@ -162,8 +163,8 @@ async def me(
         "questionnaire_completed": user.questionnaire_completed,
         "current_module": user.current_module,
         "can_regenerate_summary": user.can_regenerate_summary,
-        "plan": "pro" if impersonated else (sub.plan if sub else "free"),
-        "is_premium": True if impersonated else _is_premium(sub),
+        "plan": "pro" if (impersonated or is_admin) else (sub.plan if sub else "free"),
+        "is_premium": True if (impersonated or is_admin) else _is_premium(sub),
     }
 
 

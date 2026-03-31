@@ -408,86 +408,84 @@ export default function Home() {
       {/* Pathways */}
       <section
         id="pathways"
-        style={{
-          padding: "3rem 1rem",
-          maxWidth: "1000px",
-          margin: "0 auto",
-        }}
+        style={{ padding: "3rem 0", overflow: "hidden" }}
       >
-        <h2
-          style={{
-            textAlign: "center",
-            fontSize: "1.75rem",
-            fontWeight: 700,
-            marginBottom: "1rem",
-          }}
-        >
-          14 career pathways
-        </h2>
-        <p
-          style={{
-            textAlign: "center",
-            color: "#94a3b8",
-            marginBottom: "2.5rem",
-            maxWidth: "600px",
-            margin: "0 auto 2.5rem",
-          }}
-        >
-          Each pathway is scored against your unique profile using a six-component model:
-          interest fit, skill match, environment preference, feasibility, compensation, and risk tolerance.
-        </p>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: "1rem",
-          }}
-        >
+        <div style={{ textAlign: "center", marginBottom: "2rem", padding: "0 1rem" }}>
+          <p style={{ color: "#60a5fa", fontSize: "0.8rem", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "0.5rem" }}>
+            Your skills open doors
+          </p>
+          <h2 style={{ fontSize: "1.75rem", fontWeight: 700, marginBottom: "0.75rem" }}>
+            15 career pathways, scored to you
+          </h2>
+          <p style={{ color: "#94a3b8", maxWidth: "520px", margin: "0 auto", fontSize: "0.95rem", lineHeight: 1.6 }}>
+            Interest fit, skill match, feasibility, compensation, and more &mdash; each pathway ranked against your unique profile.
+          </p>
+        </div>
+
+        {/* Row 1 - scrolls left */}
+        <div style={{ display: "flex", gap: "0.75rem", animation: "marqueeLeft 35s linear infinite", width: "max-content", marginBottom: "0.75rem" }}>
           {[
-            { name: "Aviation Training", icon: "+" },
-            { name: "Corporate L&D", icon: "+" },
-            { name: "HR & Talent", icon: "+" },
-            { name: "Customer Experience", icon: "+" },
-            { name: "Operations", icon: "+" },
-            { name: "Safety & Compliance", icon: "+" },
-            { name: "Project Management", icon: "+" },
-            { name: "Business Analysis", icon: "+" },
-            { name: "UX/UI Design", icon: "+" },
-            { name: "Hospitality & Luxury", icon: "+" },
-            { name: "Private Aviation", icon: "+" },
-            { name: "Healthcare", icon: "+" },
-            { name: "Sales & Biz Dev", icon: "+" },
-            { name: "Entrepreneurship", icon: "+" },
-            { name: "Education & Coaching", icon: "+" },
-          ].map((pw) => (
+            { name: "Aviation Training", icon: "\u2708\uFE0F" },
+            { name: "Corporate L&D", icon: "\uD83C\uDFAF" },
+            { name: "HR & Talent", icon: "\uD83E\uDD1D" },
+            { name: "Customer Experience", icon: "\u2B50" },
+            { name: "Operations", icon: "\u2699\uFE0F" },
+            { name: "Safety & Compliance", icon: "\uD83D\uDEE1\uFE0F" },
+            { name: "Project Management", icon: "\uD83D\uDCCA" },
+            { name: "Business Analysis", icon: "\uD83D\uDD0D" },
+            { name: "Aviation Training", icon: "\u2708\uFE0F" },
+            { name: "Corporate L&D", icon: "\uD83C\uDFAF" },
+            { name: "HR & Talent", icon: "\uD83E\uDD1D" },
+            { name: "Customer Experience", icon: "\u2B50" },
+            { name: "Operations", icon: "\u2699\uFE0F" },
+            { name: "Safety & Compliance", icon: "\uD83D\uDEE1\uFE0F" },
+            { name: "Project Management", icon: "\uD83D\uDCCA" },
+            { name: "Business Analysis", icon: "\uD83D\uDD0D" },
+          ].map((pw, i) => (
             <div
-              key={pw.name}
+              key={`r1-${i}`}
               style={{
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid #1e293b",
-                borderRadius: "10px",
-                padding: "1.25rem",
-                textAlign: "center",
+                display: "flex", alignItems: "center", gap: "0.6rem",
+                background: "rgba(255,255,255,0.04)", border: "1px solid #1e293b",
+                borderRadius: "50px", padding: "0.5rem 1.1rem 0.5rem 0.6rem",
+                whiteSpace: "nowrap", flexShrink: 0,
               }}
             >
-              <div
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "10px",
-                  background: "rgba(37, 99, 235, 0.15)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  margin: "0 auto 0.75rem",
-                  color: "#60a5fa",
-                  fontSize: "1.2rem",
-                  fontWeight: 700,
-                }}
-              >
-                {pw.icon}
-              </div>
-              <p style={{ fontWeight: 500, fontSize: "0.9rem" }}>{pw.name}</p>
+              <span style={{ fontSize: "1.25rem", lineHeight: 1 }}>{pw.icon}</span>
+              <span style={{ fontWeight: 500, fontSize: "0.88rem", color: "#e2e8f0" }}>{pw.name}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Row 2 - scrolls right */}
+        <div style={{ display: "flex", gap: "0.75rem", animation: "marqueeRight 40s linear infinite", width: "max-content" }}>
+          {[
+            { name: "UX/UI Design", icon: "\uD83C\uDFA8" },
+            { name: "Hospitality & Luxury", icon: "\uD83C\uDFE8" },
+            { name: "Private Aviation", icon: "\uD83D\uDEE9\uFE0F" },
+            { name: "Healthcare", icon: "\uD83E\uDE7A" },
+            { name: "Sales & Biz Dev", icon: "\uD83D\uDCB0" },
+            { name: "Entrepreneurship", icon: "\uD83D\uDE80" },
+            { name: "Education & Coaching", icon: "\uD83C\uDF93" },
+            { name: "UX/UI Design", icon: "\uD83C\uDFA8" },
+            { name: "Hospitality & Luxury", icon: "\uD83C\uDFE8" },
+            { name: "Private Aviation", icon: "\uD83D\uDEE9\uFE0F" },
+            { name: "Healthcare", icon: "\uD83E\uDE7A" },
+            { name: "Sales & Biz Dev", icon: "\uD83D\uDCB0" },
+            { name: "Entrepreneurship", icon: "\uD83D\uDE80" },
+            { name: "Education & Coaching", icon: "\uD83C\uDF93" },
+          ].map((pw, i) => (
+            <div
+              key={`r2-${i}`}
+              style={{
+                display: "flex", alignItems: "center", gap: "0.6rem",
+                background: "rgba(255,255,255,0.04)", border: "1px solid #1e293b",
+                borderRadius: "50px", padding: "0.5rem 1.1rem 0.5rem 0.6rem",
+                whiteSpace: "nowrap", flexShrink: 0,
+              }}
+            >
+              <span style={{ fontSize: "1.25rem", lineHeight: 1 }}>{pw.icon}</span>
+              <span style={{ fontWeight: 500, fontSize: "0.88rem", color: "#e2e8f0" }}>{pw.name}</span>
             </div>
           ))}
         </div>
