@@ -385,6 +385,19 @@
       "back_to_dashboard": "Volver al panel"
     }
   },
+  "referral": {
+    "title": "Invita amigos, gana Pro gratis",
+    "subtitle": "Comparte tu enlace de referido. Por cada 3 que se registren, recibes 1 mes gratis de Pro.",
+    "referrals_count": "referido(s)",
+    "more_needed": "m\u00e1s para la pr\u00f3xima recompensa",
+    "free_month": "mes gratis",
+    "copied": "\u00a1Copiado!",
+    "copy_link": "Copiar enlace",
+    "share_hint": "Comparte este enlace con amigos que est\u00e9n comenzando su transici\u00f3n profesional.",
+    "claim_reward": "Reclamar mes gratis de Pro",
+    "months_earned": "mes(es) de Pro ganado(s)",
+    "invited_badge": "\u00a1Has sido invitado! Crea tu cuenta gratuita abajo."
+  },
   "questions": {
     "Q005": {
       "prompt": "¿Consientes el procesamiento de tus datos profesionales para generar recomendaciones?",

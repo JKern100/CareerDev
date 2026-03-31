@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getMe, getSummary, getCareerReport, getProgress } from "@/lib/api";
 import FlowerSpinner from "@/components/FlowerSpinner";
+import ReferralCard from "@/components/ReferralCard";
 import { useTranslation, LANGUAGES, LangCode } from "@/hooks/useTranslation";
 
 interface UserState {
@@ -310,6 +311,9 @@ export default function DashboardPage() {
             onClick={() => router.push(!pro ? "/pricing" : "/coach")}
           />
         </div>
+
+        {/* Referral card */}
+        <ReferralCard />
       </div>
     </div>
   );

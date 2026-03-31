@@ -43,10 +43,10 @@ async function request<T>(
 }
 
 // Auth
-export async function register(email: string, password: string, fullName?: string) {
+export async function register(email: string, password: string, fullName?: string, referralCode?: string) {
   return request<{ id: string; email: string; email_verified: boolean }>("/auth/register", {
     method: "POST",
-    body: JSON.stringify({ email, password, full_name: fullName }),
+    body: JSON.stringify({ email, password, full_name: fullName, referral_code: referralCode || undefined }),
   });
 }
 
@@ -683,6 +683,40 @@ export async function updateActionStep(stepId: string, data: { status?: string; 
     method: "PATCH",
     body: JSON.stringify(data),
   });
+}
+
+// Referral
+export interface ReferralStats {
+  referral_code: string;
+  total_referrals: number;
+  rewards_earned: number;
+  next_reward_in: number;
+}
+
+export interface ReferralRewardResult {
+  rewarded: boolean;
+  message: string;
+  plan: string | null;
+  expires_at: string | null;
+}
+
+export interface AdminReferralOverview {
+  total_referrals: number;
+  total_rewards_granted: number;
+  top_referrers: { user_id: string; email: string; full_name: string | null; referral_code: string; referral_count: number; rewards_earned: number }[];
+  recent_referrals: { user_id: string; email: string; full_name: string | null; signed_up_at: string | null; referrer_email: string; referrer_code: string }[];
+}
+
+export async function getReferralStats() {
+  return request<ReferralStats>("/referral/stats");
+}
+
+export async function claimReferralReward() {
+  return request<ReferralRewardResult>("/referral/claim-reward", { method: "POST" });
+}
+
+export async function getAdminReferralOverview() {
+  return request<AdminReferralOverview>("/referral/admin/overview");
 }
 
 // Payment

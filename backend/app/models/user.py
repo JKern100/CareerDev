@@ -1,12 +1,22 @@
+import secrets
+import string
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import String, Boolean, DateTime, Integer, Enum as SAEnum, Uuid
+from sqlalchemy import String, Boolean, DateTime, Integer, Enum as SAEnum, Uuid, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
 import enum
+
+
+def _generate_referral_code() -> str:
+    """Generate a short unique referral code like 'JAYK-2X9F'."""
+    chars = string.ascii_uppercase + string.digits
+    part1 = "".join(secrets.choice(chars) for _ in range(4))
+    part2 = "".join(secrets.choice(chars) for _ in range(4))
+    return f"{part1}-{part2}"
 
 
 class UserRole(str, enum.Enum):
@@ -56,6 +66,10 @@ class User(Base):
     questionnaire_completed: Mapped[bool] = mapped_column(Boolean, default=False)
     current_module: Mapped[str | None] = mapped_column(String(10))
     current_question_id: Mapped[str | None] = mapped_column(String(10))
+
+    # Referral system
+    referral_code: Mapped[str | None] = mapped_column(String(20), unique=True, nullable=True, default=_generate_referral_code)
+    referred_by: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("users.id"), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
