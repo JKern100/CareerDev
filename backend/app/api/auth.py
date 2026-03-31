@@ -32,7 +32,7 @@ limiter = Limiter(key_func=get_remote_address)
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 @limiter.limit("5/minute")
 async def register(request: Request, data: UserRegister, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.email == data.email))
@@ -59,18 +59,27 @@ async def register(request: Request, data: UserRegister, db: AsyncSession = Depe
     await db.commit()
     await db.refresh(user)
 
-    # Send verification email
+    # Send verification email in background (non-blocking)
     token = create_email_verification_token(user.email)
     email_sent = await send_verification_email(user.email, token)
 
     if not email_sent:
-        # Only auto-verify if SMTP is not configured at all (dev mode)
-        if not settings.SMTP_HOST:
+        # Only auto-verify if Resend is not configured at all (dev mode)
+        if not settings.RESEND_API_KEY:
             user.email_verified = True
             await db.commit()
             await db.refresh(user)
 
-    return user
+    # Track login
+    user.has_logged_in = True
+    user.last_login_at = datetime.utcnow()
+    user.login_count = 1
+    await log_activity(db, user, "register")
+    await db.commit()
+
+    # Auto-login: return JWT
+    access_token = create_access_token({"sub": str(user.id)})
+    return TokenResponse(access_token=access_token, is_first_login=True)
 
 
 @router.post("/verify-email")
@@ -108,8 +117,8 @@ async def resend_verification(data: ResendVerificationRequest, db: AsyncSession 
     if user and not user.email_verified:
         token = create_email_verification_token(user.email)
         email_sent = await send_verification_email(user.email, token)
-        if not email_sent:
-            # Auto-verify if email delivery isn't available
+        if not email_sent and not settings.RESEND_API_KEY:
+            # Auto-verify only in dev mode (no email provider configured)
             user.email_verified = True
             await db.commit()
     return {"detail": "If that email is registered and unverified, a verification link has been sent."}
@@ -128,14 +137,6 @@ async def login(request: Request, data: UserLogin, db: AsyncSession = Depends(ge
             status_code=400,
             detail="This account uses Google sign-in. Please sign in with Google.",
         )
-
-    if not user.email_verified and user.role == "user":
-        if not settings.SMTP_HOST:
-            # No email delivery available — auto-verify so users aren't stuck
-            user.email_verified = True
-            await db.commit()
-        else:
-            raise HTTPException(status_code=403, detail="Please verify your email before signing in. Check your inbox for a verification link.")
 
     # Track first login
     is_first_login = not user.has_logged_in
@@ -174,6 +175,7 @@ async def me(
         "questionnaire_completed": user.questionnaire_completed,
         "current_module": user.current_module,
         "can_regenerate_summary": user.can_regenerate_summary,
+        "email_verified": user.email_verified,
         "plan": "pro" if (impersonated or is_admin) else (sub.plan if sub else "free"),
         "is_premium": True if (impersonated or is_admin) else _is_premium(sub),
     }

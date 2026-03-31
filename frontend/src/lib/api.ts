@@ -44,10 +44,15 @@ async function request<T>(
 
 // Auth
 export async function register(email: string, password: string, fullName?: string, referralCode?: string) {
-  return request<{ id: string; email: string; email_verified: boolean }>("/auth/register", {
+  const data = await request<{ access_token: string; is_first_login: boolean }>("/auth/register", {
     method: "POST",
     body: JSON.stringify({ email, password, full_name: fullName, referral_code: referralCode || undefined }),
   });
+  localStorage.setItem("token", data.access_token);
+  if (data.is_first_login) {
+    localStorage.setItem("is_first_login", "true");
+  }
+  return data;
 }
 
 export async function login(email: string, password: string) {
@@ -85,6 +90,7 @@ export async function getMe() {
     questionnaire_completed: boolean;
     current_module: string | null;
     can_regenerate_summary: boolean;
+    email_verified: boolean;
     plan: string;
     is_premium: boolean;
   }>("/auth/me");
