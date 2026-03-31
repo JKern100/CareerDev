@@ -4,7 +4,11 @@ import logging
 from datetime import datetime
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
 from pydantic import BaseModel, Field
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -70,7 +74,9 @@ def _parse_goal_id(goal_id: str) -> UUID:
 # ── Chat ─────────────────────────────────────────────────────────────────
 
 @router.post("/chat", response_model=ChatResponse)
+@limiter.limit("20/minute")
 async def send_chat_message(
+    request: Request,
     data: ChatRequest,
     user: User = Depends(require_premium),
     db: AsyncSession = Depends(get_db),

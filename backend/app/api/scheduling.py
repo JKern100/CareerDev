@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -34,9 +34,9 @@ class AdvisorOut(BaseModel):
 
 
 class AvailabilitySlotIn(BaseModel):
-    day_of_week: int  # 0=Mon, 6=Sun
-    start_time: str   # "09:00"
-    end_time: str      # "17:00"
+    day_of_week: int = Field(..., ge=0, le=6)
+    start_time: str = Field(..., pattern=r"^\d{2}:\d{2}$")
+    end_time: str = Field(..., pattern=r"^\d{2}:\d{2}$")
 
 
 class AvailabilitySlotOut(BaseModel):
@@ -58,9 +58,9 @@ class TimeSlotOut(BaseModel):
 
 
 class BookingIn(BaseModel):
-    advisor_id: str
-    date: str        # "2026-03-15"
-    start_time: str  # "10:00"
+    advisor_id: str = Field(..., max_length=50)
+    date: str = Field(..., pattern=r"^\d{4}-\d{2}-\d{2}$")
+    start_time: str = Field(..., pattern=r"^\d{2}:\d{2}$")
 
 
 class BookingOut(BaseModel):
@@ -79,12 +79,12 @@ class BookingOut(BaseModel):
 
 
 class AdvisorProfileIn(BaseModel):
-    bio: str | None = None
-    credentials: str | None = None
+    bio: str | None = Field(default=None, max_length=2000)
+    credentials: str | None = Field(default=None, max_length=1000)
     specialties: list | None = None
     languages: list | None = None
-    timezone: str | None = None
-    session_duration_minutes: int | None = None
+    timezone: str | None = Field(default=None, max_length=100)
+    session_duration_minutes: int | None = Field(default=None, ge=15, le=240)
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────
@@ -106,8 +106,16 @@ async def _get_or_create_advisor(user: User, db: AsyncSession) -> Advisor:
     return advisor
 
 
+def _parse_uuid(value: str, label: str = "ID") -> UUID:
+    """Parse a string to UUID, raising 400 on invalid format."""
+    try:
+        return UUID(value)
+    except (ValueError, AttributeError):
+        raise HTTPException(status_code=400, detail=f"Invalid {label}")
+
+
 async def _get_advisor_with_user(advisor_id: str, db: AsyncSession) -> tuple[Advisor, User]:
-    result = await db.execute(select(Advisor).where(Advisor.id == UUID(advisor_id)))
+    result = await db.execute(select(Advisor).where(Advisor.id == _parse_uuid(advisor_id, "advisor ID")))
     advisor = result.scalar_one_or_none()
     if not advisor:
         raise HTTPException(status_code=404, detail="Advisor not found")
@@ -474,7 +482,7 @@ async def cancel_booking(
     db: AsyncSession = Depends(get_db),
 ):
     """Cancel a booking. Both user and advisor can cancel."""
-    result = await db.execute(select(Booking).where(Booking.id == UUID(booking_id)))
+    result = await db.execute(select(Booking).where(Booking.id == _parse_uuid(booking_id, "booking ID")))
     booking = result.scalar_one_or_none()
     if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")
