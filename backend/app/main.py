@@ -25,6 +25,9 @@ def _add_missing_columns(conn):
 
     create_all only creates new tables — it won't ALTER existing ones.
     This function inspects each table and adds missing columns with defaults.
+
+    Uses SAVEPOINTs so that one failed ALTER TABLE doesn't abort the
+    entire transaction (required for PostgreSQL).
     """
     inspector = inspect(conn)
     existing_tables = inspector.get_table_names()
@@ -33,6 +36,7 @@ def _add_missing_columns(conn):
     type_map = {
         "FLOAT": "FLOAT DEFAULT 0.0",
         "VARCHAR": "VARCHAR(200) DEFAULT ''",
+        "STRING": "VARCHAR(200) DEFAULT ''",
         "TEXT": "TEXT DEFAULT ''",
         "INTEGER": "INTEGER DEFAULT 0",
         "JSON": "JSON",
@@ -52,9 +56,13 @@ def _add_missing_columns(conn):
                 sql_type = type_map.get(col_type, "TEXT")
                 logger.info(f"Adding missing column {table.name}.{column.name} ({sql_type})")
                 try:
+                    # Use SAVEPOINT so a failure here doesn't abort the
+                    # outer transaction (PostgreSQL requirement).
+                    nested = conn.begin_nested()
                     conn.execute(text(
                         f'ALTER TABLE {table.name} ADD COLUMN "{column.name}" {sql_type}'
                     ))
+                    nested.commit()
                 except Exception as e:
                     logger.warning(f"Could not add column {table.name}.{column.name}: {e}")
 
@@ -187,6 +195,25 @@ async def _backfill_existing_users_verified():
             logger.info("Backfilled %d existing users as email_verified", updated)
 
 
+async def _backfill_referral_codes():
+    """Generate referral codes for existing users who don't have one."""
+    from app.models.user import User, _generate_referral_code
+    async with async_session() as session:
+        result = await session.execute(
+            select(User).where(
+                (User.referral_code == None) | (User.referral_code == "")  # noqa: E711
+            )
+        )
+        users = result.scalars().all()
+        updated = 0
+        for user in users:
+            user.referral_code = _generate_referral_code()
+            updated += 1
+        if updated:
+            await session.commit()
+            logger.info("Backfilled referral codes for %d existing users", updated)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Import all models so Base.metadata knows about them
@@ -202,14 +229,21 @@ async def lifespan(app: FastAPI):
     import app.models.payment  # noqa: F401
     import app.models.promo  # noqa: F401
 
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-        await conn.run_sync(_add_missing_columns)
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+            await conn.run_sync(_add_missing_columns)
 
-    await _seed_pathways()
-    await _seed_questions()
-    await _repair_question_data()
-    await _backfill_existing_users_verified()
+        await _seed_pathways()
+        await _seed_questions()
+        await _repair_question_data()
+        await _backfill_existing_users_verified()
+        await _backfill_referral_codes()
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        logger.critical("Startup failed — see traceback above")
+        raise
     yield
 
 
