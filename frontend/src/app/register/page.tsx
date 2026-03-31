@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { register, resendVerification } from "@/lib/api";
+import { useRouter, useSearchParams } from "next/navigation";
+import { register } from "@/lib/api";
 import FlowerSpinner from "@/components/FlowerSpinner";
 import { useTranslation } from "@/hooks/useTranslation";
+import { settings } from "@/lib/settings";
 
 export default function RegisterPage() {
   return (
@@ -15,6 +16,7 @@ export default function RegisterPage() {
 }
 
 function RegisterContent() {
+  const router = useRouter();
   const { t } = useTranslation();
   const searchParams = useSearchParams();
   const refCode = searchParams.get("ref") || "";
@@ -26,105 +28,28 @@ function RegisterContent() {
       localStorage.setItem("referral_code", refCode);
     }
   }, [refCode]);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [registered, setRegistered] = useState(false);
-  const [autoVerified, setAutoVerified] = useState(false);
-  const [resending, setResending] = useState(false);
-  const [resendMsg, setResendMsg] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      const result = await register(email, password, fullName || undefined, refCode || undefined);
-      setRegistered(true);
-      if (result.email_verified) {
-        setAutoVerified(true);
-      }
+      await register(email, password, fullName || undefined, refCode || undefined);
+      router.push("/dashboard");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Registration failed");
-    } finally {
       setLoading(false);
     }
   }
 
-  async function handleResend() {
-    setResending(true);
-    setResendMsg("");
-    try {
-      await resendVerification(email);
-      setResendMsg(p("verification_resent"));
-    } catch {
-      setResendMsg(p("resend_failed"));
-    } finally {
-      setResending(false);
-    }
-  }
-
-  if (registered) {
-    if (autoVerified) {
-      return (
-        <div className="container" style={{ maxWidth: "460px", textAlign: "center" }}>
-          <div style={{ marginTop: "3rem", marginBottom: "1.5rem" }}>
-            <div style={{
-              width: "64px", height: "64px", borderRadius: "50%",
-              background: "#d1fae5", display: "inline-flex",
-              alignItems: "center", justifyContent: "center", fontSize: "1.75rem",
-            }}>
-              &#10003;
-            </div>
-          </div>
-          <h1>{p("account_created")}</h1>
-          <p className="text-muted" style={{ marginTop: "0.5rem", lineHeight: 1.7 }}>
-            {p("account_ready")}
-          </p>
-          <a href="/login" className="btn btn-primary" style={{ marginTop: "1.5rem", display: "inline-flex" }}>
-            {p("sign_in")}
-          </a>
-        </div>
-      );
-    }
-
-    return (
-      <div className="container" style={{ maxWidth: "460px", textAlign: "center" }}>
-        <div style={{ marginTop: "3rem", marginBottom: "1.5rem" }}>
-          <div style={{
-            width: "64px", height: "64px", borderRadius: "50%",
-            background: "#dbeafe", display: "inline-flex",
-            alignItems: "center", justifyContent: "center", fontSize: "1.75rem",
-          }}>
-            &#9993;
-          </div>
-        </div>
-        <h1>{p("check_email")}</h1>
-        <p className="text-muted" style={{ marginTop: "0.5rem", lineHeight: 1.7 }}>
-          <span dangerouslySetInnerHTML={{ __html: t("pages.register.verification_sent", { email: email.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;") }) }} />
-        </p>
-        <div style={{ marginTop: "1.5rem" }}>
-          <button
-            className="btn btn-outline"
-            onClick={handleResend}
-            disabled={resending}
-            style={{ fontSize: "0.85rem" }}
-          >
-            {resending ? p("sending") : p("resend_verification")}
-          </button>
-        </div>
-        {resendMsg && (
-          <p className="text-sm" style={{ marginTop: "0.75rem", color: "var(--success)" }}>
-            {resendMsg}
-          </p>
-        )}
-        <p className="text-sm text-muted mt-3">
-          <a href="/login" style={{ color: "var(--primary)" }}>{p("go_to_signin")}</a>
-        </p>
-      </div>
-    );
+  function handleGoogleSignIn() {
+    window.location.href = "/api/auth/google";
   }
 
   return (
@@ -148,8 +73,55 @@ function RegisterContent() {
           fontSize: "0.85rem",
           color: "#60a5fa",
         }}>
-          &#127873; {t("referral.invited_badge")}
+          {t("referral.invited_badge")}
         </div>
+      )}
+
+      {/* Google Sign-In */}
+      {settings.googleOAuthEnabled && (
+        <>
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.6rem",
+              width: "100%",
+              padding: "0.7rem 1rem",
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid var(--border)",
+              borderRadius: "10px",
+              color: "var(--foreground)",
+              fontSize: "0.9rem",
+              fontWeight: 500,
+              cursor: "pointer",
+              marginBottom: "0.25rem",
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+              <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
+              <path d="M9.003 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.26c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009.003 18z" fill="#34A853"/>
+              <path d="M3.964 10.712A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.712V4.956H.957A8.997 8.997 0 000 9c0 1.452.348 2.827.957 4.044l3.007-2.332z" fill="#FBBC05"/>
+              <path d="M9.003 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.464.891 11.428 0 9.002 0A8.997 8.997 0 00.957 4.958L3.964 7.29c.708-2.127 2.692-3.71 5.036-3.71z" fill="#EA4335"/>
+            </svg>
+            Continue with Google
+          </button>
+
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.75rem",
+            margin: "0.75rem 0",
+            color: "#64748b",
+            fontSize: "0.8rem",
+          }}>
+            <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
+            or
+            <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
+          </div>
+        </>
       )}
 
       <form onSubmit={handleSubmit} className="card flex flex-col gap-1">

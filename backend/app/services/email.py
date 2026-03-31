@@ -1,14 +1,14 @@
-"""Email sending service."""
+"""Email sending service using Resend."""
 
 import logging
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 
-import aiosmtplib
+import httpx
 
 from app.config import settings
 
 logger = logging.getLogger(__name__)
+
+RESEND_API = "https://api.resend.com/emails"
 
 
 def _branded_email(body_content: str) -> str:
@@ -24,8 +24,8 @@ def _branded_email(body_content: str) -> str:
           <!-- Header with logo -->
           <tr>
             <td align="center" style="background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); padding: 32px 24px;">
-              <img src="{logo_url}" alt="CareerDev" width="56" height="56" style="display: block; margin-bottom: 12px;" />
-              <span style="font-size: 22px; font-weight: 700; color: #ffffff; letter-spacing: 0.5px;">CareerDev</span>
+              <img src="{logo_url}" alt="CrewTransition" width="56" height="56" style="display: block; margin-bottom: 12px;" />
+              <span style="font-size: 22px; font-weight: 700; color: #ffffff; letter-spacing: 0.5px;">Crew<span style="color: #60a5fa;">Transition</span></span>
             </td>
           </tr>
           <!-- Body -->
@@ -38,7 +38,7 @@ def _branded_email(body_content: str) -> str:
           <tr>
             <td style="padding: 16px 32px 24px; border-top: 1px solid #e2e8f0;">
               <p style="color: #94a3b8; font-size: 12px; line-height: 1.5; margin: 0; text-align: center;">
-                &copy; CareerDev &mdash; Your career transition partner<br/>
+                &copy; CrewTransition &mdash; Your career transition partner<br/>
                 This is an automated message. Please do not reply directly.
               </p>
             </td>
@@ -51,27 +51,34 @@ def _branded_email(body_content: str) -> str:
 </html>"""
 
 
-async def _send_email(msg: MIMEMultipart) -> bool:
-    """Send an email via SMTP. Returns True on success, False on failure."""
-    if not settings.SMTP_HOST:
-        logger.warning("SMTP not configured — email not sent. To: %s", msg["To"])
+async def _send_email(to: str, subject: str, html: str) -> bool:
+    """Send an email via Resend API. Returns True on success."""
+    if not settings.RESEND_API_KEY:
+        logger.warning("RESEND_API_KEY not configured — email not sent. To: %s", to)
         return False
 
     try:
-        # Port 465 uses implicit SSL; port 587 uses STARTTLS
-        use_tls = settings.SMTP_PORT == 465
-        await aiosmtplib.send(
-            msg,
-            hostname=settings.SMTP_HOST,
-            port=settings.SMTP_PORT,
-            username=settings.SMTP_USER,
-            password=settings.SMTP_PASSWORD,
-            use_tls=use_tls,
-            start_tls=not use_tls,
-        )
-        return True
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                RESEND_API,
+                headers={
+                    "Authorization": f"Bearer {settings.RESEND_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "from": settings.EMAIL_FROM,
+                    "to": [to],
+                    "subject": subject,
+                    "html": html,
+                },
+                timeout=10,
+            )
+            if resp.status_code >= 400:
+                logger.error("Resend API error %s: %s", resp.status_code, resp.text)
+                return False
+            return True
     except Exception:
-        logger.exception("Failed to send email to %s", msg["To"])
+        logger.exception("Failed to send email to %s", to)
         return False
 
 
@@ -80,7 +87,7 @@ async def send_verification_email(to_email: str, token: str) -> bool:
     verify_url = f"{settings.FRONTEND_URL}/verify-email?token={token}"
 
     body = f"""\
-              <h2 style="color: #1e293b; font-size: 20px; margin: 0 0 16px;">Welcome to CareerDev!</h2>
+              <h2 style="color: #1e293b; font-size: 20px; margin: 0 0 16px;">Welcome to CrewTransition!</h2>
               <p style="margin: 0 0 12px;">Thanks for creating your account. Please verify your email address to get started on your career transition journey.</p>
               <p style="margin: 0 0 24px;">Click the button below to confirm your email:</p>
               <table cellpadding="0" cellspacing="0" style="margin: 0 0 24px;">
@@ -99,15 +106,7 @@ async def send_verification_email(to_email: str, token: str) -> bool:
               </p>"""
 
     html = _branded_email(body)
-
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = "Verify your CareerDev email"
-    msg["From"] = settings.SMTP_FROM_EMAIL
-    msg["To"] = to_email
-    msg.attach(MIMEText(f"Verify your email: {verify_url}", "plain"))
-    msg.attach(MIMEText(html, "html"))
-
-    return await _send_email(msg)
+    return await _send_email(to_email, "Verify your CrewTransition email", html)
 
 
 async def send_reset_email(to_email: str, reset_token: str) -> bool:
@@ -116,7 +115,7 @@ async def send_reset_email(to_email: str, reset_token: str) -> bool:
 
     body = f"""\
               <h2 style="color: #1e293b; font-size: 20px; margin: 0 0 16px;">Password Reset</h2>
-              <p style="margin: 0 0 12px;">You requested a password reset for your CareerDev account.</p>
+              <p style="margin: 0 0 12px;">You requested a password reset for your CrewTransition account.</p>
               <p style="margin: 0 0 24px;">Click the button below to set a new password:</p>
               <table cellpadding="0" cellspacing="0" style="margin: 0 0 24px;">
                 <tr>
@@ -135,12 +134,4 @@ async def send_reset_email(to_email: str, reset_token: str) -> bool:
               </p>"""
 
     html = _branded_email(body)
-
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = "Reset your CareerDev password"
-    msg["From"] = settings.SMTP_FROM_EMAIL
-    msg["To"] = to_email
-    msg.attach(MIMEText(f"Reset your password: {reset_url}", "plain"))
-    msg.attach(MIMEText(html, "html"))
-
-    return await _send_email(msg)
+    return await _send_email(to_email, "Reset your CrewTransition password", html)
