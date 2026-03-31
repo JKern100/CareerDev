@@ -213,7 +213,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-from app.api import auth, questionnaire, analysis, privacy, admin, scheduling, results, coach, action_plan, payment, promo
+from app.api import auth, questionnaire, analysis, privacy, admin, scheduling, results, coach, action_plan, payment, promo, referral
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -252,6 +252,7 @@ app.include_router(coach.router)
 app.include_router(action_plan.router)
 app.include_router(payment.router)
 app.include_router(promo.router)
+app.include_router(referral.router)
 
 
 @app.get("/health")

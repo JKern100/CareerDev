@@ -34,11 +34,14 @@ function AuthCallbackContent() {
 
     (async () => {
       try {
+        const referralCode = localStorage.getItem("referral_code") || undefined;
         const res = await fetch(`${API_BASE}/auth/google/callback`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code, state }),
+          body: JSON.stringify({ code, state, referral_code: referralCode }),
         });
+        // Clear referral code after use
+        localStorage.removeItem("referral_code");
 
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));

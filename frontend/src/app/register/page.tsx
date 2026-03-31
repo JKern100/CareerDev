@@ -1,13 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { register, resendVerification } from "@/lib/api";
 import FlowerSpinner from "@/components/FlowerSpinner";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="container" style={{ maxWidth: "400px", textAlign: "center" }}><FlowerSpinner size={48} /></div>}>
+      <RegisterContent />
+    </Suspense>
+  );
+}
+
+function RegisterContent() {
   const { t } = useTranslation();
+  const searchParams = useSearchParams();
+  const refCode = searchParams.get("ref") || "";
   const p = (key: string) => t(`pages.register.${key}`);
+
+  // Store referral code in localStorage for Google OAuth flow persistence
+  useEffect(() => {
+    if (refCode) {
+      localStorage.setItem("referral_code", refCode);
+    }
+  }, [refCode]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -23,7 +41,7 @@ export default function RegisterPage() {
     setError("");
     setLoading(true);
     try {
-      const result = await register(email, password, fullName || undefined);
+      const result = await register(email, password, fullName || undefined, refCode || undefined);
       setRegistered(true);
       if (result.email_verified) {
         setAutoVerified(true);
@@ -118,6 +136,21 @@ export default function RegisterPage() {
           {p("subtitle")}
         </p>
       </div>
+
+      {refCode && (
+        <div style={{
+          background: "rgba(59,130,246,0.1)",
+          border: "1px solid rgba(59,130,246,0.3)",
+          borderRadius: "8px",
+          padding: "0.6rem 0.75rem",
+          marginBottom: "0.5rem",
+          textAlign: "center",
+          fontSize: "0.85rem",
+          color: "#60a5fa",
+        }}>
+          &#127873; {t("referral.invited_badge")}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="card flex flex-col gap-1">
         <div>

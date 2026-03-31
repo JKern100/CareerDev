@@ -39,10 +39,21 @@ async def register(request: Request, data: UserRegister, db: AsyncSession = Depe
     if result.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Email already registered")
 
+    # Resolve referral code to referrer user ID
+    referred_by = None
+    if data.referral_code:
+        ref_result = await db.execute(
+            select(User).where(User.referral_code == data.referral_code.strip().upper())
+        )
+        referrer = ref_result.scalar_one_or_none()
+        if referrer:
+            referred_by = referrer.id
+
     user = User(
         email=data.email,
         hashed_password=hash_password(data.password),
         full_name=data.full_name,
+        referred_by=referred_by,
     )
     db.add(user)
     await db.commit()
@@ -236,6 +247,7 @@ async def google_login():
 class GoogleCallbackRequest(BaseModel):
     code: str
     state: str | None = None
+    referral_code: str | None = None
 
 
 @router.post("/google/callback", response_model=TokenResponse)
@@ -303,6 +315,16 @@ async def google_callback(data: GoogleCallbackRequest, db: AsyncSession = Depend
                 user.auth_provider = "google"
         user.email_verified = True
     else:
+        # Resolve referral code for new OAuth users
+        referred_by = None
+        if data.referral_code:
+            ref_result = await db.execute(
+                select(User).where(User.referral_code == data.referral_code.strip().upper())
+            )
+            referrer = ref_result.scalar_one_or_none()
+            if referrer:
+                referred_by = referrer.id
+
         # Create new user
         user = User(
             email=email,
@@ -311,6 +333,7 @@ async def google_callback(data: GoogleCallbackRequest, db: AsyncSession = Depend
             auth_provider="google",
             email_verified=True,
             hashed_password=None,
+            referred_by=referred_by,
         )
         db.add(user)
 

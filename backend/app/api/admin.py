@@ -347,7 +347,11 @@ async def delete_user(
     await db.execute(delete(Evidence).where(Evidence.user_id == u.id))
     await db.execute(delete(Answer).where(Answer.user_id == u.id))
 
-    # 6. Activity log and user
+    # 6. Nullify referral references pointing to this user
+    from sqlalchemy import update
+    await db.execute(update(User).where(User.referred_by == u.id).values(referred_by=None))
+
+    # 7. Activity log and user
     await db.execute(delete(ActivityEvent).where(ActivityEvent.user_id == u.id))
     await db.delete(u)
     await db.commit()

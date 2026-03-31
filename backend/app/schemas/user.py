@@ -7,6 +7,7 @@ class UserRegister(BaseModel):
     email: EmailStr
     password: str
     full_name: str | None = None
+    referral_code: str | None = None
 
 
 class UserLogin(BaseModel):

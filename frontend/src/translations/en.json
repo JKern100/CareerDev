@@ -385,5 +385,18 @@
       "back_to_dashboard": "Back to Dashboard"
     }
   },
+  "referral": {
+    "title": "Invite Friends, Earn Free Pro",
+    "subtitle": "Share your referral link with friends. For every 3 who sign up, you get 1 free month of Pro.",
+    "referrals_count": "referral(s)",
+    "more_needed": "more to next reward",
+    "free_month": "free month",
+    "copied": "Copied!",
+    "copy_link": "Copy Link",
+    "share_hint": "Share this link with friends starting their career transition. They get a great tool, you get free Pro!",
+    "claim_reward": "Claim Free Pro Month",
+    "months_earned": "month(s) of Pro earned",
+    "invited_badge": "You've been invited! Create your free account below."
+  },
   "questions": {}
 }

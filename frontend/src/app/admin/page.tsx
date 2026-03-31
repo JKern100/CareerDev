@@ -33,8 +33,9 @@ import {
 import LoginActivityChart from "@/components/LoginActivityChart";
 import AdminPromo from "@/components/AdminPromo";
 import AdminCoachUsage from "@/components/AdminCoachUsage";
+import AdminReferrals from "@/components/AdminReferrals";
 
-type Tab = "dashboard" | "users" | "questions" | "activity" | "promo" | "coach-usage";
+type Tab = "dashboard" | "users" | "questions" | "activity" | "promo" | "coach-usage" | "referrals";
 
 /* ── Help Content ─────────────────────────────────────────────────────── */
 
@@ -129,6 +130,19 @@ const HELP_CONTENT: Record<Tab, { title: string; sections: { heading: string; bo
       {
         heading: "Controls",
         body: `- **Applies to**: Restrict which plans the code works on (all, pro, premium, monthly).\n- **Max uses**: Total number of times the code can be used across all users. Leave empty for unlimited.\n- **Max per user**: How many times a single user can use the code (default: 1).\n- **Expires at**: After this date, the code stops working.\n- **Note**: Internal note for your reference (e.g. "Influencer campaign", "Beta tester").`,
+      },
+    ],
+  },
+  referrals: {
+    title: "Referrals Help",
+    sections: [
+      {
+        heading: "Overview",
+        body: "Track your referral program. Users share their unique referral code with friends. Every 3 successful referrals earns the referrer 1 free month of Pro.",
+      },
+      {
+        heading: "Metrics",
+        body: `- **Total Referrals**: Number of users who signed up via a referral link.\n- **Rewards Granted**: Total months of Pro granted as referral rewards.\n- **Top Referrers**: Users who have referred the most new sign-ups.\n- **Recent Referred Sign-ups**: Latest users who joined via a referral link, along with who referred them.`,
       },
     ],
   },
@@ -786,7 +800,7 @@ export default function AdminPage() {
 
       {/* Tabs */}
       <div style={styles.tabs}>
-        {(["dashboard", "users", "activity", "questions", "promo", "coach-usage"] as Tab[]).map((t) => (
+        {(["dashboard", "users", "activity", "questions", "promo", "coach-usage", "referrals"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => handleTabChange(t)}
@@ -795,7 +809,7 @@ export default function AdminPage() {
               ...(tab === t ? styles.tabActive : {}),
             }}
           >
-            {t === "dashboard" ? "Dashboard" : t === "users" ? "Users" : t === "activity" ? "Activity" : t === "promo" ? "Promo Codes" : t === "coach-usage" ? "Coach Usage" : "Questions"}
+            {t === "dashboard" ? "Dashboard" : t === "users" ? "Users" : t === "activity" ? "Activity" : t === "promo" ? "Promo Codes" : t === "coach-usage" ? "Coach Usage" : t === "referrals" ? "Referrals" : "Questions"}
           </button>
         ))}
       </div>
@@ -1304,6 +1318,12 @@ export default function AdminPage() {
         {tab === "coach-usage" && (
           <div style={{ padding: "1rem" }}>
             <AdminCoachUsage />
+          </div>
+        )}
+
+        {tab === "referrals" && (
+          <div style={{ padding: "1rem" }}>
+            <AdminReferrals />
           </div>
         )}
       </div>
