@@ -179,7 +179,7 @@ async def _backfill_existing_users_verified():
             select(User).where(
                 User.email_verified == False,  # noqa: E712
                 User.has_logged_in == False,  # noqa: E712
-                User.created_at < datetime.now(timezone.utc),
+                User.created_at < datetime.utcnow(),
             )
         )
         users = result.scalars().all()
