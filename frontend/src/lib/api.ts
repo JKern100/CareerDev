@@ -442,6 +442,39 @@ export async function getUserActivity(userId: string, params?: { action?: string
   return request<ActivityEvent[]>(`/admin/users/${userId}/activity${qs ? `?${qs}` : ""}`);
 }
 
+// Coach Usage Analytics
+export interface CoachUsageOverview {
+  total_messages: number;
+  total_user_messages: number;
+  total_assistant_messages: number;
+  unique_users: number;
+  messages_today: number;
+  messages_7d: number;
+  messages_30d: number;
+  avg_messages_per_user: number;
+  top_users: { user_id: string; email: string; messages: number }[];
+}
+
+export interface CoachUserUsage {
+  user_id: string;
+  user_email: string;
+  total_messages: number;
+  user_messages: number;
+  assistant_messages: number;
+  first_message_at: string | null;
+  last_message_at: string | null;
+  messages_today: number;
+  messages_7d: number;
+}
+
+export async function getCoachUsageOverview() {
+  return request<CoachUsageOverview>("/admin/coach-usage");
+}
+
+export async function getCoachUserUsage(userId: string) {
+  return request<CoachUserUsage>(`/admin/coach-usage/${userId}`);
+}
+
 // Scheduling
 export interface AdvisorProfile {
   id: string;
@@ -559,11 +592,27 @@ export interface CoachGoal {
   completed_at: string | null;
 }
 
+export interface CoachChatResponse {
+  reply: string;
+  daily_messages_used: number;
+  daily_messages_limit: number;
+}
+
+export interface CoachQuota {
+  daily_messages_used: number;
+  daily_messages_limit: number;
+  daily_messages_remaining: number;
+}
+
 export async function sendCoachMessage(message: string, language?: string) {
-  return request<{ reply: string }>("/coach/chat", {
+  return request<CoachChatResponse>("/coach/chat", {
     method: "POST",
     body: JSON.stringify({ message, language }),
   });
+}
+
+export async function getCoachQuota() {
+  return request<CoachQuota>("/coach/quota");
 }
 
 export async function getCoachHistory(limit = 50, offset = 0) {

@@ -9,6 +9,7 @@ import {
   getMe,
   sendCoachMessage,
   getCoachHistory,
+  getCoachQuota,
   clearCoachHistory,
   getCoachGoals,
   createCoachGoal,
@@ -35,6 +36,8 @@ export default function CoachPage() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [quotaUsed, setQuotaUsed] = useState(0);
+  const [quotaLimit, setQuotaLimit] = useState(100);
   const [showGoals, setShowGoals] = useState(false);
   const [newGoalTitle, setNewGoalTitle] = useState("");
   const [newGoalDate, setNewGoalDate] = useState("");
@@ -52,12 +55,17 @@ export default function CoachPage() {
     async function load() {
       try {
         await getMe();
-        const [historyResult, goalsResult] = await Promise.allSettled([
+        const [historyResult, goalsResult, quotaResult] = await Promise.allSettled([
           getCoachHistory(),
           getCoachGoals(),
+          getCoachQuota(),
         ]);
         if (historyResult.status === "fulfilled") setMessages(historyResult.value);
         if (goalsResult.status === "fulfilled") setGoals(goalsResult.value);
+        if (quotaResult.status === "fulfilled") {
+          setQuotaUsed(quotaResult.value.daily_messages_used);
+          setQuotaLimit(quotaResult.value.daily_messages_limit);
+        }
       } catch {
         router.push("/login");
       } finally {
@@ -91,16 +99,19 @@ export default function CoachPage() {
     setMessages((prev) => [...prev, tempUserMsg]);
 
     try {
-      const { reply } = await sendCoachMessage(text, lang);
+      const res = await sendCoachMessage(text, lang);
       setMessages((prev) => [
         ...prev,
-        { id: tempId("a"), role: "assistant", content: reply, created_at: new Date().toISOString() },
+        { id: tempId("a"), role: "assistant", content: res.reply, created_at: new Date().toISOString() },
       ]);
-    } catch {
+      setQuotaUsed(res.daily_messages_used);
+      setQuotaLimit(res.daily_messages_limit);
+    } catch (err) {
       // Remove the optimistic user message on failure
       setMessages((prev) => prev.filter((m) => m.id !== userMsgId));
       setInput(text); // Restore their input
-      setError(p("error_send"));
+      const msg = err instanceof Error ? err.message : "";
+      setError(msg.includes("Daily message limit") ? msg : p("error_send"));
     } finally {
       setSending(false);
       inputRef.current?.focus();
@@ -397,23 +408,35 @@ export default function CoachPage() {
 
             {/* Input Area */}
             <div style={styles.inputArea}>
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={p("placeholder")}
-                aria-label="Message to career coach"
-                style={styles.textarea}
-                rows={1}
-                disabled={sending}
-              />
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={quotaUsed >= quotaLimit ? "Daily message limit reached. Resets at midnight UTC." : p("placeholder")}
+                  aria-label="Message to career coach"
+                  style={styles.textarea}
+                  rows={1}
+                  disabled={sending || quotaUsed >= quotaLimit}
+                />
+                <div style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  fontSize: "0.72rem", color: quotaLimit - quotaUsed <= 10 ? "#f59e0b" : "#475569",
+                  padding: "0 0.25rem",
+                }}>
+                  <span>{quotaUsed}/{quotaLimit} messages today</span>
+                  {quotaLimit - quotaUsed <= 20 && quotaUsed < quotaLimit && (
+                    <span>{quotaLimit - quotaUsed} remaining</span>
+                  )}
+                </div>
+              </div>
               <button
                 onClick={handleSend}
-                disabled={!input.trim() || sending}
+                disabled={!input.trim() || sending || quotaUsed >= quotaLimit}
                 style={{
                   ...styles.sendBtn,
-                  opacity: !input.trim() || sending ? 0.4 : 1,
+                  opacity: !input.trim() || sending || quotaUsed >= quotaLimit ? 0.4 : 1,
                 }}
               >
                 {p("send")}

@@ -1,7 +1,7 @@
 """AI Career Coach API routes."""
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -10,7 +10,7 @@ from slowapi.util import get_remote_address
 
 limiter = Limiter(key_func=get_remote_address)
 from pydantic import BaseModel, Field
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -24,6 +24,8 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/coach", tags=["coach"])
 
+DAILY_MESSAGE_LIMIT = 100
+
 
 # ── Schemas ──────────────────────────────────────────────────────────────
 
@@ -34,6 +36,8 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     reply: str
+    daily_messages_used: int
+    daily_messages_limit: int
 
 
 class MessageOut(BaseModel):
@@ -73,6 +77,19 @@ def _parse_goal_id(goal_id: str) -> UUID:
 
 # ── Chat ─────────────────────────────────────────────────────────────────
 
+async def _get_daily_message_count(user_id: UUID, db: AsyncSession) -> int:
+    """Count user messages sent today (UTC)."""
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    result = await db.execute(
+        select(func.count()).select_from(CoachMessage).where(
+            CoachMessage.user_id == user_id,
+            CoachMessage.role == "user",
+            CoachMessage.created_at >= today_start,
+        )
+    )
+    return result.scalar() or 0
+
+
 @router.post("/chat", response_model=ChatResponse)
 @limiter.limit("20/minute")
 async def send_chat_message(
@@ -82,16 +99,42 @@ async def send_chat_message(
     db: AsyncSession = Depends(get_db),
 ):
     """Send a message to the AI career coach and get a response."""
+    # Check daily quota
+    daily_used = await _get_daily_message_count(user.id, db)
+    if daily_used >= DAILY_MESSAGE_LIMIT:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Daily message limit reached ({DAILY_MESSAGE_LIMIT} messages). Resets at midnight UTC.",
+        )
+
     try:
         reply = await chat_with_coach(user.id, data.message.strip(), db, language=data.language)
         await log_activity(db, user, "coach_chat", f"Sent message ({len(data.message)} chars)")
         await db.commit()
-        return ChatResponse(reply=reply)
+        return ChatResponse(
+            reply=reply,
+            daily_messages_used=daily_used + 1,
+            daily_messages_limit=DAILY_MESSAGE_LIMIT,
+        )
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e))
     except Exception:
         logger.exception("Coach chat error for user %s", user.id)
         raise HTTPException(status_code=500, detail="Failed to get coach response. Please try again.")
+
+
+@router.get("/quota")
+async def get_quota(
+    user: User = Depends(require_premium),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get the user's daily message quota status."""
+    daily_used = await _get_daily_message_count(user.id, db)
+    return {
+        "daily_messages_used": daily_used,
+        "daily_messages_limit": DAILY_MESSAGE_LIMIT,
+        "daily_messages_remaining": max(0, DAILY_MESSAGE_LIMIT - daily_used),
+    }
 
 
 @router.get("/history", response_model=list[MessageOut])

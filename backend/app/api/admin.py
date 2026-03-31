@@ -18,6 +18,7 @@ from app.models.questionnaire import Answer, Question
 from app.models.report import Report, AnalysisReport
 from app.models.pathway import PathwayScore
 from app.models.activity import ActivityEvent
+from app.models.coach import CoachMessage
 from app.api.deps import get_admin_user
 from app.services.auth import hash_password, create_access_token
 from app.config import settings
@@ -748,3 +749,177 @@ async def get_user_activity(
         )
         for e in events
     ]
+
+
+# ── Coach Usage Analytics ───────────────────────────────────────────────
+
+
+class CoachUsageOverview(BaseModel):
+    total_messages: int
+    total_user_messages: int
+    total_assistant_messages: int
+    unique_users: int
+    messages_today: int
+    messages_7d: int
+    messages_30d: int
+    avg_messages_per_user: float
+    top_users: list[dict]
+
+
+class CoachUserUsage(BaseModel):
+    user_id: str
+    user_email: str
+    total_messages: int
+    user_messages: int
+    assistant_messages: int
+    first_message_at: datetime | None
+    last_message_at: datetime | None
+    messages_today: int
+    messages_7d: int
+
+
+@router.get("/coach-usage", response_model=CoachUsageOverview)
+async def get_coach_usage(
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get overall AI coach usage analytics."""
+    now = datetime.now(timezone.utc)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_ago = now - timedelta(days=7)
+    month_ago = now - timedelta(days=30)
+
+    total_result = await db.execute(select(func.count()).select_from(CoachMessage))
+    total_messages = total_result.scalar() or 0
+
+    user_msgs_result = await db.execute(
+        select(func.count()).select_from(CoachMessage).where(CoachMessage.role == "user")
+    )
+    total_user_messages = user_msgs_result.scalar() or 0
+    total_assistant_messages = total_messages - total_user_messages
+
+    unique_result = await db.execute(
+        select(func.count(func.distinct(CoachMessage.user_id))).select_from(CoachMessage)
+    )
+    unique_users = unique_result.scalar() or 0
+
+    today_result = await db.execute(
+        select(func.count()).select_from(CoachMessage).where(CoachMessage.created_at >= today_start)
+    )
+    messages_today = today_result.scalar() or 0
+
+    week_result = await db.execute(
+        select(func.count()).select_from(CoachMessage).where(CoachMessage.created_at >= week_ago)
+    )
+    messages_7d = week_result.scalar() or 0
+
+    month_result = await db.execute(
+        select(func.count()).select_from(CoachMessage).where(CoachMessage.created_at >= month_ago)
+    )
+    messages_30d = month_result.scalar() or 0
+
+    avg_per_user = round(total_user_messages / unique_users, 1) if unique_users > 0 else 0.0
+
+    top_query = (
+        select(
+            CoachMessage.user_id,
+            User.email,
+            func.count().label("msg_count"),
+        )
+        .join(User, CoachMessage.user_id == User.id)
+        .where(CoachMessage.role == "user")
+        .group_by(CoachMessage.user_id, User.email)
+        .order_by(func.count().desc())
+        .limit(10)
+    )
+    top_result = await db.execute(top_query)
+    top_users = [
+        {"user_id": str(row.user_id), "email": row.email, "messages": row.msg_count}
+        for row in top_result.all()
+    ]
+
+    return CoachUsageOverview(
+        total_messages=total_messages,
+        total_user_messages=total_user_messages,
+        total_assistant_messages=total_assistant_messages,
+        unique_users=unique_users,
+        messages_today=messages_today,
+        messages_7d=messages_7d,
+        messages_30d=messages_30d,
+        avg_messages_per_user=avg_per_user,
+        top_users=top_users,
+    )
+
+
+@router.get("/coach-usage/{user_id}", response_model=CoachUserUsage)
+async def get_coach_user_usage(
+    user_id: str,
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get AI coach usage for a specific user."""
+    try:
+        user_uuid = uuid.UUID(user_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid user ID")
+
+    user_result = await db.execute(select(User).where(User.id == user_uuid))
+    target_user = user_result.scalar_one_or_none()
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    now = datetime.now(timezone.utc)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_ago = now - timedelta(days=7)
+
+    total_result = await db.execute(
+        select(func.count()).select_from(CoachMessage).where(CoachMessage.user_id == user_uuid)
+    )
+    total = total_result.scalar() or 0
+
+    user_msg_result = await db.execute(
+        select(func.count()).select_from(CoachMessage).where(
+            CoachMessage.user_id == user_uuid, CoachMessage.role == "user"
+        )
+    )
+    user_msgs = user_msg_result.scalar() or 0
+
+    first_result = await db.execute(
+        select(func.min(CoachMessage.created_at)).where(CoachMessage.user_id == user_uuid)
+    )
+    first_at = first_result.scalar()
+
+    last_result = await db.execute(
+        select(func.max(CoachMessage.created_at)).where(CoachMessage.user_id == user_uuid)
+    )
+    last_at = last_result.scalar()
+
+    today_result = await db.execute(
+        select(func.count()).select_from(CoachMessage).where(
+            CoachMessage.user_id == user_uuid,
+            CoachMessage.role == "user",
+            CoachMessage.created_at >= today_start,
+        )
+    )
+    today_count = today_result.scalar() or 0
+
+    week_result = await db.execute(
+        select(func.count()).select_from(CoachMessage).where(
+            CoachMessage.user_id == user_uuid,
+            CoachMessage.role == "user",
+            CoachMessage.created_at >= week_ago,
+        )
+    )
+    week_count = week_result.scalar() or 0
+
+    return CoachUserUsage(
+        user_id=str(user_uuid),
+        user_email=target_user.email,
+        total_messages=total,
+        user_messages=user_msgs,
+        assistant_messages=total - user_msgs,
+        first_message_at=first_at,
+        last_message_at=last_at,
+        messages_today=today_count,
+        messages_7d=week_count,
+    )
