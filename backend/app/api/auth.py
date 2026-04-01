@@ -110,7 +110,8 @@ class ResendVerificationRequest(BaseModel):
 
 
 @router.post("/resend-verification")
-async def resend_verification(data: ResendVerificationRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("3/minute")
+async def resend_verification(request: Request, data: ResendVerificationRequest, db: AsyncSession = Depends(get_db)):
     # Always return success to avoid leaking which emails exist
     result = await db.execute(select(User).where(User.email == data.email))
     user = result.scalar_one_or_none()
@@ -129,7 +130,7 @@ async def resend_verification(data: ResendVerificationRequest, db: AsyncSession 
 async def login(request: Request, data: UserLogin, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.email == data.email))
     user = result.scalar_one_or_none()
-    if not user or not user.hashed_password or not verify_password(data.password, user.hashed_password):
+    if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     if user.auth_provider == "google" and not user.hashed_password:
@@ -137,6 +138,9 @@ async def login(request: Request, data: UserLogin, db: AsyncSession = Depends(ge
             status_code=400,
             detail="This account uses Google sign-in. Please sign in with Google.",
         )
+
+    if not user.hashed_password or not verify_password(data.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
     # Track first login
     is_first_login = not user.has_logged_in
