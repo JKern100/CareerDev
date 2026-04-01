@@ -12,8 +12,7 @@ RESEND_API = "https://api.resend.com/emails"
 
 
 def _branded_email(body_content: str) -> str:
-    """Wrap email body content in a branded template with logo and footer."""
-    logo_url = f"{settings.FRONTEND_URL}/logo.svg"
+    """Wrap email body content in a branded template with text logo and footer."""
     return f"""\
 <html>
 <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
@@ -21,11 +20,10 @@ def _branded_email(body_content: str) -> str:
     <tr>
       <td align="center">
         <table width="520" cellpadding="0" cellspacing="0" style="background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
-          <!-- Header with logo -->
+          <!-- Header -->
           <tr>
             <td align="center" style="background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); padding: 32px 24px;">
-              <img src="{logo_url}" alt="CrewTransition" width="56" height="56" style="display: block; margin-bottom: 12px;" />
-              <span style="font-size: 22px; font-weight: 700; color: #ffffff; letter-spacing: 0.5px;">Crew<span style="color: #60a5fa;">Transition</span></span>
+              <span style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: 0.5px;">Crew<span style="color: #60a5fa;">Transition</span></span>
             </td>
           </tr>
           <!-- Body -->
