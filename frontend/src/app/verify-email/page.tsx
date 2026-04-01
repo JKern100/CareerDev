@@ -57,8 +57,8 @@ function VerifyEmailContent() {
           <p className="text-muted" style={{ marginTop: "0.5rem", lineHeight: 1.7 }}>
             {message}. {p("success_text")}
           </p>
-          <a href="/login" className="btn btn-primary" style={{ marginTop: "1.5rem", display: "inline-flex" }}>
-            {p("sign_in")}
+          <a href="/dashboard" className="btn btn-primary" style={{ marginTop: "1.5rem", display: "inline-flex" }}>
+            Go to Dashboard
           </a>
         </>
       )}
