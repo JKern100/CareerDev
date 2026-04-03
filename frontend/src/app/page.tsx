@@ -87,6 +87,7 @@ export default function Home() {
 
       {/* Hero */}
       <section
+        className="hero-section"
         style={{
           position: "relative",
           overflow: "hidden",
@@ -131,6 +132,7 @@ export default function Home() {
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: "900px" }}>
           {/* Badge */}
           <div
+            className="hero-badge"
             style={{
               display: "inline-block",
               background: "rgba(37, 99, 235, 0.2)",
@@ -150,10 +152,11 @@ export default function Home() {
           </div>
 
           {/* Logo image */}
-          <div style={{ marginBottom: "1.25rem" }}>
+          <div className="hero-logo-img" style={{ marginBottom: "1.25rem" }}>
             <img
               src="/hero-logo.png"
               alt="CrewTransition.com"
+              className="hero-logo-img"
               style={{
                 maxWidth: "min(480px, 85vw)",
                 height: "auto",
@@ -166,6 +169,7 @@ export default function Home() {
 
           {/* Headline */}
           <h1
+            className="hero-headline"
             style={{
               fontSize: "clamp(1.75rem, 4.5vw, 3rem)",
               fontWeight: 700,
@@ -190,7 +194,7 @@ export default function Home() {
           </h1>
 
           {/* People image — flight attendant to businesswoman */}
-          <div style={{ marginBottom: "1.25rem" }}>
+          <div className="hero-people-img" style={{ marginBottom: "1.25rem" }}>
             <img
               src="/hero-people.png"
               alt="From flight attendant to business professional"
@@ -207,6 +211,7 @@ export default function Home() {
           </div>
 
           <p
+            className="hero-subtitle"
             style={{
               fontSize: "1.15rem",
               color: "#cbd5e1",
@@ -222,6 +227,7 @@ export default function Home() {
 
           {/* Feature pills */}
           <div
+            className="hero-pills"
             style={{
               display: "flex",
               gap: "1.5rem",
