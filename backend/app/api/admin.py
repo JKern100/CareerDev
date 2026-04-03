@@ -4,8 +4,10 @@ import csv
 import hmac
 import io
 import json
+import os
 import uuid
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
@@ -975,4 +977,158 @@ async def get_coach_user_usage(
         last_message_at=last_at,
         messages_today=today_count,
         messages_7d=week_count,
+    )
+
+
+# ─── AI Resources ────────────────────────────────────────────────────
+
+RESOURCES_DIR = Path(__file__).parent.parent / "data" / "resources"
+PATHWAYS_PATH = Path(__file__).parent.parent / "data" / "pathways.json"
+
+# Metadata about each resource — label and where it's used
+from app.services.career_analysis import RESOURCE_FILES as ANALYSIS_RESOURCE_FILES
+
+RESOURCE_METADATA: dict[str, dict] = {}
+for _fname, _header in ANALYSIS_RESOURCE_FILES:
+    RESOURCE_METADATA[_fname] = {
+        "label": _header,
+        "used_by": "career_analysis",
+    }
+# Extra files not in the RESOURCE_FILES list but still relevant
+RESOURCE_METADATA["resource_0_index.md"] = {
+    "label": "Resource Index & Assembly Guide",
+    "used_by": "reference",
+}
+RESOURCE_METADATA["resource_14_master_system_prompt.md"] = {
+    "label": "Master System Prompt Template",
+    "used_by": "reference",
+}
+
+
+class ResourceListItem(BaseModel):
+    filename: str
+    label: str
+    used_by: str
+    size_bytes: int
+    word_count: int
+
+
+class ResourceContent(BaseModel):
+    filename: str
+    label: str
+    used_by: str
+    content: str
+    size_bytes: int
+    word_count: int
+
+
+class ResourceUpdateIn(BaseModel):
+    content: str
+
+
+class ResourceUpdateOut(BaseModel):
+    filename: str
+    size_bytes: int
+    word_count: int
+    cache_cleared: bool
+
+
+@router.get("/resources", response_model=list[ResourceListItem])
+async def list_resources(admin: User = Depends(get_admin_user)):
+    """List all AI resource files with metadata."""
+    items = []
+    for fname in sorted(RESOURCES_DIR.iterdir()):
+        if not fname.name.endswith(".md"):
+            continue
+        content = fname.read_text(encoding="utf-8")
+        meta = RESOURCE_METADATA.get(fname.name, {
+            "label": fname.name,
+            "used_by": "unknown",
+        })
+        items.append(ResourceListItem(
+            filename=fname.name,
+            label=meta["label"],
+            used_by=meta["used_by"],
+            size_bytes=len(content.encode("utf-8")),
+            word_count=len(content.split()),
+        ))
+
+    # Also include pathways.json
+    if PATHWAYS_PATH.exists():
+        pj = PATHWAYS_PATH.read_text(encoding="utf-8")
+        items.append(ResourceListItem(
+            filename="pathways.json",
+            label="Career Pathways Definitions",
+            used_by="career_analysis + scoring",
+            size_bytes=len(pj.encode("utf-8")),
+            word_count=len(pj.split()),
+        ))
+
+    return items
+
+
+@router.get("/resources/{filename}", response_model=ResourceContent)
+async def get_resource(filename: str, admin: User = Depends(get_admin_user)):
+    """Get the full content of a resource file."""
+    if filename == "pathways.json":
+        path = PATHWAYS_PATH
+    else:
+        # Prevent path traversal
+        if "/" in filename or "\\" in filename or ".." in filename:
+            raise HTTPException(status_code=400, detail="Invalid filename")
+        path = RESOURCES_DIR / filename
+
+    if not path.exists():
+        raise HTTPException(status_code=404, detail=f"Resource not found: {filename}")
+
+    content = path.read_text(encoding="utf-8")
+    meta = RESOURCE_METADATA.get(filename, {
+        "label": filename,
+        "used_by": "career_analysis" if filename == "pathways.json" else "unknown",
+    })
+
+    return ResourceContent(
+        filename=filename,
+        label=meta["label"],
+        used_by=meta["used_by"],
+        content=content,
+        size_bytes=len(content.encode("utf-8")),
+        word_count=len(content.split()),
+    )
+
+
+@router.put("/resources/{filename}", response_model=ResourceUpdateOut)
+async def update_resource(
+    filename: str,
+    data: ResourceUpdateIn,
+    admin: User = Depends(get_admin_user),
+):
+    """Update a resource file and clear the cached system prompt."""
+    if filename == "pathways.json":
+        path = PATHWAYS_PATH
+        # Validate JSON
+        try:
+            json.loads(data.content)
+        except json.JSONDecodeError as e:
+            raise HTTPException(status_code=400, detail=f"Invalid JSON: {e}")
+    else:
+        if "/" in filename or "\\" in filename or ".." in filename:
+            raise HTTPException(status_code=400, detail="Invalid filename")
+        path = RESOURCES_DIR / filename
+
+    if not path.exists():
+        raise HTTPException(status_code=404, detail=f"Resource not found: {filename}")
+
+    path.write_text(data.content, encoding="utf-8")
+
+    # Clear the cached system prompt so the next analysis uses the updated resource
+    import app.services.career_analysis as ca
+    ca._cached_system_prompt = None
+    cache_cleared = True
+
+    return ResourceUpdateOut(
+        filename=filename,
+        size_bytes=len(data.content.encode("utf-8")),
+        word_count=len(data.content.split()),
+        cache_cleared=cache_cleared,
     )
