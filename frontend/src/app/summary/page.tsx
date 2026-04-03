@@ -18,6 +18,7 @@ export default function SummaryPage() {
   const [tier2Complete, setTier2Complete] = useState(false);
   const [hasAnalysisReport, setHasAnalysisReport] = useState(false);
   const [questionnaireComplete, setQuestionnaireComplete] = useState(false);
+  const [newDataAvailable, setNewDataAvailable] = useState(false);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
@@ -47,6 +48,15 @@ export default function SummaryPage() {
 
         // Try to get existing summary
         const data = await getSummary();
+
+        // Check if user completed a new tier since last report generation
+        if (data.created_at && me.last_tier_completed_at) {
+          const reportDate = new Date(data.created_at);
+          const tierDate = new Date(me.last_tier_completed_at);
+          if (tierDate > reportDate) {
+            setNewDataAvailable(true);
+          }
+        }
 
         if (me.can_regenerate_summary) {
           // Admin enabled regeneration — auto-regenerate
@@ -138,6 +148,41 @@ export default function SummaryPage() {
       <p className="text-muted" style={{ marginBottom: "2rem" }}>
         {p("subtitle")}
       </p>
+
+      {/* New data banner */}
+      {newDataAvailable && canRegenerate && (
+        <div
+          style={{
+            background: "linear-gradient(135deg, rgba(59,130,246,0.08), rgba(34,197,94,0.08))",
+            border: "1px solid rgba(59,130,246,0.3)",
+            borderRadius: "12px",
+            padding: "1rem 1.25rem",
+            marginBottom: "1.5rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "0.75rem",
+          }}
+        >
+          <div>
+            <p style={{ fontWeight: 600, fontSize: "0.9rem", marginBottom: "0.25rem" }}>
+              {p("new_data_title")}
+            </p>
+            <p className="text-muted" style={{ fontSize: "0.85rem" }}>
+              {p("new_data_text")}
+            </p>
+          </div>
+          <button
+            className="btn btn-primary"
+            style={{ fontSize: "0.85rem", padding: "0.5rem 1.25rem", whiteSpace: "nowrap" }}
+            onClick={handleRegenerate}
+            disabled={generating}
+          >
+            {generating ? t("ui.regenerating") : p("regenerate_now")}
+          </button>
+        </div>
+      )}
 
       {/* Render the summary as formatted markdown */}
       <div

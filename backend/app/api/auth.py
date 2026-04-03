@@ -179,6 +179,7 @@ async def me(
         "questionnaire_completed": user.questionnaire_completed,
         "current_module": user.current_module,
         "can_regenerate_summary": user.can_regenerate_summary,
+        "last_tier_completed_at": user.last_tier_completed_at.isoformat() if user.last_tier_completed_at else None,
         "email_verified": user.email_verified,
         "plan": "pro" if (impersonated or is_admin) else (sub.plan if sub else "free"),
         "is_premium": True if (impersonated or is_admin) else _is_premium(sub),

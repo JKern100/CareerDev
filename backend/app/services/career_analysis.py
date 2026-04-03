@@ -10,7 +10,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from app.config import settings
-from app.services.routing import get_question_bank, MODULE_LABELS, CORE_MODULES, TIER1_SCREENS, TIER2_SCREENS
+from app.services.routing import (
+    get_question_bank, MODULE_LABELS, CORE_MODULES,
+    TIER1_SCREENS, TIER2_SCREENS, TIER3_SCREENS,
+    TIER1_QUESTION_IDS, TIER2_QUESTION_IDS, TIER3_QUESTION_IDS,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -235,6 +239,23 @@ def build_user_message(answers: dict, user_name: str | None, completed_at: datet
 
     enrichment_note = f" (plus {optional_answered} optional deep-dive answers)" if optional_answered > 0 else ""
 
+    # Determine tier completion status
+    tier1_done = TIER1_QUESTION_IDS.issubset(answered_ids)
+    tier2_done = TIER2_QUESTION_IDS.issubset(answered_ids)
+    tier3_done = TIER3_QUESTION_IDS.issubset(answered_ids)
+    tiers_completed = []
+    if tier1_done:
+        tiers_completed.append("1 (Quick Match — initial rankings)")
+    if tier2_done:
+        tiers_completed.append("2 (Sharpen — full scoring accuracy)")
+    if tier3_done:
+        tiers_completed.append("3 (Personalise — background, evidence, constraints)")
+    tiers_not_completed = []
+    if not tier2_done:
+        tiers_not_completed.append("2 (skills, preferences, constraints — affects ranking accuracy)")
+    if not tier3_done:
+        tiers_not_completed.append("3 (evidence stories, constraints, trade-offs — enriches narrative)")
+
     # Determine which modules are completed
     answered_ids = set(answers.keys())
     modules_completed = []
@@ -265,6 +286,8 @@ def build_user_message(answers: dict, user_name: str | None, completed_at: datet
         f"- Questionnaire completed: {date_display}",
         f"- Modules completed: {', '.join(modules_completed)}",
         f"- Overall completeness: {completeness_pct}% of core questions ({completeness_label}){enrichment_note}",
+        f"- Tiers completed: {', '.join(tiers_completed) if tiers_completed else 'None'}",
+        f"- Tiers NOT completed: {', '.join(tiers_not_completed) if tiers_not_completed else 'All tiers complete'}",
         f"- Preferred language (Q007): {language}",
         f"- Communication style (Q008): {comm_style}",
         "",
@@ -293,6 +316,18 @@ def build_user_message(answers: dict, user_name: str | None, completed_at: datet
                 value_str = "[NULL]"
 
             lines.append(f"{q.question_id} | {q.prompt} | {value_str}")
+
+    # Add tier-aware framing instruction
+    if tiers_not_completed:
+        lines.append("")
+        lines.append(
+            "TIER-AWARE FRAMING: The user has not completed all tiers. "
+            "For sections of the report that would benefit from data in incomplete tiers, "
+            "briefly note what would improve with more data. For example: "
+            "'Your evidence stories (Stage 3) would strengthen this assessment' or "
+            "'Completing Stage 2 would allow fully accurate pathway rankings.' "
+            "Keep these notes concise — one sentence max per section, only where materially relevant."
+        )
 
     # Add explicit language instruction at the end of user message
     if language and language != "English":

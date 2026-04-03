@@ -90,6 +90,7 @@ export async function getMe() {
     questionnaire_completed: boolean;
     current_module: string | null;
     can_regenerate_summary: boolean;
+    last_tier_completed_at: string | null;
     email_verified: boolean;
     plan: string;
     is_premium: boolean;
