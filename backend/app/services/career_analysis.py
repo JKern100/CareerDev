@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from app.config import settings
-from app.services.routing import get_question_bank, MODULE_LABELS, CORE_MODULES
+from app.services.routing import get_question_bank, MODULE_LABELS, CORE_MODULES, TIER1_SCREENS, TIER2_SCREENS
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +74,15 @@ def build_system_prompt() -> str:
         "the user's preferred language, which is specified in their Q007 answer. If Q007 "
         'is null or "English", write in English. For non-English outputs, retain all '
         "credential names, pathway names, and company names in English with a translation "
-        "or explanation alongside."
+        "or explanation alongside.\n\n"
+        "---\n\n"
+        "PATHWAY DIVERSITY:\n"
+        "Ensure the recommended pathways represent genuinely different career directions. "
+        "If the user has high urgency (Q009 >= 7), prioritise pathways that offer a clear "
+        "break from their current role. Avoid recommending multiple aviation-adjacent "
+        "pathways unless the user explicitly expressed interest in staying in aviation (e.g. "
+        "selected L&D or Operations in Q106). Focus on transferable skills applied to NEW "
+        "industries and highlight learning opportunities for career change."
     )
 
     # Inject each resource file
@@ -206,17 +214,26 @@ def build_user_message(answers: dict, user_name: str | None, completed_at: datet
     """
     qbank = {q.question_id: q for q in get_question_bank()}
 
-    # Determine completeness
-    total_questions = len(qbank)
-    answered_count = sum(1 for qid, ans in answers.items() if ans.get("value") is not None)
-    completeness_pct = round(answered_count / total_questions * 100) if total_questions else 0
+    # Determine completeness — count against core questions (Tier 1 + Tier 2) only.
+    # Tier 3 is optional enrichment and should not penalise the completeness score.
+    required_qids = set()
+    for screen in TIER1_SCREENS + TIER2_SCREENS:
+        required_qids.update(screen["questions"])
+
+    answered_ids = set(qid for qid, ans in answers.items() if ans.get("value") is not None)
+    required_answered = len(answered_ids & required_qids)
+    optional_answered = len(answered_ids - required_qids)
+
+    completeness_pct = round(required_answered / len(required_qids) * 100) if required_qids else 0
 
     if completeness_pct >= 85:
         completeness_label = "High"
-    elif completeness_pct >= 65:
+    elif completeness_pct >= 50:
         completeness_label = "Medium"
     else:
         completeness_label = "Low"
+
+    enrichment_note = f" (plus {optional_answered} optional deep-dive answers)" if optional_answered > 0 else ""
 
     # Determine which modules are completed
     answered_ids = set(answers.keys())
@@ -247,7 +264,7 @@ def build_user_message(answers: dict, user_name: str | None, completed_at: datet
         f"- Name (or anonymous ID): {name_display}",
         f"- Questionnaire completed: {date_display}",
         f"- Modules completed: {', '.join(modules_completed)}",
-        f"- Overall completeness: {completeness_pct}% ({completeness_label})",
+        f"- Overall completeness: {completeness_pct}% of core questions ({completeness_label}){enrichment_note}",
         f"- Preferred language (Q007): {language}",
         f"- Communication style (Q008): {comm_style}",
         "",
@@ -276,6 +293,16 @@ def build_user_message(answers: dict, user_name: str | None, completed_at: datet
                 value_str = "[NULL]"
 
             lines.append(f"{q.question_id} | {q.prompt} | {value_str}")
+
+    # Add explicit language instruction at the end of user message
+    if language and language != "English":
+        lines.append("")
+        lines.append(
+            f"CRITICAL: Write the ENTIRE report output in {language}. "
+            f"All narrative text, section headers, analysis, and recommendations "
+            f"must be in {language}. Retain pathway names, credential names, "
+            f"and company names in English with {language} translations."
+        )
 
     return "\n".join(lines)
 

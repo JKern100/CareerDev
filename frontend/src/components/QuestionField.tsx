@@ -17,6 +17,7 @@ interface Props {
   isNotSure?: boolean;
   translation?: QuestionTranslation;
   uiStrings?: Record<string, string>;
+  currencyCode?: string;
 }
 
 export default function QuestionField({
@@ -27,6 +28,7 @@ export default function QuestionField({
   isNotSure,
   translation,
   uiStrings,
+  currencyCode,
 }: Props) {
   const renderInput = () => {
     if (isNotSure) {
@@ -173,13 +175,25 @@ export default function QuestionField({
 
       case "numeric":
         return (
-          <input
-            type="number"
-            min={question.min_val ?? undefined}
-            max={question.max_val ?? undefined}
-            value={typeof value === "number" ? value : ""}
-            onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-          />
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <input
+              type="number"
+              min={question.min_val ?? undefined}
+              max={question.max_val ?? undefined}
+              value={value === "" || value == null ? "" : value}
+              placeholder="0"
+              style={{ flex: 1 }}
+              onChange={(e) => {
+                const v = e.target.value;
+                onChange(v === "" ? "" : parseFloat(v));
+              }}
+            />
+            {currencyCode && (
+              <span style={{ color: "var(--muted)", fontWeight: 500, fontSize: "0.9rem", whiteSpace: "nowrap" }}>
+                {currencyCode}
+              </span>
+            )}
+          </div>
         );
 
       case "text_short":

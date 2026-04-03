@@ -87,7 +87,7 @@ def build_summary_prompt(answers: dict, user_name: str | None = None) -> str:
     q007 = answers.get("Q007")
     if q007:
         lang_pref = q007.get("value", "English")
-    lang_instruction = f"\n\nLANGUAGE: Write the entire report in {lang_pref}." if lang_pref != "English" else ""
+    lang_instruction = f"\n\nLANGUAGE REQUIREMENT: You MUST write the entire report in {lang_pref}. Every section, header, and paragraph must be in {lang_pref}. Only retain credential names and company names in English with a {lang_pref} translation alongside."
 
     formatted_answers = _format_answers_for_prompt(answers)
 

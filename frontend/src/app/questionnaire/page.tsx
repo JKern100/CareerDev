@@ -52,6 +52,7 @@ function QuestionnaireContent() {
 
   // Shared state
   const [answers, setAnswers] = useState<AnswerMap>({});
+  const [currencyCode, setCurrencyCode] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -115,6 +116,12 @@ function QuestionnaireContent() {
             });
           }
         }
+
+        // Extract currency preference from previous answers
+        const q003 = screen.existing_answers.find((ea) => ea.question_id === "Q003");
+        if (q003?.value && typeof q003.value === "string") {
+          setCurrencyCode(q003.value);
+        }
       }
 
       const initial: AnswerMap = {};
@@ -129,7 +136,7 @@ function QuestionnaireContent() {
           } else if (q.question_type === "likert_1_5") {
             defaultValue = 3;
           } else if (q.question_type === "numeric") {
-            defaultValue = q.min_val ?? 0;
+            defaultValue = "";
           }
           initial[q.question_id] = { value: defaultValue, confidence: 100 };
         }
@@ -624,12 +631,18 @@ function QuestionnaireContent() {
               isNotSure={answers[q.question_id]?.value === "not_sure"}
               translation={qTr?.[q.question_id]}
               uiStrings={ui}
-              onChange={(val) =>
+              currencyCode={q.question_type === "numeric" ? (
+                (answers["Q003"]?.value as string) || currencyCode || undefined
+              ) : undefined}
+              onChange={(val) => {
                 setAnswers((prev) => ({
                   ...prev,
                   [q.question_id]: { value: val, confidence: 100 },
-                }))
-              }
+                }));
+                if (q.question_id === "Q003" && typeof val === "string") {
+                  setCurrencyCode(val);
+                }
+              }}
               onNotSure={() =>
                 setAnswers((prev) => ({
                   ...prev,
