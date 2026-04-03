@@ -43,7 +43,14 @@ export default function PricingPage() {
       const { checkout_url } = await createCheckout(plan);
       window.location.href = checkout_url;
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Failed to start checkout");
+      const msg = err instanceof Error ? err.message : "";
+      if (msg.includes("not configured") || msg.includes("503") || msg.includes("Service Unavailable")) {
+        // Payment provider not set up — scroll to promo section
+        setPromoError("Payment system is being set up. Use an access code below to unlock Pro.");
+        document.getElementById("promo-section")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else {
+        alert(msg || "Failed to start checkout");
+      }
     } finally {
       setLoading(null);
     }
@@ -170,7 +177,7 @@ export default function PricingPage() {
         </div>
 
         {/* Promo Code */}
-        <div style={styles.promoSection}>
+        <div id="promo-section" style={styles.promoSection}>
           <p style={{ color: "#94a3b8", fontSize: "0.9rem", marginBottom: "0.75rem" }}>
             {p("promo_label")}
           </p>
