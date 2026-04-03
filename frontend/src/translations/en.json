@@ -54,7 +54,9 @@
     "change_answer": "Change my answer",
     "text_placeholder": "Your answer...",
     "story_placeholder": "Share your experience...",
-    "file_upload": "File upload coming soon"
+    "file_upload": "File upload coming soon",
+    "hub_title": "Your Career Assessment",
+    "hub_subtitle": "Answer in stages — go as deep as you like."
   },
   "nav": {
     "dashboard": "Dashboard",

@@ -85,6 +85,9 @@ class QuestionnaireProgressOut(BaseModel):
     tier1_complete: bool = False
     tier2_complete: bool = False
     tier3_complete: bool = False
+    tier1_screens_done: int = 0
+    tier2_screens_done: int = 0
+    tier3_screens_done: int = 0
 
 
 class CoreScreenOut(BaseModel):

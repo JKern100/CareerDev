@@ -28,6 +28,9 @@ from app.services.routing import (
     MODULE_LABELS,
     CORE_MODULES,
     ALL_PROGRESSIVE_SCREENS,
+    TIER1_SCREENS,
+    TIER2_SCREENS,
+    TIER3_SCREENS,
     get_next_progressive_screen,
     is_tier1_complete,
     is_tier2_complete,
@@ -396,6 +399,9 @@ async def get_progress(
             is_complete=complete,
         ))
 
+    def _count_screens_done(screens: list[dict], aids: set[str]) -> int:
+        return sum(1 for s in screens if all(qid in aids for qid in s["questions"]))
+
     return QuestionnaireProgressOut(
         total_modules=len(CORE_MODULES),
         completed_modules=completed_modules,
@@ -408,4 +414,7 @@ async def get_progress(
         tier1_complete=is_tier1_complete(answered_ids),
         tier2_complete=is_tier2_complete(answered_ids),
         tier3_complete=is_tier3_complete(answered_ids),
+        tier1_screens_done=_count_screens_done(TIER1_SCREENS, answered_ids),
+        tier2_screens_done=_count_screens_done(TIER2_SCREENS, answered_ids),
+        tier3_screens_done=_count_screens_done(TIER3_SCREENS, answered_ids),
     )

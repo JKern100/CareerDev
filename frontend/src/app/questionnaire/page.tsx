@@ -7,6 +7,7 @@ import {
   submitAnswers,
   completeQuestionnaire,
   getProgress,
+  getMe,
   Question,
   CoreScreen,
   APP_VERSION,
@@ -18,6 +19,22 @@ import { useTranslation } from "@/hooks/useTranslation";
 
 type AnswerMap = Record<string, { value: string | number | string[]; confidence: number }>;
 
+interface HubData {
+  tier1Complete: boolean;
+  tier2Complete: boolean;
+  tier3Complete: boolean;
+  tier1ScreensDone: number;
+  tier2ScreensDone: number;
+  tier3ScreensDone: number;
+  isPremium: boolean;
+}
+
+// Stage config constants
+const STAGE_CONFIG = [
+  { tier: 1 as const, screens: 4, questions: 20, minutes: 5, label: "Quick Match" },
+  { tier: 2 as const, screens: 4, questions: 22, minutes: 5, label: "Sharpen" },
+  { tier: 3 as const, screens: 8, questions: 40, minutes: 10, label: "Personalise" },
+];
 
 export default function QuestionnairePage() {
   return (
@@ -30,82 +47,92 @@ export default function QuestionnairePage() {
 function QuestionnaireContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const startParam = searchParams.get("start"); // ?start=tier2
+  const startParam = searchParams.get("start");
 
-  // Phase: "tier1" → "tier1_done" → "tier2" → "tier2_done" → "tier3" → "complete"
-  // "upgrade_required" shown when free user tries to access Tier 2/3
-  const [phase, setPhase] = useState<"tier1" | "tier1_done" | "tier2" | "tier2_done" | "tier3" | "complete" | "upgrade_required">(
-    startParam === "tier2" ? "tier2" : "tier1"
-  );
+  // Phase: "hub" = overview, "tier1/2/3" = answering questions
+  const [phase, setPhase] = useState<"hub" | "tier1" | "tier2" | "tier3">("hub");
   const phaseRef = useRef(phase);
-  phaseRef.current = phase; // always current — avoids stale closures
+  phaseRef.current = phase;
 
-  // Language — uses the global useTranslation hook
   const { t, getQuestionTranslation, lang } = useTranslation();
-  // Backward-compat aliases for the template
-  const ui = lang !== "en" ? { step_of: t("ui.step_of"), quick_match: t("ui.quick_match"), sharpening: t("ui.sharpening"), tier1_done_title: t("ui.tier1_done_title"), tier1_done_body: t("ui.tier1_done_body"), tier1_done_see: t("ui.tier1_done_see"), tier1_done_sharpen: t("ui.tier1_done_sharpen") } as Record<string, string> : undefined;
+  const ui = lang !== "en" ? { step_of: t("ui.step_of"), quick_match: t("ui.quick_match"), sharpening: t("ui.sharpening") } as Record<string, string> : undefined;
   const qTr = lang !== "en" ? new Proxy({} as Record<string, { prompt?: string; options?: Record<string, string>; help_text?: string }>, { get: (_, qid: string) => getQuestionTranslation(qid) }) : undefined;
 
+  // Hub state
+  const [hubData, setHubData] = useState<HubData | null>(null);
 
-  // Core phase state
+  // In-stage state
   const [coreScreen, setCoreScreen] = useState<CoreScreen | null>(null);
-
-  // Shared state
   const [answers, setAnswers] = useState<AnswerMap>({});
   const [currencyCode, setCurrencyCode] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [unansweredQuestions, setUnansweredQuestions] = useState<Question[]>([]);
-  const [showWelcome, setShowWelcome] = useState(false);
 
-  // ── Progressive phase: load next screen (Tier 1 or Tier 2) ──
+  // ── Load hub data ──
+  const loadHub = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [progress, me] = await Promise.all([getProgress(), getMe()]);
+      setHubData({
+        tier1Complete: progress.tier1_complete,
+        tier2Complete: progress.tier2_complete,
+        tier3Complete: progress.tier3_complete,
+        tier1ScreensDone: progress.tier1_screens_done,
+        tier2ScreensDone: progress.tier2_screens_done,
+        tier3ScreensDone: progress.tier3_screens_done,
+        isPremium: me.is_premium || me.role === "admin",
+      });
+    } catch {
+      setError("Failed to load progress");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // ── Load next question screen ──
   const loadCoreScreen = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
       const screen = await getCoreNextScreen();
 
-      // Check tier milestones (use ref to avoid stale closure)
       const currentPhase = phaseRef.current;
-      if (screen.tier1_complete && currentPhase === "tier1") {
-        setPhase("tier1_done");
-        setLoading(false);
-        return;
-      }
-      if (screen.tier2_complete && currentPhase === "tier2") {
-        setPhase("tier2_done");
-        setLoading(false);
-        return;
-      }
-      // Tier 3 complete or all progressive screens done
-      if (screen.tier3_complete && currentPhase === "tier3") {
-        setPhase("complete");
-        setLoading(false);
-        return;
-      }
-      if (screen.tier1_complete && screen.tier2_complete && screen.tier3_complete && screen.questions.length === 0) {
-        setPhase("complete");
-        setLoading(false);
-        return;
-      }
-      // Tier 2 done but not yet in tier3 — show tier2_done milestone
-      if (screen.tier1_complete && screen.tier2_complete && !screen.tier3_complete && screen.questions.length === 0 && currentPhase !== "tier3") {
-        setPhase("tier2_done");
-        setLoading(false);
+
+      // Tier completion → return to hub
+      if (
+        (screen.tier1_complete && currentPhase === "tier1") ||
+        (screen.tier2_complete && currentPhase === "tier2") ||
+        (screen.tier3_complete && currentPhase === "tier3") ||
+        (screen.tier1_complete && screen.tier2_complete && screen.tier3_complete)
+      ) {
+        // If all done and user was in tier3, mark questionnaire complete
+        if (screen.tier3_complete && currentPhase === "tier3") {
+          try { await completeQuestionnaire(); } catch { /* ignore */ }
+        }
+        setPhase("hub");
+        await loadHub();
         return;
       }
 
-      // Subscription gate — backend returns this when free user hits Tier 2/3
+      // Edge: tier2 done but not in tier3 — back to hub
+      if (screen.tier1_complete && screen.tier2_complete && !screen.tier3_complete && screen.questions.length === 0 && currentPhase !== "tier3") {
+        setPhase("hub");
+        await loadHub();
+        return;
+      }
+
+      // Subscription gate — free user tried Tier 2/3
       if (screen.screen_id === "upgrade_required") {
-        setPhase("upgrade_required" as typeof phase);
-        setLoading(false);
+        setPhase("hub");
+        await loadHub();
         return;
       }
 
       setCoreScreen(screen);
 
-      // Initialize answers from existing + defaults
+      // Initialize answers
       const existingMap = new Map<string, { value: string | number | string[]; confidence: number }>();
       if (screen.existing_answers) {
         for (const ea of screen.existing_answers) {
@@ -116,8 +143,6 @@ function QuestionnaireContent() {
             });
           }
         }
-
-        // Extract currency preference from previous answers
         const q003 = screen.existing_answers.find((ea) => ea.question_id === "Q003");
         if (q003?.value && typeof q003.value === "string") {
           setCurrencyCode(q003.value);
@@ -147,7 +172,7 @@ function QuestionnaireContent() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [loadHub]);
 
   // ── Initial load ──
   useEffect(() => {
@@ -156,61 +181,36 @@ function QuestionnaireContent() {
       router.push("/login");
       return;
     }
-    if (localStorage.getItem("is_first_login") === "true") {
-      setShowWelcome(true);
-      localStorage.removeItem("is_first_login");
-    }
+    // Clean up first-login flag (no longer need welcome modal)
+    localStorage.removeItem("is_first_login");
 
-    // If no explicit start param, auto-detect the right phase from progress
-    if (!startParam) {
-      getProgress().then((progress) => {
-        if (progress.tier3_complete) {
-          // All tiers done
-          setPhase("complete");
-          setLoading(false);
-        } else if (progress.tier2_complete) {
-          // All scoring done — show tier2_done milestone
-          setPhase("tier2_done");
-          setLoading(false);
-        } else if (progress.tier1_complete) {
-          // Tier 1 done — show tier1_done milestone
-          setPhase("tier1_done");
-          setLoading(false);
-        } else {
-          // Still in tier1
-          loadCoreScreen();
-        }
-      }).catch(() => {
-        loadCoreScreen();
-      });
-    } else if (phaseRef.current === "tier2") {
-      // ?start=tier2 — tier2 useEffect handles loading
+    if (startParam === "tier2" || startParam === "tier3") {
+      setPhase(startParam === "tier2" ? "tier2" : "tier3");
     } else {
-      loadCoreScreen();
+      loadHub();
     }
-  }, [router, loadCoreScreen, startParam]);
+  }, [router, loadHub, startParam]);
 
-  // ── When switching to tier2 or tier3, load next progressive screen ──
+  // ── When entering a tier, load the next screen ──
   useEffect(() => {
-    if (phase === "tier2" || phase === "tier3") {
+    if (phase === "tier1" || phase === "tier2" || phase === "tier3") {
       loadCoreScreen();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
 
-  // ── Core submit handler ──
+  // ── Submit answers handler ──
   async function handleCoreSubmit() {
     if (!coreScreen) return;
     setSubmitting(true);
     setError("");
     setUnansweredQuestions([]);
 
-    // Check required fields
     const unanswered = coreScreen.questions.filter((q) => {
       if (!q.required) return false;
       const ans = answers[q.question_id];
       if (!ans) return true;
-      if (ans.value === "not_sure") return false; // "Not sure" counts as answered
+      if (ans.value === "not_sure") return false;
       return ans.value === "" || (Array.isArray(ans.value) && ans.value.length === 0);
     });
 
@@ -231,21 +231,12 @@ function QuestionnaireContent() {
         }));
 
       await submitAnswers(payload);
-      await loadCoreScreen(); // Load next core screen or mark complete
+      await loadCoreScreen();
       window.scrollTo(0, 0);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to save answers");
     } finally {
       setSubmitting(false);
-    }
-  }
-
-  async function handleComplete() {
-    try {
-      await completeQuestionnaire();
-      router.push("/summary");
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to complete");
     }
   }
 
@@ -259,13 +250,13 @@ function QuestionnaireContent() {
     );
   }
 
-  // ── Render: Error with no questions loaded ──
-  if (!loading && error && !coreScreen) {
+  // ── Render: Error with nothing loaded ──
+  if (!loading && error && !coreScreen && !hubData) {
     return (
       <div className="container" style={{ textAlign: "center", marginTop: "4rem" }}>
         <p style={{ color: "#ef4444", marginBottom: "1rem" }}>{error}</p>
         <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
-          <button className="btn btn-primary" onClick={() => loadCoreScreen()}>
+          <button className="btn btn-primary" onClick={() => loadHub()}>
             {t("ui.try_again")}
           </button>
           <button className="btn btn-outline" onClick={() => router.push("/dashboard")}>
@@ -276,428 +267,319 @@ function QuestionnaireContent() {
     );
   }
 
-  // ── Render: Tier 1 done milestone ──
-  if (phase === "tier1_done") {
-    return (
-      <>
-        <AppHeader />
-        <div className="container" style={{ textAlign: "center", marginTop: "4rem", maxWidth: "560px" }}>
-          <div style={{
-            width: "64px", height: "64px", borderRadius: "50%",
-            background: "#dbeafe",
-            display: "inline-flex", alignItems: "center", justifyContent: "center",
-            fontSize: "1.75rem", marginBottom: "1.5rem",
-          }}>
-            &#127775;
-          </div>
-          <h1 style={{ fontSize: "1.5rem", marginBottom: "0.75rem" }}>
-            {ui?.tier1_done_title || "Your initial results are ready!"}
-          </h1>
-          <p style={{ color: "var(--muted)", lineHeight: 1.7, fontSize: "0.95rem", marginBottom: "1rem" }}>
-            {ui?.tier1_done_body || "Based on your quick assessment, we've matched you to career pathways. You can see your results now, or sharpen them with ~20 more questions (~5 min)."}
-          </p>
-          <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
-            <button
-              className="btn btn-primary"
-              onClick={() => router.push("/summary")}
-              style={{ padding: "0.75rem 2rem" }}
-            >
-              {ui?.tier1_done_see || "See My Results"}
-            </button>
-            <button
-              className="btn btn-outline"
-              onClick={() => setPhase("tier2")}
-              style={{ padding: "0.75rem 2rem" }}
-            >
-              {ui?.tier1_done_sharpen || "Sharpen My Results (~5 min)"}
-            </button>
-          </div>
-          <p style={{ color: "var(--muted)", fontSize: "0.8rem", marginTop: "1.5rem" }}>
-            The &quot;Sharpen&quot; questions cover all scoring-relevant skills, preferences, and constraints.
-            Your career rankings will be fully accurate after this step.
-          </p>
-        </div>
-      </>
-    );
-  }
+  // ── Render: Stage Hub ──
+  if (phase === "hub" && hubData) {
+    const stageData = [
+      {
+        complete: hubData.tier1Complete,
+        screensDone: hubData.tier1ScreensDone,
+        locked: false,
+        lockReason: null as string | null,
+      },
+      {
+        complete: hubData.tier2Complete,
+        screensDone: hubData.tier2ScreensDone,
+        locked: !hubData.tier1Complete || (!hubData.isPremium && !hubData.tier2Complete),
+        lockReason: !hubData.tier1Complete ? "Complete Stage 1 first" : !hubData.isPremium ? null : null,
+      },
+      {
+        complete: hubData.tier3Complete,
+        screensDone: hubData.tier3ScreensDone,
+        locked: !hubData.tier2Complete || (!hubData.isPremium && !hubData.tier3Complete),
+        lockReason: !hubData.tier2Complete ? "Complete Stage 2 first" : !hubData.isPremium ? null : null,
+      },
+    ];
 
-  // ── Render: Upgrade required (free user hit Tier 2/3 paywall) ──
-  if (phase === "upgrade_required") {
     return (
       <>
         <AppHeader />
-        <div className="container" style={{ textAlign: "center", marginTop: "4rem", maxWidth: "560px" }}>
-          <div style={{
-            width: "64px", height: "64px", borderRadius: "50%",
-            background: "linear-gradient(135deg, #dbeafe, #e0e7ff)",
-            display: "inline-flex", alignItems: "center", justifyContent: "center",
-            fontSize: "1.75rem", marginBottom: "1.5rem",
-          }}>
-            &#128274;
-          </div>
-          <h1 style={{ fontSize: "1.5rem", marginBottom: "0.75rem" }}>
-            {t("ui.upgrade_title")}
-          </h1>
-          <p style={{ color: "var(--muted)", lineHeight: 1.7, fontSize: "0.95rem", marginBottom: "1.5rem" }}>
-            {t("ui.upgrade_body")}
-          </p>
-          <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
-            <button
-              className="btn btn-primary"
-              onClick={() => router.push("/pricing")}
-              style={{ padding: "0.75rem 2rem", fontSize: "1rem" }}
-            >
-              {t("ui.upgrade_cta")}
-            </button>
-          </div>
-          <button
-            onClick={() => router.push("/dashboard")}
-            style={{
-              background: "none",
-              border: "none",
-              color: "var(--muted)",
-              cursor: "pointer",
-              fontSize: "0.85rem",
-              marginTop: "1.25rem",
-              textDecoration: "underline",
-            }}
-          >
-            Back to dashboard
-          </button>
-          <p style={{ color: "var(--muted)", fontSize: "0.8rem", marginTop: "1rem" }}>
-            {t("ui.upgrade_note")}
-          </p>
-        </div>
-      </>
-    );
-  }
-
-  // ── Render: Tier 2 done milestone ──
-  if (phase === "tier2_done") {
-    return (
-      <>
-        <AppHeader />
-        <div className="container" style={{ marginTop: "2.5rem", maxWidth: "620px" }}>
+        <div className="container" style={{ maxWidth: "640px", marginTop: "2rem" }}>
           <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-            <div style={{
-              width: "64px", height: "64px", borderRadius: "50%",
-              background: "#d1fae5",
-              display: "inline-flex", alignItems: "center", justifyContent: "center",
-              fontSize: "1.75rem", marginBottom: "1.5rem",
-            }}>
-              &#9989;
-            </div>
-            <h1 style={{ fontSize: "1.5rem", marginBottom: "0.75rem" }}>
-              Your career rankings are locked in
+            <h1 style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>
+              {t("ui.hub_title")}
             </h1>
-            <p style={{ color: "var(--muted)", lineHeight: 1.7, fontSize: "0.95rem" }}>
-              You&apos;ve answered all the questions that determine your pathway scores.
-              You can see your results now &mdash; or unlock a significantly richer, more personalised report.
+            <p style={{ color: "var(--muted)", fontSize: "0.95rem" }}>
+              {t("ui.hub_subtitle")}
             </p>
           </div>
 
-          {/* Primary CTA */}
-          <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-            <button
-              className="btn btn-primary"
-              onClick={() => router.push("/summary")}
-              style={{ padding: "0.75rem 2.5rem", fontSize: "1rem" }}
-            >
-              See My Results Now
-            </button>
-          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            {STAGE_CONFIG.map((stage, i) => {
+              const sd = stageData[i];
+              const needsUpgrade = !hubData.isPremium && !sd.complete && i > 0 && (i === 1 ? hubData.tier1Complete : hubData.tier2Complete);
 
-          {/* Stage 3 pitch */}
-          <div style={{
-            background: "linear-gradient(135deg, rgba(37, 99, 235, 0.06), rgba(139, 92, 246, 0.06))",
-            border: "1px solid rgba(37, 99, 235, 0.2)",
-            borderRadius: "14px",
-            padding: "1.75rem 1.5rem",
-            marginBottom: "1.5rem",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
-              <span style={{
-                fontSize: "0.7rem", background: "var(--primary)", color: "white",
-                padding: "0.2rem 0.65rem", borderRadius: "20px", fontWeight: 600,
-                letterSpacing: "0.03em",
-              }}>
-                RECOMMENDED
-              </span>
-            </div>
+              return (
+                <div
+                  key={stage.tier}
+                  style={{
+                    border: `1px solid ${sd.complete ? "rgba(34,197,94,0.3)" : sd.locked ? "var(--border)" : "rgba(59,130,246,0.3)"}`,
+                    borderRadius: "14px",
+                    padding: "1.5rem",
+                    background: sd.complete ? "rgba(34,197,94,0.04)" : sd.locked ? "rgba(100,116,139,0.04)" : "rgba(59,130,246,0.04)",
+                    opacity: sd.locked && !needsUpgrade ? 0.7 : 1,
+                  }}
+                >
+                  {/* Header row */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <h2 style={{ fontSize: "1.1rem", fontWeight: 600, margin: 0 }}>
+                        Stage {stage.tier}: {stage.label}
+                      </h2>
+                      {stage.tier === 3 && (
+                        <span style={{
+                          fontSize: "0.65rem", padding: "2px 6px", borderRadius: "999px",
+                          background: "rgba(139,92,246,0.1)", color: "#7c3aed", fontWeight: 600,
+                        }}>
+                          OPTIONAL
+                        </span>
+                      )}
+                    </div>
+                    {sd.complete && (
+                      <span style={{
+                        fontSize: "0.75rem", padding: "3px 10px", borderRadius: "999px",
+                        background: "rgba(34,197,94,0.15)", color: "#16a34a", fontWeight: 600,
+                      }}>
+                        ✓ Complete
+                      </span>
+                    )}
+                    {!sd.complete && stage.tier > 1 && !sd.locked && (
+                      <span style={{
+                        fontSize: "0.65rem", padding: "2px 6px", borderRadius: "999px",
+                        background: "rgba(59,130,246,0.1)", color: "#2563eb", fontWeight: 600,
+                      }}>
+                        PRO
+                      </span>
+                    )}
+                  </div>
 
-            <h2 style={{ fontSize: "1.15rem", marginBottom: "0.75rem", fontWeight: 600 }}>
-              Want a report that actually sounds like you?
-            </h2>
+                  {/* Meta */}
+                  <p style={{ color: "var(--muted)", fontSize: "0.8rem", marginBottom: "0.75rem" }}>
+                    {stage.questions} questions · ~{stage.minutes} min
+                  </p>
 
-            <p style={{ color: "var(--muted)", lineHeight: 1.75, fontSize: "0.9rem", marginBottom: "1.25rem" }}>
-              Your current report uses your scores to rank careers. But the <strong style={{ color: "var(--fg)" }}>personalised deep-dive</strong> transforms it into
-              a career transition plan written specifically for your situation &mdash; your aviation background, your real constraints, your ambitions, and the
-              trade-offs you&apos;re actually willing to make.
-            </p>
+                  {/* Description */}
+                  <p style={{ color: "var(--muted)", fontSize: "0.9rem", lineHeight: 1.6, marginBottom: "1rem" }}>
+                    {stage.tier === 1 && "Get your initial career pathway rankings based on skills, experience, and goals."}
+                    {stage.tier === 2 && "Fully score all skills, preferences, and constraints for accurate rankings."}
+                    {stage.tier === 3 && "Add background, evidence, and context for a richer AI-written career report. Your rankings won\u2019t change \u2014 this enriches the narrative."}
+                  </p>
 
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "0.75rem",
-              marginBottom: "1.5rem",
-            }}>
-              {[
-                { icon: "\u2708\uFE0F", label: "Your aviation story", desc: "How your specific crew experience translates to each career" },
-                { icon: "\uD83D\uDCAA", label: "Evidence-backed skills", desc: "Real examples from your career that prove your strengths" },
-                { icon: "\uD83C\uDFAF", label: "Your dream role", desc: "We\u2019ll address what you really want \u2014 even if it\u2019s ambitious" },
-                { icon: "\u2696\uFE0F", label: "Realistic constraints", desc: "Visa, finances, family \u2014 your plan will actually work" },
-              ].map((item) => (
-                <div key={item.label} style={{
-                  background: "white",
-                  borderRadius: "10px",
-                  padding: "0.875rem",
-                  border: "1px solid var(--border)",
-                }}>
-                  <div style={{ fontSize: "1.25rem", marginBottom: "0.375rem" }}>{item.icon}</div>
-                  <p style={{ fontWeight: 600, fontSize: "0.85rem", marginBottom: "0.25rem" }}>{item.label}</p>
-                  <p style={{ color: "var(--muted)", fontSize: "0.775rem", lineHeight: 1.5 }}>{item.desc}</p>
-                </div>
-              ))}
-            </div>
+                  {/* Progress bar (if in progress) */}
+                  {!sd.complete && sd.screensDone > 0 && !sd.locked && (
+                    <div style={{ marginBottom: "0.75rem" }}>
+                      <div style={{
+                        height: "4px", background: "var(--border)", borderRadius: "2px",
+                        overflow: "hidden", marginBottom: "0.25rem",
+                      }}>
+                        <div style={{
+                          height: "100%", borderRadius: "2px",
+                          width: `${(sd.screensDone / stage.screens) * 100}%`,
+                          background: "var(--primary)",
+                          transition: "width 0.3s ease",
+                        }} />
+                      </div>
+                      <p style={{ fontSize: "0.75rem", color: "var(--muted)" }}>
+                        {sd.screensDone} of {stage.screens} screens done
+                      </p>
+                    </div>
+                  )}
 
-            <div style={{
-              background: "white",
-              borderRadius: "10px",
-              padding: "1rem 1.25rem",
-              border: "1px solid var(--border)",
-              marginBottom: "1.25rem",
-            }}>
-              <p style={{ fontWeight: 600, fontSize: "0.85rem", marginBottom: "0.5rem", color: "var(--fg)" }}>
-                What to expect
-              </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", fontSize: "0.825rem", color: "#475569", lineHeight: 1.6 }}>
-                <p>&#128340; <strong>~10-12 minutes</strong> across 8 focused sections &mdash; 40 curated questions</p>
-                <p>&#128190; <strong>Save and continue any time</strong> &mdash; close the browser, come back tomorrow, pick up exactly where you left off</p>
-                <p>&#128221; <strong>Mix of quick picks and short answers</strong> &mdash; mostly tapping options, a few short written responses</p>
-                <p>&#127775; <strong>Each section unlocks more detail</strong> &mdash; your report gets richer with every screen you complete</p>
-              </div>
-            </div>
-
-            <div style={{ textAlign: "center" }}>
-              <button
-                className="btn btn-outline"
-                onClick={() => setPhase("tier3")}
-                style={{
-                  padding: "0.75rem 2.5rem",
-                  fontSize: "0.95rem",
-                  borderColor: "var(--primary)",
-                  color: "var(--primary)",
-                  fontWeight: 600,
-                }}
-              >
-                Start the Deep-Dive
-              </button>
-              <p style={{ color: "var(--muted)", fontSize: "0.75rem", marginTop: "0.75rem" }}>
-                You can stop after any module and still see improved results.
-              </p>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  // ── Render: Complete ──
-  if (phase === "complete") {
-    return (
-      <div className="container" style={{ textAlign: "center", marginTop: "4rem", maxWidth: "560px" }}>
-        <div style={{
-          width: "64px", height: "64px", borderRadius: "50%",
-          background: "#d1fae5",
-          display: "inline-flex", alignItems: "center", justifyContent: "center",
-          fontSize: "1.75rem", marginBottom: "1.5rem",
-        }}>
-          ✓
-        </div>
-        <h1 style={{ fontSize: "1.5rem", marginBottom: "0.75rem" }}>{t("ui.questionnaire_complete_title")}</h1>
-        <p className="text-muted mb-3" style={{ lineHeight: 1.7 }}>
-          {t("ui.questionnaire_complete_body")}
-        </p>
-        <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
-          <button className="btn btn-primary" onClick={handleComplete} style={{ padding: "0.75rem 2rem" }}>
-            {t("ui.view_profile_summary")}
-          </button>
-          <button
-            className="btn btn-outline"
-            style={{ padding: "0.75rem 1.5rem", borderColor: "rgba(234, 179, 8, 0.4)", color: "#eab308" }}
-            onClick={() => router.push("/coach")}
-          >
-            {t("ui.talk_to_coach")}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Render: Progressive phase (Tier 1, Tier 2, or Tier 3) ──
-  if ((phase === "tier1" || phase === "tier2" || phase === "tier3") && coreScreen) {
-    return (
-      <>
-      {showWelcome && (
-        <div style={{
-          position: "fixed", inset: 0, zIndex: 1000,
-          background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          padding: "1rem",
-        }}>
-          <div style={{
-            background: "white", borderRadius: "16px", maxWidth: "520px",
-            width: "100%", padding: "2.5rem 2rem", textAlign: "center",
-            boxShadow: "0 25px 50px rgba(0,0,0,0.15)",
-          }}>
-            <div style={{
-              width: "56px", height: "56px", borderRadius: "50%",
-              background: "#dbeafe", display: "inline-flex",
-              alignItems: "center", justifyContent: "center",
-              fontSize: "1.5rem", marginBottom: "1.25rem",
-            }}>
-              &#127919;
-            </div>
-            <h1 style={{ fontSize: "1.4rem", marginBottom: "0.75rem" }}>
-              Welcome to your career assessment
-            </h1>
-            <p style={{ color: "var(--muted)", lineHeight: 1.8, fontSize: "0.925rem" }}>
-              We&apos;ll start with <strong style={{ color: "var(--fg)" }}>18 quick questions (~5 min)</strong> to show you which careers fit. Then you decide how deep to go.
-            </p>
-            <div style={{
-              background: "#f8fafc", borderRadius: "10px",
-              padding: "1rem 1.25rem", margin: "1.25rem 0",
-              textAlign: "start", lineHeight: 1.75, fontSize: "0.875rem",
-              color: "#475569",
-            }}>
-              <p>
-                <span style={{ color: "var(--primary)", fontWeight: 600 }}>Step 1: Quick Match (5 min).</span>{" "}
-                18 questions to get your initial career pathway rankings.
-              </p>
-              <p style={{ marginTop: "0.5rem" }}>
-                <span style={{ color: "var(--primary)", fontWeight: 600 }}>Step 2: Sharpen (5 min, optional).</span>{" "}
-                20 more questions that fully score all skills, preferences, and constraints.
-              </p>
-              <p style={{ marginTop: "0.5rem" }}>
-                <span style={{ color: "var(--primary)", fontWeight: 600 }}>Step 3: Personalise (~10 min, optional).</span>{" "}
-                40 focused questions that add background context for a richer AI-written career report.
-              </p>
-            </div>
-            <button
-              className="btn btn-primary"
-              onClick={() => setShowWelcome(false)}
-              style={{ padding: "0.75rem 2rem", fontSize: "0.95rem", marginTop: "0.25rem" }}
-            >
-              Let&apos;s go
-            </button>
-          </div>
-        </div>
-      )}
-      <AppHeader />
-      <div className="container">
-        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0.25rem" }}>
-          <p className="text-sm text-muted">{APP_VERSION}</p>
-        </div>
-
-        {/* Core progress header */}
-        <div className="flex justify-between items-center mb-1">
-          <div>
-            <p className="text-sm text-muted">
-              {t("ui.step_of", { n: String(coreScreen.screen_number), total: String(coreScreen.total_screens) })}: {phase === "tier1" ? t("ui.quick_match") : phase === "tier2" ? t("ui.sharpening") : t("ui.personalising")}
-            </p>
-          </div>
-          <p className="text-sm text-muted">
-            ~{5 - coreScreen.screen_number + 1} min left
-          </p>
-        </div>
-
-        {/* Progress bar */}
-        <div className="progress-bar mb-2">
-          <div
-            className="progress-bar-fill"
-            style={{ width: `${((coreScreen.screen_number - 1) / coreScreen.total_screens) * 100}%` }}
-          />
-        </div>
-
-        <h1 className="mb-2">{coreScreen.screen_label}</h1>
-
-        {/* Questions */}
-        <div className="flex flex-col gap-1">
-          {coreScreen.questions.map((q) => (
-            <QuestionField
-              key={q.question_id}
-              question={q}
-              value={answers[q.question_id]?.value ?? ""}
-              isNotSure={answers[q.question_id]?.value === "not_sure"}
-              translation={qTr?.[q.question_id]}
-              uiStrings={ui}
-              currencyCode={q.question_type === "numeric" ? (
-                (answers["Q003"]?.value as string) || currencyCode || undefined
-              ) : undefined}
-              onChange={(val) => {
-                setAnswers((prev) => ({
-                  ...prev,
-                  [q.question_id]: { value: val, confidence: 100 },
-                }));
-                if (q.question_id === "Q003" && typeof val === "string") {
-                  setCurrencyCode(val);
-                }
-              }}
-              onNotSure={() =>
-                setAnswers((prev) => ({
-                  ...prev,
-                  [q.question_id]: { value: "not_sure", confidence: 50 },
-                }))
-              }
-            />
-          ))}
-        </div>
-
-        {error && (
-          <div style={{
-            color: "#92400e",
-            background: "#fef3c7",
-            border: "1px solid #f59e0b",
-            padding: "0.75rem 1rem",
-            borderRadius: "8px",
-            marginTop: "1rem",
-            fontSize: "0.875rem",
-            lineHeight: 1.5,
-          }}>
-            {error}
-            {unansweredQuestions.length > 0 && (
-              <ul style={{ margin: "0.5rem 0 0 0", paddingLeft: "1.25rem" }}>
-                {unansweredQuestions.map((q) => (
-                  <li key={q.question_id}>
-                    <a
-                      href={`#q-${q.question_id}`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        document.getElementById(`q-${q.question_id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-                      }}
-                      style={{ color: "#92400e", textDecoration: "underline", cursor: "pointer" }}
+                  {/* CTA */}
+                  {sd.complete ? (
+                    <button
+                      className="btn btn-outline"
+                      style={{ fontSize: "0.85rem", padding: "0.5rem 1.25rem" }}
+                      onClick={() => router.push("/summary")}
                     >
-                      {q.prompt}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            )}
+                      View Results
+                    </button>
+                  ) : needsUpgrade ? (
+                    <button
+                      className="btn btn-primary"
+                      style={{ fontSize: "0.85rem", padding: "0.5rem 1.25rem" }}
+                      onClick={() => router.push("/pricing")}
+                    >
+                      Upgrade to Pro
+                    </button>
+                  ) : sd.locked ? (
+                    <p style={{ color: "var(--muted)", fontSize: "0.85rem", fontStyle: "italic" }}>
+                      {sd.lockReason || `Complete Stage ${stage.tier - 1} first`}
+                    </p>
+                  ) : (
+                    <button
+                      className="btn btn-primary"
+                      style={{ fontSize: "0.85rem", padding: "0.5rem 1.25rem" }}
+                      onClick={() => setPhase(`tier${stage.tier}` as "tier1" | "tier2" | "tier3")}
+                    >
+                      {sd.screensDone > 0 ? `Continue Stage ${stage.tier} (${sd.screensDone}/${stage.screens})` : `Start Stage ${stage.tier}`}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
-        )}
 
-        {/* Navigation */}
-        <div className="mt-3" style={{ display: "flex", gap: "0.5rem" }}>
-          <button
-            className="btn btn-primary"
-            onClick={handleCoreSubmit}
-            disabled={submitting}
-            style={{ flex: 1 }}
-          >
-            {submitting ? "Saving..." : (coreScreen.tier === 1 && coreScreen.screen_number === 4) ? "See My Results" : (coreScreen.tier === 2 && coreScreen.screen_number === 8) ? "See My Full Results" : (coreScreen.tier === 3 && coreScreen.screen_number === coreScreen.total_screens) ? "View My Profile Summary" : "Next"}
-          </button>
+          {/* Back to dashboard */}
+          <div style={{ textAlign: "center", marginTop: "1.5rem" }}>
+            <button
+              onClick={() => router.push("/dashboard")}
+              style={{
+                background: "none", border: "none", color: "var(--muted)",
+                cursor: "pointer", fontSize: "0.85rem", textDecoration: "underline",
+              }}
+            >
+              ← Back to Dashboard
+            </button>
+          </div>
         </div>
-      </div>
+      </>
+    );
+  }
+
+  // ── Render: In-stage question flow ──
+  if ((phase === "tier1" || phase === "tier2" || phase === "tier3") && coreScreen) {
+    const tierIdx = phase === "tier1" ? 0 : phase === "tier2" ? 1 : 2;
+    const stageConf = STAGE_CONFIG[tierIdx];
+    const tierScreenNum = phase === "tier1" ? coreScreen.screen_number
+      : phase === "tier2" ? coreScreen.screen_number - 4
+      : coreScreen.screen_number - 8;
+    const isLastScreen = tierScreenNum === stageConf.screens;
+    const minsPerScreen = phase === "tier3" ? 1.5 : 1.25;
+    const minsLeft = Math.ceil((stageConf.screens - tierScreenNum + 1) * minsPerScreen);
+
+    return (
+      <>
+        <AppHeader />
+        <div className="container">
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0.25rem" }}>
+            <p className="text-sm text-muted">{APP_VERSION}</p>
+          </div>
+
+          {/* Stage pills */}
+          <div style={{ display: "flex", gap: "0.4rem", marginBottom: "0.75rem", fontSize: "0.7rem", flexWrap: "wrap" }}>
+            {STAGE_CONFIG.map((sc, i) => {
+              const isActive = i === tierIdx;
+              const isDone = i < tierIdx || (i === tierIdx && false); // current stage not yet done
+              const isPast = i < tierIdx;
+              return (
+                <span
+                  key={sc.tier}
+                  style={{
+                    padding: "3px 10px", borderRadius: "999px", fontWeight: 600,
+                    background: isActive ? "#3b82f6" : isPast ? "#22c55e" : "#334155",
+                    color: isActive || isPast ? "white" : "#64748b",
+                  }}
+                >
+                  {isPast ? `Stage ${sc.tier} ✓` : isActive ? `Stage ${sc.tier}: ${tierScreenNum}/${sc.screens}` : `Stage ${sc.tier}`}
+                </span>
+              );
+            })}
+          </div>
+
+          {/* Progress header */}
+          <div className="flex justify-between items-center mb-1">
+            <p className="text-sm text-muted">
+              Stage {stageConf.tier}: {stageConf.label} — Screen {tierScreenNum} of {stageConf.screens}
+            </p>
+            <p className="text-sm text-muted">~{minsLeft} min left</p>
+          </div>
+
+          {/* Progress bar (per-stage) */}
+          <div className="progress-bar mb-2">
+            <div
+              className="progress-bar-fill"
+              style={{ width: `${((tierScreenNum - 1) / stageConf.screens) * 100}%` }}
+            />
+          </div>
+
+          <h1 className="mb-1">{coreScreen.screen_label}</h1>
+          <p className="text-sm text-muted" style={{ marginBottom: "1rem" }}>
+            {coreScreen.questions.length} question{coreScreen.questions.length !== 1 ? "s" : ""} on this page
+          </p>
+
+          {/* Questions */}
+          <div className="flex flex-col gap-1">
+            {coreScreen.questions.map((q) => (
+              <QuestionField
+                key={q.question_id}
+                question={q}
+                value={answers[q.question_id]?.value ?? ""}
+                isNotSure={answers[q.question_id]?.value === "not_sure"}
+                translation={qTr?.[q.question_id]}
+                uiStrings={ui}
+                currencyCode={q.question_type === "numeric" ? (
+                  (answers["Q003"]?.value as string) || currencyCode || undefined
+                ) : undefined}
+                onChange={(val) => {
+                  setAnswers((prev) => ({
+                    ...prev,
+                    [q.question_id]: { value: val, confidence: 100 },
+                  }));
+                  if (q.question_id === "Q003" && typeof val === "string") {
+                    setCurrencyCode(val);
+                  }
+                }}
+                onNotSure={() =>
+                  setAnswers((prev) => ({
+                    ...prev,
+                    [q.question_id]: { value: "not_sure", confidence: 50 },
+                  }))
+                }
+              />
+            ))}
+          </div>
+
+          {error && (
+            <div style={{
+              color: "#92400e", background: "#fef3c7", border: "1px solid #f59e0b",
+              padding: "0.75rem 1rem", borderRadius: "8px", marginTop: "1rem",
+              fontSize: "0.875rem", lineHeight: 1.5,
+            }}>
+              {error}
+              {unansweredQuestions.length > 0 && (
+                <ul style={{ margin: "0.5rem 0 0 0", paddingLeft: "1.25rem" }}>
+                  {unansweredQuestions.map((q) => (
+                    <li key={q.question_id}>
+                      <a
+                        href={`#q-${q.question_id}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          document.getElementById(`q-${q.question_id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }}
+                        style={{ color: "#92400e", textDecoration: "underline", cursor: "pointer" }}
+                      >
+                        {q.prompt}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          {/* Navigation */}
+          <div className="mt-3" style={{ display: "flex", gap: "0.5rem" }}>
+            <button
+              className="btn btn-primary"
+              onClick={handleCoreSubmit}
+              disabled={submitting}
+              style={{ flex: 1 }}
+            >
+              {submitting ? "Saving..." : isLastScreen ? "Done" : "Next"}
+            </button>
+          </div>
+          <div style={{ textAlign: "center", marginTop: "0.75rem" }}>
+            <button
+              onClick={() => { setPhase("hub"); loadHub(); }}
+              style={{
+                background: "none", border: "none", color: "var(--muted)",
+                cursor: "pointer", fontSize: "0.8rem", textDecoration: "underline",
+              }}
+            >
+              ← Back to overview
+            </button>
+          </div>
+        </div>
       </>
     );
   }

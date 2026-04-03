@@ -54,7 +54,9 @@
     "change_answer": "Cambiar mi respuesta",
     "text_placeholder": "Tu respuesta...",
     "story_placeholder": "Comparte tu experiencia...",
-    "file_upload": "Subida de archivos próximamente"
+    "file_upload": "Subida de archivos próximamente",
+    "hub_title": "Tu evaluación profesional",
+    "hub_subtitle": "Responde por etapas — profundiza tanto como quieras."
   },
   "nav": {
     "dashboard": "Panel",

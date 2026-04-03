@@ -54,7 +54,9 @@
     "change_answer": "غيّر إجابتي",
     "text_placeholder": "إجابتك...",
     "story_placeholder": "شارك تجربتك...",
-    "file_upload": "رفع الملفات قريبًا"
+    "file_upload": "رفع الملفات قريبًا",
+    "hub_title": "تقييمك المهني",
+    "hub_subtitle": "أجب على مراحل — تعمّق بقدر ما تريد."
   },
   "nav": {
     "dashboard": "لوحة التحكم",
