@@ -1,5 +1,6 @@
 """Shared API dependencies."""
 
+from datetime import datetime, timedelta
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
@@ -13,6 +14,9 @@ from app.models.user import User
 from app.services.auth import decode_access_token
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
+# Throttle last_active_at updates to once per minute
+_ACTIVITY_THROTTLE = timedelta(minutes=1)
 
 
 async def get_current_user(
@@ -42,6 +46,13 @@ async def get_current_user(
         raise credentials_exception
     # Tag user object with impersonation flag from JWT claim
     user._impersonated = payload.get("imp", False)
+
+    # Update last_active_at (throttled to avoid DB writes on every request)
+    now = datetime.utcnow()
+    if user.last_active_at is None or (now - user.last_active_at) > _ACTIVITY_THROTTLE:
+        user.last_active_at = now
+        await db.commit()
+
     return user
 
 

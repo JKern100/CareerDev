@@ -37,6 +37,20 @@ import AdminReferrals from "@/components/AdminReferrals";
 
 type Tab = "dashboard" | "users" | "questions" | "activity" | "promo" | "coach-usage" | "referrals";
 
+function formatTimeAgo(dateStr: string): string {
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diffMs = now - then;
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString();
+}
+
 /* ── Help Content ─────────────────────────────────────────────────────── */
 
 const HELP_CONTENT: Record<Tab, { title: string; sections: { heading: string; body: string }[] }> = {
@@ -829,6 +843,7 @@ export default function AdminPage() {
             </div>
             <div style={styles.statsGrid}>
               <StatCard label="Total Users" value={stats.total_users} />
+              <StatCard label="Online Now" value={stats.users_online} />
               <StatCard label="Completed Questionnaire" value={stats.users_completed_questionnaire} />
               <StatCard label="Completion Rate" value={`${stats.completion_rate}%`} />
               <StatCard label="Users with Reports" value={stats.users_with_reports} />
@@ -886,8 +901,12 @@ export default function AdminPage() {
                       Questionnaire: {selectedUser.questionnaire_completed ? "Done" : `Module ${selectedUser.current_module || "A"}`}
                     </span>
                     <span style={styles.badge}>Logins: {selectedUser.login_count}</span>
-                    <span style={styles.badge}>
-                      Last login: {selectedUser.last_login_at ? new Date(selectedUser.last_login_at).toLocaleString() : "Never"}
+                    <span style={{
+                      ...styles.badge,
+                      background: selectedUser.is_online ? "rgba(34,197,94,0.15)" : undefined,
+                      color: selectedUser.is_online ? "#22c55e" : undefined,
+                    }}>
+                      {selectedUser.is_online ? "● Online now" : selectedUser.last_active_at ? `Last active: ${formatTimeAgo(selectedUser.last_active_at)}` : selectedUser.last_login_at ? `Last login: ${new Date(selectedUser.last_login_at).toLocaleString()}` : "Never active"}
                     </span>
                   </div>
                   <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
@@ -1026,7 +1045,7 @@ export default function AdminPage() {
                       <th style={styles.th}>Role</th>
                       <th style={styles.th}>Status</th>
                       <th style={styles.th}>Answers</th>
-                      <th style={styles.th}>Last Login</th>
+                      <th style={styles.th}>Last Active</th>
                       <th style={styles.th}>Joined</th>
                       <th style={styles.th}>Actions</th>
                     </tr>
@@ -1034,7 +1053,20 @@ export default function AdminPage() {
                   <tbody>
                     {filteredUsers.map((u) => (
                       <tr key={u.id}>
-                        <td style={styles.td}>{u.email}</td>
+                        <td style={styles.td}>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                            <span style={{
+                              width: "8px",
+                              height: "8px",
+                              borderRadius: "50%",
+                              background: u.is_online ? "#22c55e" : "#475569",
+                              display: "inline-block",
+                              flexShrink: 0,
+                              boxShadow: u.is_online ? "0 0 6px rgba(34,197,94,0.5)" : "none",
+                            }} title={u.is_online ? "Online" : "Offline"} />
+                            {u.email}
+                          </span>
+                        </td>
                         <td style={styles.td}>{u.full_name || "\u2014"}</td>
                         <td style={styles.td}>
                           <span style={{
@@ -1053,7 +1085,17 @@ export default function AdminPage() {
                           )}
                         </td>
                         <td style={styles.td}>{u.answers_count}</td>
-                        <td style={styles.td}>{u.last_login_at ? new Date(u.last_login_at).toLocaleDateString() : "\u2014"}</td>
+                        <td style={styles.td}>
+                          {u.is_online ? (
+                            <span style={{ color: "#22c55e", fontWeight: 500 }}>Online now</span>
+                          ) : u.last_active_at ? (
+                            <span title={new Date(u.last_active_at).toLocaleString()}>
+                              {formatTimeAgo(u.last_active_at)}
+                            </span>
+                          ) : u.last_login_at ? (
+                            new Date(u.last_login_at).toLocaleDateString()
+                          ) : "\u2014"}
+                        </td>
                         <td style={styles.td}>{new Date(u.created_at).toLocaleDateString()}</td>
                         <td style={{ ...styles.td, display: "flex", gap: "6px" }}>
                           <button style={styles.btnSmall} onClick={() => handleViewAnswers(u)}>

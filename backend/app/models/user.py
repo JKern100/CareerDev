@@ -53,6 +53,9 @@ class User(Base):
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     login_count: Mapped[int | None] = mapped_column(Integer, default=0)
 
+    # Activity tracking (updated on every authenticated request, throttled to 1/min)
+    last_active_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
     # Consent
     consent_processing: Mapped[bool] = mapped_column(Boolean, default=False)
     consent_anonymized: Mapped[bool] = mapped_column(Boolean, default=False)
