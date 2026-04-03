@@ -207,9 +207,26 @@ export default function PricingPage() {
             </p>
           )}
           {promoSuccess && (
-            <p style={{ color: "#4ade80", fontSize: "0.95rem", fontWeight: 600, marginTop: "0.75rem" }}>
-              {promoSuccess}
-            </p>
+            <div style={{ marginTop: "1rem", textAlign: "center" }}>
+              <p style={{ color: "#4ade80", fontSize: "0.95rem", fontWeight: 600, marginBottom: "1rem" }}>
+                {promoSuccess}
+              </p>
+              <button
+                onClick={() => router.push("/dashboard")}
+                style={{
+                  background: "#22c55e",
+                  color: "white",
+                  border: "none",
+                  padding: "0.75rem 2rem",
+                  borderRadius: "10px",
+                  fontSize: "1rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Go to Dashboard
+              </button>
+            </div>
           )}
         </div>
 
