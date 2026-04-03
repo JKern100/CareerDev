@@ -257,12 +257,14 @@ export default function DashboardPage() {
               : user.tier1Complete ? d("summary_generate")
               : d("summary_locked")
             }
-            cta={user.hasSummary ? d("summary_cta_view") : user.tier1Complete ? d("summary_cta_gen") : d("locked")}
+            cta={user.hasSummary ? d("summary_cta_view") : user.tier1Complete ? d("summary_cta_gen") : d("q_cta_start")}
             done={user.hasSummary}
             active={currentStep === 2}
             locked={!user.tier1Complete}
             accent="#8b5cf6"
-            onClick={() => (user.hasSummary || user.tier1Complete) && router.push("/summary")}
+            onClick={() => router.push(
+              user.hasSummary || user.tier1Complete ? "/summary" : "/questionnaire"
+            )}
           />
         </div>
 
@@ -277,14 +279,14 @@ export default function DashboardPage() {
               : user.tier2Complete ? d("analysis_generate")
               : d("analysis_locked")
             }
-            cta={!pro ? t("ui.upgrade_to_pro") : user.hasAnalysis ? d("analysis_cta_view") : user.tier2Complete ? d("analysis_cta_gen") : d("locked")}
+            cta={!pro ? t("ui.upgrade_to_pro") : user.hasAnalysis ? d("analysis_cta_view") : user.tier2Complete ? d("analysis_cta_gen") : "Complete Stage 2 first"}
             done={user.hasAnalysis}
             active={currentStep === 3}
             locked={pro ? !user.tier2Complete && !user.hasAnalysis : false}
             accent="#2563eb"
             featured
             proTag={!pro}
-            onClick={() => router.push(!pro ? "/pricing" : "/results")}
+            onClick={() => router.push(!pro ? "/pricing" : user.tier2Complete || user.hasAnalysis ? "/results" : "/questionnaire?start=tier2")}
           />
         </div>
 
@@ -295,13 +297,13 @@ export default function DashboardPage() {
             step={d("step4")}
             title={d("action_plan")}
             description={!pro ? d("plan_upgrade") : user.hasAnalysis ? d("plan_ready") : d("plan_locked")}
-            cta={!pro ? t("ui.upgrade_to_pro") : user.hasAnalysis ? d("plan_cta_view") : d("locked")}
+            cta={!pro ? t("ui.upgrade_to_pro") : user.hasAnalysis ? d("plan_cta_view") : "Complete Career Analysis first"}
             done={false}
             active={currentStep >= 4 && pro && user.hasAnalysis}
             locked={pro ? !user.hasAnalysis : false}
             accent="#22c55e"
             proTag={!pro}
-            onClick={() => router.push(!pro ? "/pricing" : "/plan")}
+            onClick={() => router.push(!pro ? "/pricing" : user.hasAnalysis ? "/plan" : "/results")}
           />
 
           {/* Anytime: Career Coach */}
@@ -309,13 +311,13 @@ export default function DashboardPage() {
             step={d("anytime")}
             title={d("career_coach")}
             description={!pro ? d("coach_upgrade") : d("coach_ready")}
-            cta={!pro ? t("ui.upgrade_to_pro") : d("coach_cta")}
+            cta={!pro ? t("ui.upgrade_to_pro") : user.tier1Complete ? d("coach_cta") : "Complete Stage 1 first"}
             done={false}
             active={pro && user.tier1Complete}
             locked={pro ? !user.tier1Complete : false}
             accent="#eab308"
             proTag={!pro}
-            onClick={() => router.push(!pro ? "/pricing" : "/coach")}
+            onClick={() => router.push(!pro ? "/pricing" : user.tier1Complete ? "/coach" : "/questionnaire")}
           />
         </div>
 
@@ -340,12 +342,9 @@ function StepCard({ step, title, description, cta, done, active, locked, accent,
   proTag?: boolean;
   onClick: () => void;
 }) {
-  const enabled = !locked || proTag;
-
   return (
     <button
-      onClick={() => enabled && onClick()}
-      disabled={!enabled}
+      onClick={() => onClick()}
       style={{
         background: featured
           ? "linear-gradient(160deg, rgba(37,99,235,0.12) 0%, rgba(37,99,235,0.03) 100%)"
@@ -360,8 +359,8 @@ function StepCard({ step, title, description, cta, done, active, locked, accent,
         textAlign: "start" as const,
         display: "flex",
         flexDirection: "column" as const,
-        cursor: enabled ? "pointer" : "not-allowed",
-        opacity: locked && !proTag ? 0.5 : 1,
+        cursor: "pointer",
+        opacity: locked && !proTag ? 0.6 : 1,
         transition: "border-color 0.15s, transform 0.15s",
         width: "100%",
         color: "inherit",
@@ -403,13 +402,13 @@ function StepCard({ step, title, description, cta, done, active, locked, accent,
       <div style={{
         display: "inline-block", padding: "0.55rem 1.25rem", borderRadius: "8px",
         fontSize: "0.88rem", fontWeight: 600,
-        ...(featured && enabled
+        ...(featured && !locked
           ? { background: "#2563eb", color: "white" }
           : proTag
             ? { background: "rgba(37,99,235,0.12)", color: "#60a5fa", border: "1px solid rgba(37,99,235,0.3)" }
-            : enabled
+            : !locked
               ? { background: "rgba(255,255,255,0.06)", color: "#f1f5f9", border: "1px solid #334155" }
-              : { background: "rgba(255,255,255,0.02)", color: "#475569", border: "1px solid #1e293b" }),
+              : { background: "rgba(255,255,255,0.04)", color: "#94a3b8", border: "1px solid #1e293b" }),
       }}>
         {cta}
       </div>
