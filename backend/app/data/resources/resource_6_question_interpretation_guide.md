@@ -164,4 +164,61 @@ Surface it. Don't suppress a user's stated aspiration because the other signals 
 
 ---
 
+
+---
+
+## NEW QUESTIONS — Q109 UPDATE, Q120, Q121, Q122
+
+### Q109 — Primary reason for career change (updated)
+The option "Industry instability / geopolitical risk" has been added. This is a critical signal that changes the entire analysis approach.
+
+**When Q109 = "Industry instability / geopolitical risk":**
+- Immediately cross-reference Q120 to identify which industries to exclude
+- Read Q121 for specifics on what feels unstable
+- Apply Resource 4 B4a industry avoidance hard filter before scoring any pathways
+- Frame the entire report around moving the user into stable, geopolitically resilient sectors
+- Do not treat this the same as burnout — burnout is about how the work feels, instability is about perceived existential risk to the industry itself
+
+---
+
+### Q120 — Industries to move away from (new, required)
+**What it measures:** Explicit industry exclusions. This is a hard filter, not a preference.
+
+**How to interpret:**
+- Any industry selected = that industry's pathways are excluded from results. Period.
+- "No specific industries to avoid" = no industry filter applied; proceed normally
+- Multiple selections = multiple industry filters applied simultaneously
+- Empty or null = treat as "No specific industries to avoid"
+
+**Never treat Q120 as a soft preference to weigh against skills fit or salary.** A user who selected "Aviation" in Q120 and then scores highly on P1 (Aviation Training) skills still does not receive P1 as a recommendation. Skills fit does not override an explicit industry exclusion.
+
+---
+
+### Q121 — What makes your current industry feel unstable (new, optional, conditional)
+**What it measures:** The specific nature of the user's instability concern — war, seasonal volatility, automation, consolidation, reputational risk, or other factors.
+
+**How to interpret:**
+- War / conflict / geopolitical mentions → apply aviation AND hospitality AND tourism exclusions even if Q120 was not completed; these three sectors move together in geopolitical disruption
+- "Automation" or "technology" mentions → flag in relevant pathways that AI/automation risk exists; don't exclude but note in pathway recommendations
+- "Seasonal" or "volatile demand" → flag pathways with similar demand volatility
+- "Company-specific" concerns (e.g. my airline is struggling) → may not require full industry exclusion; use judgement based on whether Q120 confirms broader industry avoidance
+- If Q121 is null: rely on Q109 + Q120 alone
+
+---
+
+### Q122 — Tuesday morning 2028 visualisation (new, optional)
+**What it measures:** Genuine aspiration, uncensored by rational self-filtering. This question bypasses the tendency to give "sensible" answers and reveals what the user actually imagines for themselves.
+
+**How to interpret:**
+- Location described → cross-reference with Q079/Q080 target locations; if different, note the discrepancy as a reflection point
+- Workspace described (home office, café, clinic, classroom, outdoors) → strong signal for preferred work environment; weight more heavily than Q047 if they conflict
+- Activity described → map to pathway families. "Writing" → L&D, content, consulting. "Meeting clients" → CX, sales, coaching. "Teaching" → P14. "Running a team" → management track. "Working alone" → independent/freelance track.
+- Emotional language (calm, excited, proud) → use to calibrate tone and what "success" means to this user
+- If null: proceed without it; do not flag absence to user
+
+**This question often contains the most honest signal in the entire questionnaire. When Q122 conflicts with other answers, surface the tension gently — it usually points to something the user hasn't fully acknowledged yet.**
+
+
+---
+
 *This guide should be updated as new question types are added and as patterns emerge from real user analyses during the pilot phase.*

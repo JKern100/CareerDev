@@ -18,6 +18,70 @@ from app.services.routing import (
 
 logger = logging.getLogger(__name__)
 
+# ---------------------------------------------------------------------------
+# Industry avoidance → pathway exclusion mapping
+# ---------------------------------------------------------------------------
+
+INDUSTRY_PATHWAY_MAP: dict[str, list[str]] = {
+    "Aviation": ["P1", "P10"],
+    "Hospitality & tourism": ["P9"],
+}
+
+# When Q109 = instability and Q120 is empty/not answered, assume these as fallback
+INSTABILITY_FALLBACK_EXCLUSIONS = ["P1", "P9", "P10"]
+
+
+def get_excluded_pathways(answers: dict) -> tuple[list[str], list[str]]:
+    """Determine which pathways to exclude based on industry avoidance signals.
+
+    Returns:
+        (excluded_pathway_ids, excluded_industry_names)
+    """
+    def get_val(qid: str):
+        ans = answers.get(qid)
+        if ans:
+            return ans.get("value")
+        return None
+
+    q109 = get_val("Q109")
+    q120 = get_val("Q120")  # multi_select → list or None
+    q121 = get_val("Q121")  # text or None
+
+    excluded_ids: set[str] = set()
+    excluded_industries: list[str] = []
+
+    # Normalise Q120
+    if isinstance(q120, list):
+        # "No specific industries to avoid" overrides the instability fallback
+        if "No specific industries to avoid" in q120:
+            return [], []
+        for industry in q120:
+            if industry in INDUSTRY_PATHWAY_MAP:
+                excluded_ids.update(INDUSTRY_PATHWAY_MAP[industry])
+                excluded_industries.append(industry)
+
+    # Q109 instability fallback: if user cited instability but didn't answer Q120
+    is_instability = q109 == "Industry instability / geopolitical risk"
+    q120_empty = not q120 or (isinstance(q120, list) and len(q120) == 0)
+
+    if is_instability and q120_empty:
+        # Check Q121 for specific mentions
+        q121_text = (q121 or "").lower()
+        if any(kw in q121_text for kw in ["aviation", "airline", "flying", "flight"]):
+            excluded_ids.update(["P1", "P10"])
+            if "Aviation" not in excluded_industries:
+                excluded_industries.append("Aviation")
+        if any(kw in q121_text for kw in ["hospitality", "hotel", "tourism"]):
+            excluded_ids.update(["P9"])
+            if "Hospitality & tourism" not in excluded_industries:
+                excluded_industries.append("Hospitality & tourism")
+        # If Q121 is also empty/vague, apply full fallback
+        if not excluded_ids:
+            excluded_ids.update(INSTABILITY_FALLBACK_EXCLUSIONS)
+            excluded_industries = ["Aviation", "Hospitality & tourism"]
+
+    return sorted(excluded_ids), excluded_industries
+
 RESOURCES_DIR = Path(__file__).parent.parent / "data" / "resources"
 PATHWAYS_PATH = Path(__file__).parent.parent / "data" / "pathways.json"
 
@@ -113,7 +177,14 @@ def build_system_prompt() -> str:
         "---\n\n"
         "ANALYSIS INSTRUCTIONS:\n\n"
         "Follow this sequence exactly:\n\n"
-        "STEP 1 — CONFIRM DATA INTEGRITY\n"
+        "STEP 1 — CONFIRM DATA INTEGRITY AND APPLY HARD FILTERS\n"
+        "Check for industry avoidance signals immediately: read Q109, Q120, and Q121 "
+        "before doing anything else. If INDUSTRY EXCLUSIONS APPLIED appears at the top "
+        "of the user message, those pathways are already excluded by the application — "
+        "confirm and enforce them. If Q120 contains industry selections or Q109 = "
+        '"Industry instability / geopolitical risk", identify and lock the excluded '
+        "pathways before scoring begins. These exclusions do not change regardless of "
+        "what the scoring process produces later.\n"
         "All required questions have been answered before this API call was made — the "
         "application enforces this gate at the UI level. You can assume required question "
         "data is present. If a required question value appears missing, treat it as a "
@@ -277,10 +348,27 @@ def build_user_message(answers: dict, user_name: str | None, completed_at: datet
     name_display = user_name or "Anonymous"
     date_display = completed_at.strftime("%Y-%m-%d") if completed_at else datetime.utcnow().strftime("%Y-%m-%d")
 
+    # Run industry exclusion check
+    excluded_ids, excluded_industries = get_excluded_pathways(answers)
+
     lines = [
         "Analyse the following questionnaire responses and generate a career transition "
         "analysis report following the instructions in your system prompt.",
         "",
+    ]
+
+    # Inject industry exclusions at the very top if any
+    if excluded_ids:
+        lines.append(
+            f"INDUSTRY EXCLUSIONS APPLIED: The following pathways have been excluded "
+            f"based on the user's industry avoidance answers (Q109/Q120/Q121): "
+            f"{', '.join(excluded_ids)} (industries: {', '.join(excluded_industries)}). "
+            f"Do NOT score, recommend, or present these pathways under any circumstances. "
+            f"This is a hard filter enforced by the application — not a preference to weigh."
+        )
+        lines.append("")
+
+    lines.extend([
         "USER PROFILE SUMMARY:",
         f"- Name (or anonymous ID): {name_display}",
         f"- Questionnaire completed: {date_display}",
@@ -292,7 +380,7 @@ def build_user_message(answers: dict, user_name: str | None, completed_at: datet
         f"- Communication style (Q008): {comm_style}",
         "",
         "QUESTIONNAIRE RESPONSES:",
-    ]
+    ])
 
     # Group questions by module
     for mod in CORE_MODULES:
