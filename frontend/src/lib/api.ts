@@ -205,6 +205,9 @@ export async function getProgress() {
     tier1_complete: boolean;
     tier2_complete: boolean;
     tier3_complete: boolean;
+    tier1_screens_done: number;
+    tier2_screens_done: number;
+    tier3_screens_done: number;
   }>("/questionnaire/progress");
 }
 
