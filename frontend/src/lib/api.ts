@@ -278,12 +278,15 @@ export interface AdminUser {
   reports_count: number;
   has_analysis_report: boolean;
   last_login_at: string | null;
+  last_active_at: string | null;
+  is_online: boolean;
   login_count: number;
   created_at: string;
 }
 
 export interface DashboardStats {
   total_users: number;
+  users_online: number;
   users_completed_questionnaire: number;
   users_with_reports: number;
   total_answers: number;

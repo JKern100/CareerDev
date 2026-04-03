@@ -45,6 +45,8 @@ class AdminUserOut(BaseModel):
     reports_count: int
     has_analysis_report: bool
     last_login_at: datetime | None
+    last_active_at: datetime | None
+    is_online: bool
     login_count: int
     created_at: datetime
 
@@ -60,6 +62,7 @@ class AdminUserUpdate(BaseModel):
 
 class DashboardStats(BaseModel):
     total_users: int
+    users_online: int
     users_completed_questionnaire: int
     users_with_reports: int
     total_answers: int
@@ -138,8 +141,14 @@ async def get_dashboard_stats(
     now = datetime.utcnow()
     week_ago = now - timedelta(days=7)
     month_ago = now - timedelta(days=30)
+    online_threshold = now - timedelta(minutes=5)
 
     total_users = (await db.execute(select(func.count(User.id)))).scalar() or 0
+
+    users_online = (await db.execute(
+        select(func.count(User.id)).where(User.last_active_at >= online_threshold)
+    )).scalar() or 0
+
     completed = (await db.execute(
         select(func.count(User.id)).where(User.questionnaire_completed == True)
     )).scalar() or 0
@@ -161,6 +170,7 @@ async def get_dashboard_stats(
 
     return DashboardStats(
         total_users=total_users,
+        users_online=users_online,
         users_completed_questionnaire=completed,
         users_with_reports=users_with_reports,
         total_answers=total_answers,
@@ -212,6 +222,9 @@ async def list_users(
     result = await db.execute(query)
     rows = result.all()
 
+    now = datetime.utcnow()
+    online_threshold = now - timedelta(minutes=5)
+
     return [
         AdminUserOut(
             id=str(u.id),
@@ -226,6 +239,8 @@ async def list_users(
             reports_count=reports_count,
             has_analysis_report=analysis_count > 0,
             last_login_at=u.last_login_at,
+            last_active_at=u.last_active_at,
+            is_online=u.last_active_at is not None and u.last_active_at >= online_threshold,
             login_count=u.login_count or 0,
             created_at=u.created_at,
         )
@@ -254,6 +269,9 @@ async def get_user(
         select(func.count(AnalysisReport.id)).where(AnalysisReport.user_id == u.id)
     )).scalar() or 0
 
+    now = datetime.utcnow()
+    online_threshold = now - timedelta(minutes=5)
+
     return AdminUserOut(
         id=str(u.id),
         email=u.email,
@@ -267,6 +285,8 @@ async def get_user(
         reports_count=reports_count,
         has_analysis_report=has_analysis > 0,
         last_login_at=u.last_login_at,
+        last_active_at=u.last_active_at,
+        is_online=u.last_active_at is not None and u.last_active_at >= online_threshold,
         login_count=u.login_count or 0,
         created_at=u.created_at,
     )
