@@ -243,7 +243,7 @@ export default function DashboardPage() {
             accent="#3b82f6"
             onClick={() => router.push(
               user.tier1Complete && !pro ? "/pricing"
-              : user.tier1Complete && !user.tier2Complete ? "/questionnaire?start=tier2"
+              : user.tier1Complete && !user.tier2Complete ? "/questionnaire"
               : "/questionnaire"
             )}
           />
@@ -286,7 +286,7 @@ export default function DashboardPage() {
             accent="#2563eb"
             featured
             proTag={!pro}
-            onClick={() => router.push(!pro ? "/pricing" : user.tier2Complete || user.hasAnalysis ? "/results" : "/questionnaire?start=tier2")}
+            onClick={() => router.push(!pro ? "/pricing" : user.tier2Complete || user.hasAnalysis ? "/results" : "/questionnaire")}
           />
         </div>
 
