@@ -40,7 +40,7 @@ TIER1_SCREENS = [
     {
         "id": "t1_1", "tier": 1,
         "label": "The Basics",
-        "questions": ["Q005", "Q001", "Q109", "Q009"],
+        "questions": ["Q005", "Q007", "Q003", "Q001", "Q109", "Q009"],
     },
     {
         "id": "t1_2", "tier": 1,

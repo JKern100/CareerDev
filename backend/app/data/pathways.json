@@ -26,7 +26,10 @@
     "weight_environment": 0.10,
     "weight_feasibility": 0.15,
     "weight_compensation": 0.15,
-    "weight_risk": 0.05
+    "weight_risk": 0.05,
+    "negative_signals": {
+      "Q009": {"condition": "gte", "threshold": 7, "penalty": 0.15}
+    }
   },
   {
     "id": "P2",
@@ -294,7 +297,7 @@
     "recommended_credentials": [],
     "skill_questions": ["Q027", "Q033", "Q035", "Q036", "Q031"],
     "interest_questions": ["Q016", "Q017", "Q106"],
-    "interest_match_values": {"Q106": ["Operations", "Aviation"]},
+    "interest_match_values": {"Q106": ["Operations"]},
     "environment_questions": ["Q047", "Q048", "Q049", "Q052"],
     "feasibility_questions": ["Q061", "Q062", "Q064", "Q065"],
     "compensation_questions": ["Q089", "Q066"],
@@ -303,7 +306,10 @@
     "weight_environment": 0.15,
     "weight_feasibility": 0.15,
     "weight_compensation": 0.15,
-    "weight_risk": 0.05
+    "weight_risk": 0.05,
+    "negative_signals": {
+      "Q009": {"condition": "gte", "threshold": 7, "penalty": 0.15}
+    }
   },
   {
     "id": "P11",
