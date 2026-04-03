@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -301,6 +303,27 @@ async def submit_answers(
 
     # Recompute answered_ids from DB (now includes flushed answers)
     answered_ids = await _get_answered_ids(user.id, db)
+
+    # Auto-enable report regeneration when a new tier milestone is reached
+    t1_now = is_tier1_complete(answered_ids)
+    t2_now = is_tier2_complete(answered_ids)
+    t3_now = is_tier3_complete(answered_ids)
+    # Check what was already complete before this submission
+    # (pre-flush IDs minus the just-submitted ones)
+    pre_ids = answered_ids - {a.question_id for a in data.answers}
+    t1_was = is_tier1_complete(pre_ids)
+    t2_was = is_tier2_complete(pre_ids)
+    t3_was = is_tier3_complete(pre_ids)
+
+    newly_completed_tier = (
+        (t1_now and not t1_was)
+        or (t2_now and not t2_was)
+        or (t3_now and not t3_was)
+    )
+    if newly_completed_tier:
+        user.can_regenerate_summary = True
+        user.can_regenerate = True
+        user.last_tier_completed_at = datetime.now(timezone.utc)
 
     # Determine the current module from the submitted answers
     submitted_modules = set()

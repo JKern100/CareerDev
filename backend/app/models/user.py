@@ -69,6 +69,7 @@ class User(Base):
     questionnaire_completed: Mapped[bool] = mapped_column(Boolean, default=False)
     current_module: Mapped[str | None] = mapped_column(String(10))
     current_question_id: Mapped[str | None] = mapped_column(String(10))
+    last_tier_completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Referral system
     referral_code: Mapped[str | None] = mapped_column(String(20), unique=True, nullable=True, default=_generate_referral_code)

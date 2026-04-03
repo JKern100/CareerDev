@@ -34,8 +34,9 @@ import LoginActivityChart from "@/components/LoginActivityChart";
 import AdminPromo from "@/components/AdminPromo";
 import AdminCoachUsage from "@/components/AdminCoachUsage";
 import AdminReferrals from "@/components/AdminReferrals";
+import AdminResources from "@/components/AdminResources";
 
-type Tab = "dashboard" | "users" | "questions" | "activity" | "promo" | "coach-usage" | "referrals";
+type Tab = "dashboard" | "users" | "questions" | "activity" | "promo" | "coach-usage" | "referrals" | "ai-resources";
 
 function formatTimeAgo(dateStr: string): string {
   const now = Date.now();
@@ -174,6 +175,23 @@ const HELP_CONTENT: Record<Tab, { title: string; sections: { heading: string; bo
       {
         heading: "Cost Control",
         body: "Each user is limited to 100 messages per day (resets at midnight UTC). The quota is shown in the chat UI. Adjust the DAILY_MESSAGE_LIMIT constant in the backend to change the cap.",
+      },
+    ],
+  },
+  "ai-resources": {
+    title: "AI Resources Help",
+    sections: [
+      {
+        heading: "Overview",
+        body: "These are the reference documents that power the AI career analysis. They are assembled into a system prompt and sent to the AI alongside each user's questionnaire answers. Editing any file here immediately takes effect for the next analysis.",
+      },
+      {
+        heading: "How Resources Are Used",
+        body: `Resources labeled **career_analysis** are injected into the system prompt in order. The AI reads them as reference documents and follows their rules exactly.\n\n- **Resource 1**: Maps aviation skills to civilian career language\n- **Resource 2**: Regional labour market context\n- **Resource 3**: Scoring & matching framework (5 dimensions)\n- **Resource 4**: Urgency & constraint signal interpretation\n- **Resource 5**: Career pathway profiles (what each role involves)\n- **Resource 6**: How to interpret each questionnaire question\n- **Resource 7**: Example outputs for quality calibration\n- **Resources 8-11**: Archetypes, credentials, contradictions, sensitive situations\n- **Resource 12**: Answer data formatting rules\n- **Resource 13**: Partial completion fallback rules\n- **pathways.json**: The list of career pathways with scoring weights`,
+      },
+      {
+        heading: "Editing Tips",
+        body: `- Changes take effect immediately — the system prompt cache is cleared on save.\n- The total prompt size affects AI cost and quality. Keep resources focused.\n- Use Markdown formatting — the AI reads these as structured documents.\n- Test changes by regenerating a report for a test user after editing.`,
       },
     ],
   },
@@ -814,18 +832,25 @@ export default function AdminPage() {
 
       {/* Tabs */}
       <div style={styles.tabs}>
-        {(["dashboard", "users", "activity", "questions", "promo", "coach-usage", "referrals"] as Tab[]).map((t) => (
-          <button
-            key={t}
-            onClick={() => handleTabChange(t)}
-            style={{
-              ...styles.tab,
-              ...(tab === t ? styles.tabActive : {}),
-            }}
-          >
-            {t === "dashboard" ? "Dashboard" : t === "users" ? "Users" : t === "activity" ? "Activity" : t === "promo" ? "Promo Codes" : t === "coach-usage" ? "Coach Usage" : t === "referrals" ? "Referrals" : "Questions"}
-          </button>
-        ))}
+        {(["dashboard", "users", "activity", "questions", "ai-resources", "promo", "coach-usage", "referrals"] as Tab[]).map((t) => {
+          const labels: Record<Tab, string> = {
+            dashboard: "Dashboard", users: "Users", activity: "Activity",
+            questions: "Questions", "ai-resources": "AI Resources",
+            promo: "Promo Codes", "coach-usage": "Coach Usage", referrals: "Referrals",
+          };
+          return (
+            <button
+              key={t}
+              onClick={() => handleTabChange(t)}
+              style={{
+                ...styles.tab,
+                ...(tab === t ? styles.tabActive : {}),
+              }}
+            >
+              {labels[t]}
+            </button>
+          );
+        })}
       </div>
 
       {error && <p style={styles.error}>{error}</p>}
@@ -1366,6 +1391,12 @@ export default function AdminPage() {
         {tab === "referrals" && (
           <div style={{ padding: "1rem" }}>
             <AdminReferrals />
+          </div>
+        )}
+
+        {tab === "ai-resources" && (
+          <div style={{ padding: "1rem" }}>
+            <AdminResources />
           </div>
         )}
       </div>

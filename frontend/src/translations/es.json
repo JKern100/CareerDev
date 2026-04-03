@@ -276,7 +276,10 @@
       "explore_coach_text": "Chatea con tu coach de carrera con IA — haz preguntas sobre tu perfil, obtén consejos de entrevista o planifica tu próximo paso.",
       "talk_to_coach": "Hablar con el coach",
       "generated_ai": "Este resumen fue generado usando IA basado en tus respuestas.",
-      "generated_plain": "Este resumen fue generado a partir de tus respuestas."
+      "generated_plain": "Este resumen fue generado a partir de tus respuestas.",
+      "new_data_title": "Nuevos datos del cuestionario disponibles",
+      "new_data_text": "Has respondido más preguntas desde que se generó este informe. Regenera para obtener un análisis actualizado.",
+      "regenerate_now": "Regenerar ahora"
     },
     "forgot_password": {
       "title": "¿Olvidaste tu contraseña?",

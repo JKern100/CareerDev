@@ -5,7 +5,10 @@ answers in a personalized style, with teaser questions for the full analysis.
 """
 
 import json
-from app.services.routing import get_question_bank, MODULE_LABELS
+from app.services.routing import (
+    get_question_bank, MODULE_LABELS,
+    TIER1_QUESTION_IDS, TIER2_QUESTION_IDS, TIER3_QUESTION_IDS,
+)
 
 # Communication style mapping from Q008
 STYLE_INSTRUCTIONS = {
@@ -91,12 +94,33 @@ def build_summary_prompt(answers: dict, user_name: str | None = None) -> str:
 
     formatted_answers = _format_answers_for_prompt(answers)
 
+    # Determine tier status
+    answered_ids = set(qid for qid, ans in answers.items() if ans.get("value") is not None)
+    tier1_done = TIER1_QUESTION_IDS.issubset(answered_ids)
+    tier2_done = TIER2_QUESTION_IDS.issubset(answered_ids)
+    tier3_done = TIER3_QUESTION_IDS.issubset(answered_ids)
+    tiers_done = []
+    if tier1_done:
+        tiers_done.append("1")
+    if tier2_done:
+        tiers_done.append("2")
+    if tier3_done:
+        tiers_done.append("3")
+    tier_status = f"Stages completed: {', '.join(tiers_done) if tiers_done else 'None'} of 3."
+    tier_guidance = ""
+    if not tier2_done:
+        tier_guidance += " Stage 2 data (detailed skills, preferences, constraints) is missing — note where this would sharpen the summary."
+    if not tier3_done:
+        tier_guidance += " Stage 3 data (evidence stories, trade-offs, dream role) is missing — note where this would enrich the narrative."
+
     return f"""You are a career advisor writing a personalized summary report for someone transitioning out of cabin crew work.
 
 {name_line}
 
 COMMUNICATION STYLE: {style_pref}
 {style_instruction}{lang_instruction}
+
+DATA COMPLETENESS: {tier_status}{tier_guidance}
 
 Below are their questionnaire responses across all modules. Write a flowing narrative report (NOT tables or bullet points) that:
 

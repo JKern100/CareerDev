@@ -276,7 +276,10 @@
       "explore_coach_text": "Chat with your AI Career Coach — ask questions about your profile, get interview advice, or plan your next move.",
       "talk_to_coach": "Talk to Coach",
       "generated_ai": "This summary was generated using AI based on your responses.",
-      "generated_plain": "This summary was generated from your responses."
+      "generated_plain": "This summary was generated from your responses.",
+      "new_data_title": "New questionnaire data available",
+      "new_data_text": "You\u2019ve completed more questions since this report was generated. Regenerate to get an updated analysis.",
+      "regenerate_now": "Regenerate Now"
     },
     "forgot_password": {
       "title": "Forgot password?",

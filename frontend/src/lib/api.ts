@@ -90,6 +90,7 @@ export async function getMe() {
     questionnaire_completed: boolean;
     current_module: string | null;
     can_regenerate_summary: boolean;
+    last_tier_completed_at: string | null;
     email_verified: boolean;
     plan: string;
     is_premium: boolean;
@@ -821,4 +822,37 @@ export async function updateAdminPromoCode(codeId: string, data: Record<string, 
 
 export async function deleteAdminPromoCode(codeId: string) {
   return request<{ detail: string }>(`/promo/admin/codes/${codeId}`, { method: "DELETE" });
+}
+
+// Admin AI Resources
+export interface ResourceListItem {
+  filename: string;
+  label: string;
+  used_by: string;
+  size_bytes: number;
+  word_count: number;
+}
+
+export interface ResourceContent {
+  filename: string;
+  label: string;
+  used_by: string;
+  content: string;
+  size_bytes: number;
+  word_count: number;
+}
+
+export async function getAdminResources() {
+  return request<ResourceListItem[]>("/admin/resources");
+}
+
+export async function getAdminResource(filename: string) {
+  return request<ResourceContent>(`/admin/resources/${encodeURIComponent(filename)}`);
+}
+
+export async function updateAdminResource(filename: string, content: string) {
+  return request<{ filename: string; size_bytes: number; word_count: number; cache_cleared: boolean }>(
+    `/admin/resources/${encodeURIComponent(filename)}`,
+    { method: "PUT", body: JSON.stringify({ content }) }
+  );
 }
