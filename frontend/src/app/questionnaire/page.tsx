@@ -389,9 +389,9 @@ function QuestionnaireContent() {
                     <button
                       className="btn btn-outline"
                       style={{ fontSize: "0.85rem", padding: "0.5rem 1.25rem" }}
-                      onClick={() => router.push("/summary")}
+                      onClick={() => setPhase(`tier${stage.tier}` as "tier1" | "tier2" | "tier3")}
                     >
-                      View Results
+                      Review Answers
                     </button>
                   ) : needsUpgrade ? (
                     <button
@@ -418,6 +418,19 @@ function QuestionnaireContent() {
               );
             })}
           </div>
+
+          {/* View Results — single CTA when at least Stage 1 done */}
+          {hubData.tier1Complete && (
+            <div style={{ marginTop: "1.5rem" }}>
+              <button
+                className="btn btn-primary"
+                style={{ width: "100%", padding: "0.75rem", fontSize: "1rem" }}
+                onClick={() => router.push("/summary")}
+              >
+                View Results
+              </button>
+            </div>
+          )}
 
           {/* Back to dashboard */}
           <div style={{ textAlign: "center", marginTop: "1.5rem" }}>
