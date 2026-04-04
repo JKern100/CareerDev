@@ -196,6 +196,18 @@ export default function DashboardPage() {
           <p style={{ color: "#94a3b8", fontSize: "1rem" }}>
             {user.progressPct > 0 ? d("subtitle_returning") : d("subtitle_new")}
           </p>
+          {pro && (
+            <span style={{
+              display: "inline-block", marginTop: "0.5rem",
+              padding: "3px 12px", borderRadius: "999px",
+              background: "linear-gradient(135deg, rgba(59,130,246,0.15), rgba(139,92,246,0.15))",
+              border: "1px solid rgba(99,102,241,0.3)",
+              color: "#818cf8", fontSize: "0.75rem", fontWeight: 700,
+              letterSpacing: "0.05em",
+            }}>
+              PRO
+            </span>
+          )}
         </div>
 
         {/* Journey progress bar */}
