@@ -353,6 +353,25 @@ def is_all_progressive_complete(answered_ids: set[str]) -> bool:
     return ALL_PROGRESSIVE_IDS.issubset(answered_ids)
 
 
+def get_screen_by_id(screen_id: str) -> dict | None:
+    """Return a screen definition by its ID (e.g. 't1_1')."""
+    for screen in ALL_PROGRESSIVE_SCREENS:
+        if screen["id"] == screen_id:
+            return screen
+    return None
+
+
+def get_tier_screens(tier: int) -> list[dict]:
+    """Return all screens for the given tier (1, 2, or 3)."""
+    if tier == 1:
+        return TIER1_SCREENS
+    elif tier == 2:
+        return TIER2_SCREENS
+    elif tier == 3:
+        return TIER3_SCREENS
+    return []
+
+
 def get_screen_questions(screen: dict) -> list["QuestionDef"]:
     """Return QuestionDef objects for the given screen (preserving order)."""
     bank = {q.question_id: q for q in get_question_bank()}

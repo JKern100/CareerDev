@@ -39,6 +39,8 @@ from app.services.routing import (
     is_tier3_complete,
     is_all_progressive_complete,
     get_screen_questions,
+    get_screen_by_id,
+    get_tier_screens,
 )
 from app.api.deps import get_current_user
 from app.models.payment import Subscription
@@ -166,6 +168,56 @@ async def get_next_core(
                 questions=[],
                 existing_answers=[],
             )
+
+    screen_number = ALL_PROGRESSIVE_SCREENS.index(screen) + 1
+    questions = get_screen_questions(screen)
+
+    qids = {q.question_id for q in questions}
+    result = await db.execute(
+        select(Answer).where(
+            Answer.user_id == user.id,
+            Answer.question_id.in_(qids),
+        )
+    )
+    existing = [
+        ExistingAnswerOut(
+            question_id=a.question_id,
+            value=a.value_json.get("value") if a.value_json else None,
+            confidence=a.confidence,
+        )
+        for a in result.scalars().all()
+    ]
+
+    return CoreScreenOut(
+        screen_id=screen["id"],
+        screen_label=screen["label"],
+        screen_number=screen_number,
+        total_screens=total,
+        tier=screen.get("tier", 1),
+        tier1_complete=t1,
+        tier2_complete=t2,
+        tier3_complete=t3,
+        questions=[_build_question_out(q) for q in questions],
+        existing_answers=existing,
+    )
+
+
+@router.get("/core/screen/{screen_id}", response_model=CoreScreenOut)
+async def get_core_screen_by_id(
+    screen_id: str,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get a specific screen by ID (for reviewing completed answers)."""
+    screen = get_screen_by_id(screen_id)
+    if screen is None:
+        raise HTTPException(status_code=404, detail=f"Screen not found: {screen_id}")
+
+    answered_ids = await _get_answered_ids(user.id, db)
+    t1 = is_tier1_complete(answered_ids)
+    t2 = is_tier2_complete(answered_ids)
+    t3 = is_tier3_complete(answered_ids)
+    total = len(ALL_PROGRESSIVE_SCREENS)
 
     screen_number = ALL_PROGRESSIVE_SCREENS.index(screen) + 1
     questions = get_screen_questions(screen)

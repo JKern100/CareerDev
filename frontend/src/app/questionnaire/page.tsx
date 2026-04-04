@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   getCoreNextScreen,
+  getCoreScreenById,
   submitAnswers,
   completeQuestionnaire,
   getProgress,
@@ -35,6 +36,13 @@ const STAGE_CONFIG = [
   { tier: 2 as const, screens: 4, questions: 22, minutes: 5, label: "Sharpen" },
   { tier: 3 as const, screens: 8, questions: 42, minutes: 10, label: "Personalise" },
 ];
+
+// Screen IDs per tier (must match backend routing.py)
+const TIER_SCREEN_IDS: Record<number, string[]> = {
+  1: ["t1_1", "t1_2", "t1_3", "t1_4"],
+  2: ["t2_1", "t2_2", "t2_3", "t2_4"],
+  3: ["t3_1", "t3_2", "t3_3", "t3_4", "t3_5", "t3_6", "t3_7", "t3_8"],
+};
 
 export default function QuestionnairePage() {
   return (
@@ -70,6 +78,10 @@ function QuestionnaireContent() {
   const [error, setError] = useState("");
   const [unansweredQuestions, setUnansweredQuestions] = useState<Question[]>([]);
 
+  // Review mode state
+  const [reviewing, setReviewing] = useState(false);
+  const [reviewScreenIdx, setReviewScreenIdx] = useState(0);
+
   // ── Load hub data ──
   const loadHub = useCallback(async () => {
     try {
@@ -86,6 +98,55 @@ function QuestionnaireContent() {
       });
     } catch {
       setError("Failed to load progress");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // ── Load a specific screen by ID (for review mode) ──
+  const loadReviewScreen = useCallback(async (screenId: string) => {
+    try {
+      setLoading(true);
+      setError("");
+      const screen = await getCoreScreenById(screenId);
+      setCoreScreen(screen);
+
+      // Initialize answers from existing answers
+      const initial: AnswerMap = {};
+      const existingMap = new Map<string, { value: string | number | string[]; confidence: number }>();
+      if (screen.existing_answers) {
+        for (const ea of screen.existing_answers) {
+          if (ea.value != null) {
+            existingMap.set(ea.question_id, {
+              value: ea.value as string | number | string[],
+              confidence: ea.confidence,
+            });
+          }
+        }
+        const q003 = screen.existing_answers.find((ea) => ea.question_id === "Q003");
+        if (q003?.value && typeof q003.value === "string") {
+          setCurrencyCode(q003.value);
+        }
+      }
+      for (const q of screen.questions) {
+        const existing = existingMap.get(q.question_id);
+        if (existing) {
+          initial[q.question_id] = existing;
+        } else {
+          let defaultValue: string | number | string[] = "";
+          if (q.question_type === "slider_0_10") {
+            defaultValue = Math.round(((q.min_val ?? 0) + (q.max_val ?? 10)) / 2);
+          } else if (q.question_type === "likert_1_5") {
+            defaultValue = 3;
+          } else if (q.question_type === "numeric") {
+            defaultValue = "";
+          }
+          initial[q.question_id] = { value: defaultValue, confidence: 100 };
+        }
+      }
+      setAnswers(initial);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to load screen");
     } finally {
       setLoading(false);
     }
@@ -191,10 +252,17 @@ function QuestionnaireContent() {
     }
   }, [router, loadHub, startParam]);
 
-  // ── When entering a tier, load the next screen ──
+  // ── When entering a tier, load the next screen (or first review screen) ──
   useEffect(() => {
     if (phase === "tier1" || phase === "tier2" || phase === "tier3") {
-      loadCoreScreen();
+      if (reviewing) {
+        const tierNum = phase === "tier1" ? 1 : phase === "tier2" ? 2 : 3;
+        const screenIds = TIER_SCREEN_IDS[tierNum];
+        setReviewScreenIdx(0);
+        loadReviewScreen(screenIds[0]);
+      } else {
+        loadCoreScreen();
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
@@ -389,7 +457,10 @@ function QuestionnaireContent() {
                     <button
                       className="btn btn-outline"
                       style={{ fontSize: "0.85rem", padding: "0.5rem 1.25rem" }}
-                      onClick={() => setPhase(`tier${stage.tier}` as "tier1" | "tier2" | "tier3")}
+                      onClick={() => {
+                        setReviewing(true);
+                        setPhase(`tier${stage.tier}` as "tier1" | "tier2" | "tier3");
+                      }}
                     >
                       Review Answers
                     </button>
@@ -483,7 +554,7 @@ function QuestionnaireContent() {
                     color: isActive || isPast ? "white" : "#64748b",
                   }}
                 >
-                  {isPast ? `Stage ${sc.tier} ✓` : isActive ? `Stage ${sc.tier}: ${tierScreenNum}/${sc.screens}` : `Stage ${sc.tier}`}
+                  {isPast ? `Stage ${sc.tier} ✓` : isActive ? `Stage ${sc.tier}: ${reviewing ? reviewScreenIdx + 1 : tierScreenNum}/${sc.screens}` : `Stage ${sc.tier}`}
                 </span>
               );
             })}
@@ -492,16 +563,16 @@ function QuestionnaireContent() {
           {/* Progress header */}
           <div className="flex justify-between items-center mb-1">
             <p className="text-sm text-muted">
-              Stage {stageConf.tier}: {stageConf.label} — Screen {tierScreenNum} of {stageConf.screens}
+              {reviewing ? "Reviewing: " : ""}Stage {stageConf.tier}: {stageConf.label} — Screen {reviewing ? reviewScreenIdx + 1 : tierScreenNum} of {stageConf.screens}
             </p>
-            <p className="text-sm text-muted">~{minsLeft} min left</p>
+            {!reviewing && <p className="text-sm text-muted">~{minsLeft} min left</p>}
           </div>
 
           {/* Progress bar (per-stage) */}
           <div className="progress-bar mb-2">
             <div
               className="progress-bar-fill"
-              style={{ width: `${((tierScreenNum - 1) / stageConf.screens) * 100}%` }}
+              style={{ width: `${(((reviewing ? reviewScreenIdx + 1 : tierScreenNum) - 1) / stageConf.screens) * 100}%` }}
             />
           </div>
 
@@ -584,27 +655,103 @@ function QuestionnaireContent() {
           )}
 
           {/* Navigation */}
-          <div className="mt-3" style={{ display: "flex", gap: "0.5rem" }}>
-            <button
-              className="btn btn-primary"
-              onClick={handleCoreSubmit}
-              disabled={submitting}
-              style={{ flex: 1 }}
-            >
-              {submitting ? "Saving..." : isLastScreen ? "Done" : "Next"}
-            </button>
-          </div>
-          <div style={{ textAlign: "center", marginTop: "0.75rem" }}>
-            <button
-              onClick={() => { setPhase("hub"); loadHub(); }}
-              style={{
-                background: "none", border: "none", color: "var(--muted)",
-                cursor: "pointer", fontSize: "0.8rem", textDecoration: "underline",
-              }}
-            >
-              ← Back to overview
-            </button>
-          </div>
+          {reviewing ? (
+            <>
+              <div className="mt-3" style={{ display: "flex", gap: "0.5rem" }}>
+                {reviewScreenIdx > 0 && (
+                  <button
+                    className="btn btn-outline"
+                    style={{ flex: 1 }}
+                    onClick={() => {
+                      const tierNum = phase === "tier1" ? 1 : phase === "tier2" ? 2 : 3;
+                      const newIdx = reviewScreenIdx - 1;
+                      setReviewScreenIdx(newIdx);
+                      loadReviewScreen(TIER_SCREEN_IDS[tierNum][newIdx]);
+                      window.scrollTo(0, 0);
+                    }}
+                  >
+                    Previous
+                  </button>
+                )}
+                <button
+                  className="btn btn-primary"
+                  style={{ flex: 1 }}
+                  disabled={submitting}
+                  onClick={async () => {
+                    // Save any edits first
+                    setSubmitting(true);
+                    try {
+                      const payload = Object.entries(answers)
+                        .filter(([, a]) => a.value !== "" && !(Array.isArray(a.value) && a.value.length === 0))
+                        .map(([qid, a]) => ({
+                          question_id: qid,
+                          value: a.value,
+                          confidence: a.value === "not_sure" ? 50 : a.confidence,
+                        }));
+                      if (payload.length > 0) {
+                        await submitAnswers(payload);
+                      }
+                    } catch {
+                      // Ignore save errors in review mode
+                    } finally {
+                      setSubmitting(false);
+                    }
+
+                    const tierNum = phase === "tier1" ? 1 : phase === "tier2" ? 2 : 3;
+                    const screenIds = TIER_SCREEN_IDS[tierNum];
+                    if (reviewScreenIdx < screenIds.length - 1) {
+                      const newIdx = reviewScreenIdx + 1;
+                      setReviewScreenIdx(newIdx);
+                      loadReviewScreen(screenIds[newIdx]);
+                      window.scrollTo(0, 0);
+                    } else {
+                      // Last screen — return to hub
+                      setReviewing(false);
+                      setPhase("hub");
+                      loadHub();
+                    }
+                  }}
+                >
+                  {submitting ? "Saving..." : reviewScreenIdx < (TIER_SCREEN_IDS[phase === "tier1" ? 1 : phase === "tier2" ? 2 : 3].length - 1) ? "Save & Next" : "Save & Done"}
+                </button>
+              </div>
+              <div style={{ textAlign: "center", marginTop: "0.75rem" }}>
+                <button
+                  onClick={() => { setReviewing(false); setPhase("hub"); loadHub(); }}
+                  style={{
+                    background: "none", border: "none", color: "var(--muted)",
+                    cursor: "pointer", fontSize: "0.8rem", textDecoration: "underline",
+                  }}
+                >
+                  ← Back to overview
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="mt-3" style={{ display: "flex", gap: "0.5rem" }}>
+                <button
+                  className="btn btn-primary"
+                  onClick={handleCoreSubmit}
+                  disabled={submitting}
+                  style={{ flex: 1 }}
+                >
+                  {submitting ? "Saving..." : isLastScreen ? "Done" : "Next"}
+                </button>
+              </div>
+              <div style={{ textAlign: "center", marginTop: "0.75rem" }}>
+                <button
+                  onClick={() => { setPhase("hub"); loadHub(); }}
+                  style={{
+                    background: "none", border: "none", color: "var(--muted)",
+                    cursor: "pointer", fontSize: "0.8rem", textDecoration: "underline",
+                  }}
+                >
+                  ← Back to overview
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </>
     );

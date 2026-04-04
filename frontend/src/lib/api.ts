@@ -159,6 +159,10 @@ export async function getCoreNextScreen() {
   return request<CoreScreen>("/questionnaire/core/next");
 }
 
+export async function getCoreScreenById(screenId: string) {
+  return request<CoreScreen>(`/questionnaire/core/screen/${screenId}`);
+}
+
 export async function getNextQuestions() {
   return request<QuestionSet>("/questionnaire/next");
 }
