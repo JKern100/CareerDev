@@ -267,6 +267,12 @@ def get_question_bank() -> list[QuestionDef]:
     return _question_bank
 
 
+def clear_question_bank_cache():
+    """Clear the cached question bank so it's re-read from CSV on next access."""
+    global _question_bank
+    _question_bank = None
+
+
 def get_questions_for_module(module: str) -> list[QuestionDef]:
     """Get all questions for a specific module."""
     return [q for q in get_question_bank() if q.module == module]

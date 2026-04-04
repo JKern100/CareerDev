@@ -3,7 +3,7 @@ import string
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import String, Boolean, DateTime, Integer, Enum as SAEnum, Uuid, ForeignKey
+from sqlalchemy import String, Boolean, DateTime, Integer, Text, Enum as SAEnum, Uuid, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -81,3 +81,13 @@ class User(Base):
     # Relationships
     answers: Mapped[list["Answer"]] = relationship("Answer", back_populates="user", lazy="selectin")
     reports: Mapped[list["Report"]] = relationship("Report", back_populates="user", lazy="selectin")
+
+
+class UserNote(Base):
+    __tablename__ = "user_notes"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    author_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))

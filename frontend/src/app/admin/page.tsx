@@ -20,12 +20,16 @@ import {
   getUserReport,
   getActivityLog,
   impersonateUser,
+  getUserNotes,
+  addUserNote,
+  deleteUserNote,
   DashboardStats,
   AdminUser,
   AdminQuestion,
   AdminAnalysisReport,
   ActivityEvent,
   UserAnswer,
+  UserNote,
   QUESTION_TYPES,
   MODULES,
   MODULE_LABELS,
@@ -501,6 +505,9 @@ export default function AdminPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [userAnswers, setUserAnswers] = useState<UserAnswer[]>([]);
+  const [userNotes, setUserNotes] = useState<UserNote[]>([]);
+  const [newNoteText, setNewNoteText] = useState("");
+  const [noteSaving, setNoteSaving] = useState(false);
   const [userSearch, setUserSearch] = useState("");
   const [userRoleFilter, setUserRoleFilter] = useState("");
 
@@ -621,12 +628,34 @@ export default function AdminPage() {
   async function handleViewAnswers(user: AdminUser) {
     setSelectedUser(user);
     setViewingReport(null);
+    setNewNoteText("");
     try {
-      const a = await getUserAnswers(user.id);
+      const [a, n] = await Promise.all([getUserAnswers(user.id), getUserNotes(user.id)]);
       setUserAnswers(a);
+      setUserNotes(n);
     } catch {
       setUserAnswers([]);
+      setUserNotes([]);
     }
+  }
+
+  async function handleAddNote(userId: string) {
+    if (!newNoteText.trim()) return;
+    setNoteSaving(true);
+    try {
+      const note = await addUserNote(userId, newNoteText.trim());
+      setUserNotes((prev) => [note, ...prev]);
+      setNewNoteText("");
+    } catch { /* ignore */ }
+    setNoteSaving(false);
+  }
+
+  async function handleDeleteNote(noteId: string) {
+    if (!confirm("Delete this note?")) return;
+    try {
+      await deleteUserNote(noteId);
+      setUserNotes((prev) => prev.filter((n) => n.id !== noteId));
+    } catch { /* ignore */ }
   }
 
   async function handleViewReport(userId: string) {
@@ -994,6 +1023,73 @@ export default function AdminPage() {
                     <button style={styles.btnDanger} onClick={() => handleDeleteUser(selectedUser.id, selectedUser.email)}>
                       Delete User
                     </button>
+                  </div>
+
+                  {/* Notes */}
+                  <div style={{ marginBottom: "1.5rem" }}>
+                    <h4 style={{ marginBottom: "0.5rem" }}>Notes ({userNotes.length})</h4>
+                    <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.75rem" }}>
+                      <textarea
+                        value={newNoteText}
+                        onChange={(e) => setNewNoteText(e.target.value)}
+                        placeholder="Add a note about this user (feedback, context, follow-up needed...)"
+                        rows={2}
+                        style={{
+                          flex: 1, padding: "0.5rem", borderRadius: "6px",
+                          border: "1px solid var(--border)", background: "var(--bg)",
+                          color: "var(--fg)", fontSize: "0.85rem", resize: "vertical",
+                          fontFamily: "inherit",
+                        }}
+                      />
+                      <button
+                        onClick={() => handleAddNote(selectedUser.id)}
+                        disabled={noteSaving || !newNoteText.trim()}
+                        style={{
+                          ...styles.btnOutline,
+                          alignSelf: "flex-end",
+                          borderColor: "#2563eb",
+                          color: "#60a5fa",
+                          opacity: noteSaving || !newNoteText.trim() ? 0.5 : 1,
+                        }}
+                      >
+                        {noteSaving ? "Saving..." : "Add Note"}
+                      </button>
+                    </div>
+                    {userNotes.length > 0 && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                        {userNotes.map((note) => (
+                          <div
+                            key={note.id}
+                            style={{
+                              padding: "0.6rem 0.75rem",
+                              borderRadius: "6px",
+                              border: "1px solid var(--border)",
+                              background: "rgba(59,130,246,0.04)",
+                              fontSize: "0.85rem",
+                              lineHeight: 1.5,
+                            }}
+                          >
+                            <p style={{ margin: 0, whiteSpace: "pre-wrap" }}>{note.content}</p>
+                            <div style={{
+                              display: "flex", justifyContent: "space-between",
+                              alignItems: "center", marginTop: "0.4rem",
+                              fontSize: "0.7rem", color: "var(--muted)",
+                            }}>
+                              <span>{note.author_name} — {new Date(note.created_at).toLocaleString()}</span>
+                              <button
+                                onClick={() => handleDeleteNote(note.id)}
+                                style={{
+                                  background: "none", border: "none", color: "#ef4444",
+                                  cursor: "pointer", fontSize: "0.7rem", padding: "2px 4px",
+                                }}
+                              >
+                                delete
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Report Viewer */}

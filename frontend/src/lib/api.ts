@@ -856,3 +856,29 @@ export async function updateAdminResource(filename: string, content: string) {
     { method: "PUT", body: JSON.stringify({ content }) }
   );
 }
+
+// --- User Notes ---
+
+export interface UserNote {
+  id: string;
+  content: string;
+  author_name: string;
+  created_at: string;
+}
+
+export async function getUserNotes(userId: string) {
+  return request<UserNote[]>(`/admin/users/${userId}/notes`);
+}
+
+export async function addUserNote(userId: string, content: string) {
+  return request<UserNote>(`/admin/users/${userId}/notes`, {
+    method: "POST",
+    body: JSON.stringify({ content }),
+  });
+}
+
+export async function deleteUserNote(noteId: string) {
+  return request<{ ok: boolean }>(`/admin/notes/${noteId}`, {
+    method: "DELETE",
+  });
+}
