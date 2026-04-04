@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.user import User
-from app.models.questionnaire import Answer
+from app.models.questionnaire import Answer, Question
 from app.services.activity import log_activity
 from app.schemas.questionnaire import (
     QuestionOut,
@@ -269,7 +269,28 @@ async def submit_answers(
 ):
     """Submit one or more answers. Returns next module info."""
     valid_ids = {q.question_id for q in get_question_bank()}
+    qbank_map = {q.question_id: q for q in get_question_bank()}
     results = []
+
+    # Ensure all submitted question_ids exist in the DB (not just the CSV).
+    # This handles the case where new questions were added to the CSV but the
+    # server hasn't restarted to run _seed_questions() yet.
+    submitted_qids = {ans.question_id for ans in data.answers}
+    db_result = await db.execute(
+        select(Question.id).where(Question.id.in_(submitted_qids))
+    )
+    existing_db_qids = {row[0] for row in db_result.all()}
+    for qid in submitted_qids - existing_db_qids:
+        q = qbank_map.get(qid)
+        if q:
+            db.add(Question(
+                id=q.question_id, module=q.module, prompt=q.prompt,
+                question_type=q.question_type, required=q.required,
+                options_json=q.options_json, min_val=q.min_val,
+                max_val=q.max_val, route_if_json=q.route_if_json,
+                tags_json=q.tags_json,
+            ))
+    await db.flush()
 
     for ans in data.answers:
         if ans.question_id not in valid_ids:
