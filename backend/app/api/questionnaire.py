@@ -344,7 +344,7 @@ async def submit_answers(
     if newly_completed_tier:
         user.can_regenerate_summary = True
         user.can_regenerate = True
-        user.last_tier_completed_at = datetime.now(timezone.utc)
+        user.last_tier_completed_at = datetime.utcnow()
 
     # Determine the current module from the submitted answers
     submitted_modules = set()
