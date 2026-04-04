@@ -186,3 +186,27 @@ These specific combinations across questions should trigger additional interpret
 ---
 
 *This document should be updated when new question types are added to the questionnaire or when new answer pattern combinations are identified during pilot analysis.*
+---
+
+## SECTION D: New Questions Added (Q120, Q121, Q122)
+
+### Q120 — Industries to avoid (multi_select)
+**Raw format:** Array of strings e.g. `["Aviation", "Hospitality & tourism"]`
+**How to interpret:** Each selection is an industry hard-exclusion. Empty array = no exclusions. Apply Resource 4 B4a immediately.
+
+| Combination | Action |
+|---|---|
+| ["Aviation"] | Exclude P1, P10 |
+| ["Hospitality & tourism"] | Exclude P9 |
+| ["Aviation", "Hospitality & tourism"] | Exclude P1, P9, P10 — the exact combination that caused the real-user failure |
+| ["No specific industries to avoid"] | No exclusions; proceed normally |
+| [] or null | Treat as no exclusions |
+
+### Q121 — What makes industry feel unstable (text_short, conditional)
+Read for: war/conflict language, sector names, specific risk types. Apply geopolitical instability rule if conflict language present. Null = not applicable or not answered; proceed without it.
+
+### Q122 — Tuesday 2028 visualisation (text_short, optional)
+Read for: location signals, workspace type, activity type, emotional tone. Map activity to pathway families per Resource 6 interpretation guide. Null = not answered; do not flag to user.
+
+### Q109 update — new option
+If value = "Industry instability / geopolitical risk": trigger B4a industry avoidance check immediately before any other processing.

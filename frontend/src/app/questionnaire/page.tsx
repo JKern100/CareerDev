@@ -31,9 +31,9 @@ interface HubData {
 
 // Stage config constants
 const STAGE_CONFIG = [
-  { tier: 1 as const, screens: 4, questions: 20, minutes: 5, label: "Quick Match" },
+  { tier: 1 as const, screens: 4, questions: 21, minutes: 5, label: "Quick Match" },
   { tier: 2 as const, screens: 4, questions: 22, minutes: 5, label: "Sharpen" },
-  { tier: 3 as const, screens: 8, questions: 40, minutes: 10, label: "Personalise" },
+  { tier: 3 as const, screens: 8, questions: 42, minutes: 10, label: "Personalise" },
 ];
 
 export default function QuestionnairePage() {
@@ -499,7 +499,20 @@ function QuestionnaireContent() {
 
           {/* Questions */}
           <div className="flex flex-col gap-1">
-            {coreScreen.questions.map((q) => (
+            {coreScreen.questions
+              .filter((q) => {
+                // Q121 is conditional: show only when Q109 = instability OR Q120 has real selections
+                if (q.question_id === "Q121") {
+                  const q109Val = answers["Q109"]?.value;
+                  const q120Val = answers["Q120"]?.value;
+                  const hasInstability = q109Val === "Industry instability / geopolitical risk";
+                  const hasRealIndustries = Array.isArray(q120Val) && q120Val.length > 0
+                    && !q120Val.every((v: string) => v === "No specific industries to avoid");
+                  return hasInstability || hasRealIndustries;
+                }
+                return true;
+              })
+              .map((q) => (
               <QuestionField
                 key={q.question_id}
                 question={q}

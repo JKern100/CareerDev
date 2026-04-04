@@ -97,7 +97,8 @@ ANALYSIS INSTRUCTIONS:
 
 Follow this sequence exactly:
 
-STEP 1 — CONFIRM DATA INTEGRITY
+STEP 1 — CONFIRM DATA INTEGRITY AND APPLY HARD FILTERS
+Check for industry avoidance signals immediately: read Q109, Q120, and Q121 before doing anything else. If Q120 contains any industry selections or Q109 = "Industry instability / geopolitical risk", identify and lock the excluded pathways before scoring begins. These exclusions do not change regardless of what the scoring process produces later.
 All required questions have been answered before this API call was made — the application enforces this gate at the UI level. You can assume required question data is present. If a required question value appears missing, treat it as a pipeline data error, note it in the report, and score that dimension at 5/10 (neutral). For missing optional questions, apply the fallback rules in Resource 13 Section B silently.
 
 STEP 2 — IDENTIFY ARCHETYPE(S)

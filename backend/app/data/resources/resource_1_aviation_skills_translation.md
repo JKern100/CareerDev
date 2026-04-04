@@ -58,8 +58,6 @@
 
 ## SECTION B: Soft Skills That Cabin Crew Consistently Demonstrate
 
-These are often invisible on CVs but highly valued by employers. The AI should surface and name these explicitly in recommendations.
-
 | Demonstrated Behaviour | Civilian Label | Why It Matters |
 |---|---|---|
 | Working with strangers as a team from day one | Rapid team integration | Critical in consulting, project work, start-ups |
@@ -74,8 +72,6 @@ These are often invisible on CVs but highly valued by employers. The AI should s
 
 ## SECTION C: Common Misconceptions the AI Should Actively Counter
 
-These are patterns where cabin crew self-assessments tend to be inaccurate. The AI should gently correct these in its output.
-
 **Misconception 1: "I don't have leadership experience"**
 → Reality: Any senior/lead/purser role IS leadership. Even standard crew roles require autonomous decision-making with zero management support at 35,000 feet.
 
@@ -86,16 +82,14 @@ These are patterns where cabin crew self-assessments tend to be inaccurate. The 
 → Reality: IATA dangerous goods, SEP certification, first aid, security clearances, and recurrent training programmes ARE qualifications. They signal regulatory competence and professional discipline.
 
 **Misconception 4: "I need to start at the bottom in a new career"**
-→ Reality: Depending on the pathway, mid-level entry is often possible. 5+ years of cabin crew at a major carrier (especially Emirates, Etihad, flydubai) carries significant brand credibility in the UAE market.
+→ Reality: Depending on the pathway, mid-level entry is often possible. 5+ years of cabin crew at a major carrier carries significant brand credibility.
 
 **Misconception 5: "My language skills don't count professionally"**
-→ Reality: In the UAE market specifically, fluency in Arabic, Hindi, Tagalog, or other regional languages is a competitive differentiator — especially in customer-facing, HR, or government-adjacent roles.
+→ Reality: Fluency in Arabic, Hindi, Tagalog, or other regional languages is a competitive differentiator in customer-facing, HR, or government-adjacent roles.
 
 ---
 
 ## SECTION D: Experience Level Calibration
-
-Use years of service and seniority to calibrate recommendation level.
 
 | Experience | Likely Civilian Entry Level |
 |---|---|
@@ -105,7 +99,3 @@ Use years of service and seniority to calibrate recommendation level.
 | Any years, senior/purser/lead role | Mid-level to junior management |
 | 8+ years, purser or above | Management / senior operations |
 | Training instructor role | L&D, training manager, programme lead |
-
----
-
-*This document is a static reference resource injected into AI analysis context. It should be reviewed and updated as career pathways data evolves.*

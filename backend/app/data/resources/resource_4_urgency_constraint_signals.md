@@ -97,6 +97,30 @@ This is the most common hard constraint for expat users. The AI must handle this
 
 ---
 
+### B4a: Industry Avoidance Constraints (Q109, Q120, Q121) — HARD FILTER
+
+**This is the constraint that was missing and caused the platform to recommend aviation and hospitality to a user who was leaving specifically because those industries felt unsafe.**
+
+Industry avoidance signals must be treated as hard filters — the same weight as visa blocks. If a user has explicitly stated they want to move away from an industry, recommending pathways in that industry is a fundamental failure of the platform.
+
+| Signal | AI Action |
+|---|---|
+| Q120 includes "Aviation" | Remove P1 (Aviation Training) and P10 (Private Aviation) from scored results entirely. Do not present them even as low matches. |
+| Q120 includes "Hospitality & tourism" | Remove P9 (Hospitality & Luxury Service Management) from scored results entirely. |
+| Q109 = "Industry instability / geopolitical risk" | Apply heightened scrutiny to ALL pathways in sectors perceived as volatile. Cross-reference Q120 to identify which industries to exclude. If Q120 is blank, infer from Q121 open text which industries feel unsafe to the user. |
+| Q121 mentions war, conflict, geopolitical instability | Treat aviation AND hospitality AND tourism as industries to avoid unless the user has explicitly indicated otherwise elsewhere. These three sectors are disproportionately affected by geopolitical disruption and users citing this reason are specifically fleeing that risk. |
+| Q120 includes any sector | That sector's pathways are excluded from recommendations. No exceptions. |
+
+**Critical rule:** A user who selects "Industry instability / geopolitical risk" as their reason for leaving (Q109) and selects "Aviation" and "Hospitality & tourism" in Q120 must receive zero recommendations in those industries. Recommending P1, P9, or P10 to this user is the exact failure that real user feedback identified. This is a hard filter, not a soft preference.
+
+**When industry avoidance removes many pathways:**
+If industry avoidance filters remove 3 or more pathways from the scored set, acknowledge this explicitly in the report: *"Based on your answers, we've excluded pathways in [industries named] from your recommendations. The pathways below are all in sectors outside those industries."* Do not present excluded pathways even as lower-ranked options.
+
+**What to do when Q120 was not answered but Q121 reveals avoidance:**
+Read Q121 open text for industry names, sector references, or risk language. If the user describes instability in aviation or hospitality specifically, apply the same hard filter as if Q120 had been explicitly selected.
+
+---
+
 ### B4: Time Availability Constraints (Module H & D)
 
 | Signal | AI Action |
@@ -153,6 +177,7 @@ These are overall framing instructions for how the AI should write its output, b
 - **Never omit the constraint summary.** Even if constraints are minimal, briefly acknowledge what you factored in — this builds trust.
 - **Never assume constraints the user didn't state.** Only apply constraints that are evidenced in their answers.
 - **Never be falsely optimistic.** A user making a real career decision needs honest framing more than they need encouragement.
+- **Never recommend a pathway in an industry the user has explicitly said they want to leave.** This is the most direct way to destroy trust in the platform. Industry avoidance (Q120) is a hard filter — not a preference to weigh against other factors.
 
 ---
 

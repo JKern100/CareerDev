@@ -15,6 +15,8 @@ Designing and delivering training programmes for cabin crew — safety, service,
 **Who succeeds here:**
 Former crew who genuinely enjoyed the teaching and coaching moments of their aviation career — not those who want to escape operations but don't know where else to go. Strong candidates are naturally systematic, comfortable giving critical feedback, and have some experience running briefings or mentoring junior crew.
 
+**Industry avoidance flag:** This pathway is in the aviation industry. If Q120 includes "Aviation" or Q121 describes aviation instability as a reason for leaving, this pathway must be excluded from results regardless of skills fit.
+
 **Who struggles here:**
 Users who rated training/instructing (Q034) below 3. Users who disliked compliance and checklists (Q020) — training ops is heavily documentation-driven. Users seeking a complete break from aviation culture.
 
@@ -285,6 +287,8 @@ Ground operations, VIP passenger handling, charter coordination, private jet cre
 
 **Who succeeds here:**
 Users who love aviation and the environment it creates — the precision, the professionalism, the international culture — but want ground-based stability. Strong operational awareness, ICAO/airline knowledge, and network within aviation are all assets.
+
+**Industry avoidance flag:** This pathway is in the aviation industry (ground-side). If Q120 includes "Aviation" or Q109 = "Industry instability / geopolitical risk" with aviation cited in Q121, this pathway must be excluded from results regardless of how direct the experience transfer is. Staying in the same industry defeats the purpose for users fleeing industry risk.
 
 **Who struggles here:**
 Users who want a complete break from aviation. Users whose primary reason for leaving is burnout with aviation culture itself — they will find this pathway brings the same culture in a different seat.

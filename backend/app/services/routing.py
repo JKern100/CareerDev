@@ -27,9 +27,9 @@ CORE_MODULES = ["A", "B", "C", "D", "E", "F", "G", "H"]
 # ---------------------------------------------------------------------------
 # Progressive questionnaire: 3-tier system
 #
-# Tier 1 "Quick Match"   — 18 questions, ~5 min → initial pathway rankings
+# Tier 1 "Quick Match"   — 21 questions, ~5 min → initial pathway rankings
 # Tier 2 "Sharpen"       — 22 more questions, ~5 min → full scoring accuracy
-# Tier 3 "Personalise"   — 40 curated questions, ~10-12 min (optional deep-dive)
+# Tier 3 "Personalise"   — 42 curated questions, ~10-12 min (optional deep-dive)
 #
 # After Tier 2, the user has answered ALL 40 scoring-relevant questions.
 # Tier 3 adds context for the AI narrative but doesn't change rankings.
@@ -40,7 +40,7 @@ TIER1_SCREENS = [
     {
         "id": "t1_1", "tier": 1,
         "label": "The Basics",
-        "questions": ["Q005", "Q007", "Q003", "Q001", "Q109", "Q009"],
+        "questions": ["Q005", "Q007", "Q003", "Q001", "Q109", "Q120", "Q009"],
     },
     {
         "id": "t1_2", "tier": 1,
@@ -91,7 +91,7 @@ TIER3_SCREENS = [
     {
         "id": "t3_2", "tier": 3,
         "label": "Aviation Reflections",
-        "questions": ["Q024", "Q025", "Q026", "Q111"],
+        "questions": ["Q024", "Q025", "Q026", "Q111", "Q121", "Q122"],
     },
     {
         "id": "t3_3", "tier": 3,
