@@ -15,7 +15,7 @@ from app.config import settings
 from app.database import engine, Base, async_session
 from app.models.questionnaire import Question
 from app.models.pathway import Pathway
-from app.services.routing import get_question_bank
+from app.services.routing import get_question_bank, clear_question_bank_cache
 from app.services.scoring import load_pathways
 
 logger = logging.getLogger(__name__)
@@ -70,15 +70,18 @@ def _add_missing_columns(conn):
 async def _seed_questions():
     """Seed the questions table from the CSV question bank.
 
-    Additive: inserts any questions from the CSV that are not yet in the DB.
+    Additive + update: inserts new questions and updates existing ones
+    when CSV definitions change (e.g. new options added to Q109).
     """
+    clear_question_bank_cache()
     async with async_session() as session:
-        result = await session.execute(select(Question.id))
-        existing_ids = {row[0] for row in result.all()}
+        result = await session.execute(select(Question))
+        existing = {q.id: q for q in result.scalars().all()}
 
         added = 0
+        updated = 0
         for q in get_question_bank():
-            if q.question_id not in existing_ids:
+            if q.question_id not in existing:
                 session.add(Question(
                     id=q.question_id,
                     module=q.module,
@@ -92,9 +95,29 @@ async def _seed_questions():
                     tags_json=q.tags_json,
                 ))
                 added += 1
-        if added:
+            else:
+                db_q = existing[q.question_id]
+                changed = False
+                for attr, csv_val in [
+                    ("prompt", q.prompt),
+                    ("question_type", q.question_type),
+                    ("required", q.required),
+                    ("options_json", q.options_json),
+                    ("min_val", q.min_val),
+                    ("max_val", q.max_val),
+                    ("route_if_json", q.route_if_json),
+                    ("tags_json", q.tags_json),
+                ]:
+                    if getattr(db_q, attr) != csv_val:
+                        setattr(db_q, attr, csv_val)
+                        changed = True
+                if changed:
+                    updated += 1
+
+        if added or updated:
             await session.commit()
-            logger.info("Seeded %d new questions (total in CSV: %d)", added, len(get_question_bank()))
+            logger.info("Questions seeded: %d added, %d updated (CSV total: %d)",
+                        added, updated, len(get_question_bank()))
 
 
 async def _seed_pathways():

@@ -15,7 +15,7 @@ from sqlalchemy import select, func, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.models.user import User, UserRole
+from app.models.user import User, UserRole, UserNote
 from app.models.questionnaire import Answer, Question, Evidence
 from app.models.report import Report, AnalysisReport
 from app.models.pathway import PathwayScore
@@ -1132,3 +1132,83 @@ async def update_resource(
         word_count=len(data.content.split()),
         cache_cleared=cache_cleared,
     )
+
+
+# ---------------------------------------------------------------------------
+# User feedback notes
+# ---------------------------------------------------------------------------
+
+class NoteIn(BaseModel):
+    content: str
+
+class NoteOut(BaseModel):
+    id: str
+    content: str
+    author_name: str
+    created_at: str
+
+
+@router.get("/users/{user_id}/notes", response_model=list[NoteOut])
+async def get_user_notes(
+    user_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user),
+):
+    """List all admin notes for a user, newest first."""
+    result = await db.execute(
+        select(UserNote, User.full_name)
+        .join(User, UserNote.author_id == User.id)
+        .where(UserNote.user_id == user_id)
+        .order_by(UserNote.created_at.desc())
+    )
+    return [
+        NoteOut(
+            id=str(note.id),
+            content=note.content,
+            author_name=author_name or "Admin",
+            created_at=note.created_at.isoformat() if note.created_at else "",
+        )
+        for note, author_name in result.all()
+    ]
+
+
+@router.post("/users/{user_id}/notes", response_model=NoteOut)
+async def add_user_note(
+    user_id: uuid.UUID,
+    data: NoteIn,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user),
+):
+    """Add a feedback note to a user."""
+    if not data.content.strip():
+        raise HTTPException(status_code=400, detail="Note content cannot be empty")
+    note = UserNote(
+        user_id=user_id,
+        author_id=admin.id,
+        content=data.content.strip(),
+    )
+    db.add(note)
+    await db.commit()
+    await db.refresh(note)
+    return NoteOut(
+        id=str(note.id),
+        content=note.content,
+        author_name=admin.full_name or "Admin",
+        created_at=note.created_at.isoformat() if note.created_at else "",
+    )
+
+
+@router.delete("/notes/{note_id}")
+async def delete_user_note(
+    note_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user),
+):
+    """Delete a feedback note."""
+    result = await db.execute(select(UserNote).where(UserNote.id == note_id))
+    note = result.scalar_one_or_none()
+    if not note:
+        raise HTTPException(status_code=404, detail="Note not found")
+    await db.delete(note)
+    await db.commit()
+    return {"ok": True}

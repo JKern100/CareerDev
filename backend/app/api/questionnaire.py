@@ -434,10 +434,12 @@ async def get_progress(
         current_question_id=user.current_question_id,
         progress_pct=round(len(answered_ids) / total_questions * 100, 1) if total_questions > 0 else 0,
         modules=modules_status,
-        tier1_complete=is_tier1_complete(answered_ids),
-        tier2_complete=is_tier2_complete(answered_ids),
-        tier3_complete=is_tier3_complete(answered_ids),
-        tier1_screens_done=_count_screens_done(TIER1_SCREENS, answered_ids),
-        tier2_screens_done=_count_screens_done(TIER2_SCREENS, answered_ids),
-        tier3_screens_done=_count_screens_done(TIER3_SCREENS, answered_ids),
+        # If questionnaire was already marked complete (legacy user), honour that
+        # even if new questions were added to tiers after their completion.
+        tier1_complete=is_tier1_complete(answered_ids) or user.questionnaire_completed,
+        tier2_complete=is_tier2_complete(answered_ids) or user.questionnaire_completed,
+        tier3_complete=is_tier3_complete(answered_ids) or user.questionnaire_completed,
+        tier1_screens_done=len(TIER1_SCREENS) if user.questionnaire_completed else _count_screens_done(TIER1_SCREENS, answered_ids),
+        tier2_screens_done=len(TIER2_SCREENS) if user.questionnaire_completed else _count_screens_done(TIER2_SCREENS, answered_ids),
+        tier3_screens_done=len(TIER3_SCREENS) if user.questionnaire_completed else _count_screens_done(TIER3_SCREENS, answered_ids),
     )
