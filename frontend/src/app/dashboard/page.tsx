@@ -94,17 +94,22 @@ export default function DashboardPage() {
 
   const pro = user.isPremium;
 
+  // For legacy users who completed before new questions were added,
+  // treat tiers as complete if they have the downstream outputs
+  const effectiveTier1 = user.tier1Complete || user.hasSummary || user.questionnaireCompleted;
+  const effectiveTier2 = user.tier2Complete || user.hasAnalysis || user.questionnaireCompleted;
+
   // Determine which step the user is currently on
   const currentStep = user.hasAnalysis ? 5
     : user.hasSummary && pro ? 3
-    : user.tier1Complete ? 2
+    : effectiveTier1 ? 2
     : 1;
 
   // Progress through the journey (0–100)
   const journeyPct = user.hasAnalysis ? 100
-    : user.hasSummary && user.tier2Complete ? 70
+    : user.hasSummary && effectiveTier2 ? 70
     : user.hasSummary ? 50
-    : user.tier1Complete ? 30
+    : effectiveTier1 ? 30
     : Math.max(user.progressPct * 0.3, 0);
 
   return (
@@ -240,22 +245,22 @@ export default function DashboardPage() {
             title={d("questionnaire")}
             description={
               user.tier3Complete || user.questionnaireCompleted ? d("q_all_done")
-              : user.tier2Complete ? (pro ? d("q_t2_done_pro") : d("q_t2_done_free"))
-              : user.tier1Complete ? (pro ? d("q_t1_done_pro") : d("q_t1_done_free"))
+              : effectiveTier2 ? (pro ? d("q_t2_done_pro") : d("q_t2_done_free"))
+              : effectiveTier1 ? (pro ? d("q_t1_done_pro") : d("q_t1_done_free"))
               : d("q_not_started")
             }
             cta={
               user.tier3Complete || user.questionnaireCompleted ? d("q_cta_review")
-              : user.tier1Complete && !pro ? d("q_cta_upgrade")
+              : effectiveTier1 && !pro ? d("q_cta_upgrade")
               : user.progressPct > 0 ? d("q_cta_continue") : d("q_cta_start")
             }
-            done={user.tier1Complete}
+            done={effectiveTier1}
             active={currentStep === 1}
             locked={false}
             accent="#3b82f6"
             onClick={() => router.push(
-              user.tier1Complete && !pro ? "/pricing"
-              : user.tier1Complete && !user.tier2Complete ? "/questionnaire"
+              effectiveTier1 && !pro ? "/pricing"
+              : effectiveTier1 && !effectiveTier2 ? "/questionnaire"
               : "/questionnaire"
             )}
           />
@@ -266,16 +271,16 @@ export default function DashboardPage() {
             title={d("profile_report")}
             description={
               user.hasSummary ? d("summary_ready")
-              : user.tier1Complete ? d("summary_generate")
+              : effectiveTier1 ? d("summary_generate")
               : d("summary_locked")
             }
-            cta={user.hasSummary ? d("summary_cta_view") : user.tier1Complete ? d("summary_cta_gen") : d("q_cta_start")}
+            cta={user.hasSummary ? d("summary_cta_view") : effectiveTier1 ? d("summary_cta_gen") : d("q_cta_start")}
             done={user.hasSummary}
             active={currentStep === 2}
-            locked={!user.tier1Complete}
+            locked={!effectiveTier1 && !user.hasSummary}
             accent="#8b5cf6"
             onClick={() => router.push(
-              user.hasSummary || user.tier1Complete ? "/summary" : "/questionnaire"
+              user.hasSummary || effectiveTier1 ? "/summary" : "/questionnaire"
             )}
           />
         </div>
@@ -288,17 +293,17 @@ export default function DashboardPage() {
             description={
               !pro ? d("analysis_upgrade")
               : user.hasAnalysis ? d("analysis_ready")
-              : user.tier2Complete ? d("analysis_generate")
+              : effectiveTier2 ? d("analysis_generate")
               : d("analysis_locked")
             }
-            cta={!pro ? t("ui.upgrade_to_pro") : user.hasAnalysis ? d("analysis_cta_view") : user.tier2Complete ? d("analysis_cta_gen") : "Complete Stage 2 first"}
+            cta={!pro ? t("ui.upgrade_to_pro") : user.hasAnalysis ? d("analysis_cta_view") : effectiveTier2 ? d("analysis_cta_gen") : "Complete Stage 2 first"}
             done={user.hasAnalysis}
             active={currentStep === 3}
-            locked={pro ? !user.tier2Complete && !user.hasAnalysis : false}
+            locked={pro ? (!effectiveTier2 && !user.hasAnalysis) : false}
             accent="#2563eb"
             featured
             proTag={!pro}
-            onClick={() => router.push(!pro ? "/pricing" : user.tier2Complete || user.hasAnalysis ? "/results" : "/questionnaire")}
+            onClick={() => router.push(!pro ? "/pricing" : effectiveTier2 || user.hasAnalysis ? "/results" : "/questionnaire")}
           />
         </div>
 
@@ -323,13 +328,13 @@ export default function DashboardPage() {
             step={d("anytime")}
             title={d("career_coach")}
             description={!pro ? d("coach_upgrade") : d("coach_ready")}
-            cta={!pro ? t("ui.upgrade_to_pro") : user.tier1Complete ? d("coach_cta") : "Complete Stage 1 first"}
+            cta={!pro ? t("ui.upgrade_to_pro") : effectiveTier1 ? d("coach_cta") : "Complete Stage 1 first"}
             done={false}
-            active={pro && user.tier1Complete}
-            locked={pro ? !user.tier1Complete : false}
+            active={pro && effectiveTier1}
+            locked={pro ? !effectiveTier1 : false}
             accent="#eab308"
             proTag={!pro}
-            onClick={() => router.push(!pro ? "/pricing" : user.tier1Complete ? "/coach" : "/questionnaire")}
+            onClick={() => router.push(!pro ? "/pricing" : effectiveTier1 ? "/coach" : "/questionnaire")}
           />
         </div>
 
