@@ -217,29 +217,59 @@ export default function SummaryPage() {
             <p className="text-muted" style={{ marginBottom: "1.5rem" }}>
               {hasAnalysisReport ? p("analysis_ready_text") : p("analysis_generate_text")}
             </p>
+            {!questionnaireComplete && !hasAnalysisReport && (
+              <div style={{
+                background: "rgba(234,179,8,0.08)",
+                border: "1px solid rgba(234,179,8,0.25)",
+                borderRadius: "8px",
+                padding: "0.75rem 1rem",
+                marginBottom: "1.25rem",
+                fontSize: "0.85rem",
+                color: "#ca8a04",
+                lineHeight: 1.5,
+              }}>
+                <strong>Recommended:</strong> Complete the remaining questionnaire stages first. Your Career Analysis will be significantly more accurate and personalised with the full dataset.
+              </div>
+            )}
             <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
-              <button
-                className="btn btn-primary"
-                style={{ fontSize: "1rem", padding: "0.75rem 2rem" }}
-                onClick={() => router.push("/results")}
-              >
-                {hasAnalysisReport ? p("view_analysis") : p("generate_analysis")}
-              </button>
-              {!questionnaireComplete && (
-                <button
-                  className="btn btn-outline"
-                  style={{ fontSize: "0.9rem", padding: "0.75rem 1.5rem" }}
-                  onClick={() => router.push("/questionnaire")}
-                >
-                  {p("continue_questionnaire")}
-                </button>
+              {!questionnaireComplete && !hasAnalysisReport ? (
+                <>
+                  <button
+                    className="btn btn-primary"
+                    style={{ fontSize: "1rem", padding: "0.75rem 2rem" }}
+                    onClick={() => router.push("/questionnaire")}
+                  >
+                    {p("continue_questionnaire")}
+                  </button>
+                  <button
+                    className="btn btn-outline"
+                    style={{ fontSize: "0.9rem", padding: "0.75rem 1.5rem" }}
+                    onClick={() => router.push("/results")}
+                  >
+                    Generate anyway
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    className="btn btn-primary"
+                    style={{ fontSize: "1rem", padding: "0.75rem 2rem" }}
+                    onClick={() => router.push("/results")}
+                  >
+                    {hasAnalysisReport ? p("view_analysis") : p("generate_analysis")}
+                  </button>
+                  {!questionnaireComplete && (
+                    <button
+                      className="btn btn-outline"
+                      style={{ fontSize: "0.9rem", padding: "0.75rem 1.5rem" }}
+                      onClick={() => router.push("/questionnaire")}
+                    >
+                      {p("continue_questionnaire")}
+                    </button>
+                  )}
+                </>
               )}
             </div>
-            {!questionnaireComplete && (
-              <p className="text-muted" style={{ fontSize: "0.8rem", marginTop: "1rem" }}>
-                {p("more_questions_note")}
-              </p>
-            )}
           </>
         ) : (
           <>
