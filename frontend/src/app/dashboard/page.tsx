@@ -360,11 +360,15 @@ function StepCard({ step, title, description, cta, done, active, locked, accent,
       style={{
         background: featured
           ? "linear-gradient(160deg, rgba(37,99,235,0.12) 0%, rgba(37,99,235,0.03) 100%)"
+          : done
+          ? "rgba(34,197,94,0.04)"
           : "rgba(255,255,255,0.03)",
         border: featured
           ? "1.5px solid rgba(37,99,235,0.4)"
           : active
           ? `1.5px solid ${accent}55`
+          : done
+          ? "1.5px solid rgba(34,197,94,0.25)"
           : "1px solid #1e293b",
         borderRadius: "14px",
         padding: "1.5rem",
