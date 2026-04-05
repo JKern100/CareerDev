@@ -143,6 +143,13 @@ for _screen in TIER3_SCREENS:
 ALL_PROGRESSIVE_IDS = TIER1_QUESTION_IDS | TIER2_QUESTION_IDS | TIER3_QUESTION_IDS
 
 
+def _required_ids() -> set[str]:
+    """Return the set of question IDs that are required (cached after first call)."""
+    if not hasattr(_required_ids, "_cache"):
+        _required_ids._cache = {q.question_id for q in get_question_bank() if q.required}  # type: ignore[attr-defined]
+    return _required_ids._cache  # type: ignore[attr-defined]
+
+
 
 # Conditional module triggers based on question answers
 CONDITIONAL_TRIGGERS = {
@@ -271,6 +278,8 @@ def clear_question_bank_cache():
     """Clear the cached question bank so it's re-read from CSV on next access."""
     global _question_bank
     _question_bank = None
+    if hasattr(_required_ids, "_cache"):
+        del _required_ids._cache  # type: ignore[attr-defined]
 
 
 def get_questions_for_module(module: str) -> list[QuestionDef]:
@@ -329,28 +338,36 @@ def check_consent_block(answers: dict) -> bool:
 # ---------------------------------------------------------------------------
 
 def get_next_progressive_screen(answered_ids: set[str]) -> dict | None:
-    """Return the next progressive screen (Tier 1 or 2) with unanswered Qs."""
+    """Return the next progressive screen with unanswered required questions."""
+    required = _required_ids()
     for screen in ALL_PROGRESSIVE_SCREENS:
-        unanswered = [qid for qid in screen["questions"] if qid not in answered_ids]
-        if unanswered:
+        unanswered_required = [
+            qid for qid in screen["questions"]
+            if qid not in answered_ids and qid in required
+        ]
+        if unanswered_required:
             return screen
     return None
 
 
 def is_tier1_complete(answered_ids: set[str]) -> bool:
-    return TIER1_QUESTION_IDS.issubset(answered_ids)
+    required = _required_ids()
+    return (TIER1_QUESTION_IDS & required).issubset(answered_ids)
 
 
 def is_tier2_complete(answered_ids: set[str]) -> bool:
-    return TIER2_QUESTION_IDS.issubset(answered_ids)
+    required = _required_ids()
+    return (TIER2_QUESTION_IDS & required).issubset(answered_ids)
 
 
 def is_tier3_complete(answered_ids: set[str]) -> bool:
-    return TIER3_QUESTION_IDS.issubset(answered_ids)
+    required = _required_ids()
+    return (TIER3_QUESTION_IDS & required).issubset(answered_ids)
 
 
 def is_all_progressive_complete(answered_ids: set[str]) -> bool:
-    return ALL_PROGRESSIVE_IDS.issubset(answered_ids)
+    required = _required_ids()
+    return (ALL_PROGRESSIVE_IDS & required).issubset(answered_ids)
 
 
 def get_screen_by_id(screen_id: str) -> dict | None:
