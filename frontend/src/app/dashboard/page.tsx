@@ -255,6 +255,7 @@ export default function DashboardPage() {
               : user.progressPct > 0 ? d("q_cta_continue") : d("q_cta_start")
             }
             done={effectiveTier1}
+            partial={effectiveTier1 && !user.tier3Complete && !user.questionnaireCompleted}
             active={currentStep === 1}
             locked={false}
             accent="#3b82f6"
@@ -346,12 +347,13 @@ export default function DashboardPage() {
 }
 
 /* Reusable step card component */
-function StepCard({ step, title, description, cta, done, active, locked, accent, featured, proTag, onClick }: {
+function StepCard({ step, title, description, cta, done, partial, active, locked, accent, featured, proTag, onClick }: {
   step: string;
   title: string;
   description: string;
   cta: string;
   done: boolean;
+  partial?: boolean;
   active: boolean;
   locked: boolean;
   accent: string;
@@ -365,14 +367,14 @@ function StepCard({ step, title, description, cta, done, active, locked, accent,
       style={{
         background: featured
           ? "linear-gradient(160deg, rgba(37,99,235,0.12) 0%, rgba(37,99,235,0.03) 100%)"
-          : done
+          : done && !partial
           ? "rgba(34,197,94,0.04)"
           : "rgba(255,255,255,0.03)",
         border: featured
           ? "1.5px solid rgba(37,99,235,0.4)"
           : active
           ? `1.5px solid ${accent}55`
-          : done
+          : done && !partial
           ? "1.5px solid rgba(34,197,94,0.25)"
           : "1px solid #1e293b",
         borderRadius: "14px",
@@ -395,10 +397,10 @@ function StepCard({ step, title, description, cta, done, active, locked, accent,
         </span>
         <span style={{
           fontSize: "0.72rem", fontWeight: 600, padding: "0.2rem 0.6rem", borderRadius: "20px",
-          background: done ? "rgba(34,197,94,0.15)" : proTag ? "rgba(59,130,246,0.15)" : active ? `${accent}18` : "rgba(100,116,139,0.15)",
-          color: done ? "#22c55e" : proTag ? "#3b82f6" : active ? accent : "#94a3b8",
+          background: done && !partial ? "rgba(34,197,94,0.15)" : partial ? "rgba(59,130,246,0.15)" : proTag ? "rgba(59,130,246,0.15)" : active ? `${accent}18` : "rgba(100,116,139,0.15)",
+          color: done && !partial ? "#22c55e" : partial ? "#3b82f6" : proTag ? "#3b82f6" : active ? accent : "#94a3b8",
         }}>
-          {done ? "\u2713" : proTag ? "Pro" : active ? "\u2022 Active" : locked ? "\uD83D\uDD12" : "\u2014"}
+          {done && !partial ? "\u2713" : partial ? "In Progress" : proTag ? "Pro" : active ? "\u2022 Active" : locked ? "\uD83D\uDD12" : "\u2014"}
         </span>
       </div>
 
