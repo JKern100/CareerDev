@@ -13,6 +13,7 @@ export default function LoginPage() {
   const p = (key: string) => t(`pages.login.${key}`);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -110,12 +111,27 @@ export default function LoginPage() {
         </div>
         <div>
           <label className="text-sm">{p("password")}</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          <div style={{ position: "relative" }}>
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              style={{ paddingRight: "2.5rem" }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              style={{
+                position: "absolute", right: "0.5rem", top: "50%", transform: "translateY(-50%)",
+                background: "none", border: "none", cursor: "pointer",
+                color: "var(--muted)", fontSize: "0.8rem", padding: "0.25rem",
+              }}
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </div>
         </div>
         {error && <p style={{ color: "var(--error)", fontSize: "0.875rem" }}>{error}</p>}
         <div style={{ textAlign: "right" }}>
