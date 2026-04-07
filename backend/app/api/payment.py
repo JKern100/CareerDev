@@ -166,8 +166,12 @@ async def lemonsqueezy_webhook(request: Request):
                 await handle_subscription_expired(sub_id, db)
             else:
                 logger.info("Unhandled webhook event: %s", event_name)
+        except ValueError as e:
+            logger.error("Webhook data error for event %s: %s", event_name, e)
+            raise HTTPException(status_code=400, detail=f"Invalid webhook data: {e}")
         except Exception:
             logger.exception("Webhook processing failed for event %s", event_name)
+            raise HTTPException(status_code=500, detail="Webhook processing failed")
 
     return {"status": "ok"}
 
@@ -178,7 +182,10 @@ async def _handle_order_created(user_id_str: str | None, attrs: dict, db: AsyncS
         logger.warning("Order webhook missing user_id in custom_data")
         return
 
-    user_id = UUID(user_id_str)
+    try:
+        user_id = UUID(user_id_str)
+    except ValueError:
+        raise ValueError(f"Invalid user_id in order webhook: {user_id_str!r}")
     order_id = str(attrs.get("identifier", attrs.get("order_number", "")))
     customer_id = str(attrs.get("customer_id", ""))
     variant_id = str(attrs.get("first_order_item", {}).get("variant_id", ""))
@@ -212,7 +219,10 @@ async def _handle_subscription_created(user_id_str: str | None, attrs: dict, db:
         logger.warning("Subscription webhook missing user_id in custom_data")
         return
 
-    user_id = UUID(user_id_str)
+    try:
+        user_id = UUID(user_id_str)
+    except ValueError:
+        raise ValueError(f"Invalid user_id in subscription webhook: {user_id_str!r}")
     order_id = str(attrs.get("order_id", ""))
     customer_id = str(attrs.get("customer_id", ""))
     subscription_id = str(attrs.get("subscription_id", attrs.get("id", "")))

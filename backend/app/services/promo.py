@@ -7,7 +7,7 @@ import logging
 from datetime import datetime, timezone
 from uuid import UUID
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.promo import PromoCode, PromoRedemption
@@ -155,8 +155,12 @@ async def redeem_full_unlock(
     )
     db.add(redemption)
 
-    # Increment usage count
-    promo.times_used += 1
+    # Atomic increment to prevent race conditions
+    await db.execute(
+        update(PromoCode)
+        .where(PromoCode.id == promo.id)
+        .values(times_used=PromoCode.times_used + 1)
+    )
 
     await db.commit()
     await db.refresh(sub)
@@ -178,5 +182,10 @@ async def record_redemption(
         discount_applied=discount_description,
     )
     db.add(redemption)
-    promo.times_used += 1
+    # Atomic increment to prevent race conditions
+    await db.execute(
+        update(PromoCode)
+        .where(PromoCode.id == promo.id)
+        .values(times_used=PromoCode.times_used + 1)
+    )
     await db.commit()

@@ -8,6 +8,7 @@ import os
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
@@ -27,6 +28,7 @@ from app.models.payment import Payment, Subscription
 from app.models.promo import PromoRedemption
 from app.api.deps import get_admin_user
 from app.services.auth import hash_password, create_access_token
+from app.services.activity import log_activity
 from app.config import settings
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -252,7 +254,7 @@ async def list_users(
 
 @router.get("/users/{user_id}", response_model=AdminUserOut)
 async def get_user(
-    user_id: str,
+    user_id: UUID,
     admin: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -296,7 +298,7 @@ async def get_user(
 
 @router.patch("/users/{user_id}")
 async def update_user(
-    user_id: str,
+    user_id: UUID,
     data: AdminUserUpdate,
     admin: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
@@ -322,13 +324,22 @@ async def update_user(
     if data.new_password is not None:
         u.hashed_password = hash_password(data.new_password)
 
+    # Audit log for admin user modifications
+    changes = []
+    if data.role is not None:
+        changes.append(f"role={data.role}")
+    if data.new_password is not None:
+        changes.append("password_reset")
+    if changes:
+        await log_activity(db, admin, "admin_update_user", f"Updated {u.email}: {', '.join(changes)}")
+
     await db.commit()
     return {"detail": "User updated"}
 
 
 @router.delete("/users/{user_id}")
 async def delete_user(
-    user_id: str,
+    user_id: UUID,
     admin: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -339,6 +350,9 @@ async def delete_user(
 
     if str(u.id) == str(admin.id):
         raise HTTPException(status_code=400, detail="Cannot delete yourself")
+
+    # Audit log before deletion
+    await log_activity(db, admin, "admin_delete_user", f"Deleted user {u.email} ({u.id})")
 
     # Delete related data — order matters for foreign key constraints
     # 1. Advisor-related (AvailabilitySlot → Advisor, Booking → Advisor)
@@ -382,7 +396,7 @@ async def delete_user(
 
 @router.get("/users/{user_id}/answers", response_model=list[UserAnswerOut])
 async def get_user_answers(
-    user_id: str,
+    user_id: UUID,
     admin: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -403,7 +417,7 @@ async def get_user_answers(
 
 @router.delete("/users/{user_id}/answers")
 async def reset_user_answers(
-    user_id: str,
+    user_id: UUID,
     admin: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -620,7 +634,7 @@ async def reorder_question(
 
 @router.post("/promote/{user_id}")
 async def promote_to_admin(
-    user_id: str,
+    user_id: UUID,
     admin: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -671,7 +685,7 @@ async def admin_setup(
 
 @router.post("/impersonate/{user_id}")
 async def impersonate_user(
-    user_id: str,
+    user_id: UUID,
     admin: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -680,6 +694,10 @@ async def impersonate_user(
     target = result.scalar_one_or_none()
     if not target:
         raise HTTPException(status_code=404, detail="User not found")
+
+    # Audit log: record who impersonated whom
+    await log_activity(db, admin, "admin_impersonate", f"Impersonated {target.email} ({target.id})")
+    await db.commit()
 
     token = create_access_token(data={"sub": str(target.id), "imp": True})
     return {
@@ -700,7 +718,7 @@ class AdminAnalysisReportOut(BaseModel):
 
 @router.get("/users/{user_id}/report", response_model=AdminAnalysisReportOut)
 async def get_user_report(
-    user_id: str,
+    user_id: UUID,
     admin: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -771,7 +789,7 @@ async def get_activity(
 
 @router.get("/users/{user_id}/activity", response_model=list[ActivityEventOut])
 async def get_user_activity(
-    user_id: str,
+    user_id: UUID,
     action: str | None = None,
     days: int = 90,
     admin: User = Depends(get_admin_user),
@@ -908,7 +926,7 @@ async def get_coach_usage(
 
 @router.get("/coach-usage/{user_id}", response_model=CoachUserUsage)
 async def get_coach_user_usage(
-    user_id: str,
+    user_id: UUID,
     admin: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
