@@ -205,13 +205,14 @@ async def forgot_password(request: Request, data: ForgotPasswordRequest, db: Asy
     # Always return success to avoid leaking which emails exist
     result = await db.execute(select(User).where(User.email == data.email))
     user = result.scalar_one_or_none()
-    email_sent = False
     if user:
         token = create_reset_token(user.email)
-        email_sent = await send_reset_email(user.email, token)
+        await send_reset_email(user.email, token)
+    # Report email_configured (not email_sent) so frontend knows if the service
+    # is available at all — without leaking whether the email exists.
     return {
         "detail": "If that email is registered, a reset link has been sent.",
-        "email_sent": email_sent,
+        "email_sent": bool(settings.RESEND_API_KEY and settings.RESEND_API_KEY.strip()),
     }
 
 
