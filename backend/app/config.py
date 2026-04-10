@@ -57,9 +57,16 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+        env_file_encoding = "utf-8"
+        extra = "ignore"
 
 
 settings = Settings()
+
+import logging as _logging
+_logger = _logging.getLogger(__name__)
+_logger.info("RESEND_API_KEY configured: %s", bool(settings.RESEND_API_KEY))
+_logger.info("FRONTEND_URL: %s", settings.FRONTEND_URL)
 
 if not settings.DEBUG and settings.SECRET_KEY == "change-me-in-production":
     import logging as _logging
