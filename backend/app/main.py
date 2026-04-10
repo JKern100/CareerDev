@@ -364,3 +364,49 @@ async def debug_test_email(to: str = "delivered@resend.dev"):
             }
     except Exception as e:
         return {"error": str(e)}
+
+
+@app.get("/debug/test-reset")
+async def debug_test_reset(email: str):
+    """Simulate forgot-password flow with full diagnostics. Remove after debugging."""
+    from sqlalchemy import select as sa_select
+    from app.models.user import User
+    from app.services.auth import create_reset_token
+    from app.services.email import send_reset_email
+
+    steps = {}
+
+    # Step 1: Look up user
+    try:
+        async with async_session() as session:
+            result = await session.execute(sa_select(User).where(User.email == email))
+            user = result.scalar_one_or_none()
+            steps["user_found"] = user is not None
+            if user:
+                steps["user_id"] = str(user.id)
+                steps["user_email"] = user.email
+                steps["auth_provider"] = user.auth_provider or "email"
+            else:
+                steps["error"] = f"No user with email '{email}' in database"
+                return steps
+    except Exception as e:
+        steps["db_error"] = str(e)
+        return steps
+
+    # Step 2: Create reset token
+    try:
+        token = create_reset_token(user.email)
+        steps["token_created"] = True
+        steps["reset_url"] = f"{settings.FRONTEND_URL}/reset-password?token={token[:20]}..."
+    except Exception as e:
+        steps["token_error"] = str(e)
+        return steps
+
+    # Step 3: Send reset email
+    try:
+        sent = await send_reset_email(user.email, token)
+        steps["email_sent"] = sent
+    except Exception as e:
+        steps["email_error"] = str(e)
+
+    return steps
