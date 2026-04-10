@@ -379,7 +379,8 @@ async def debug_test_reset(email: str):
     # Step 1: Look up user
     try:
         async with async_session() as session:
-            result = await session.execute(sa_select(User).where(User.email == email))
+            from sqlalchemy import func as sa_func
+            result = await session.execute(sa_select(User).where(sa_func.lower(User.email) == email.strip().lower()))
             user = result.scalar_one_or_none()
             steps["user_found"] = user is not None
             if user:

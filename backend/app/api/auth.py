@@ -5,7 +5,7 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, EmailStr
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -35,7 +35,8 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 @limiter.limit("5/minute")
 async def register(request: Request, data: UserRegister, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(User).where(User.email == data.email))
+    normalized_email = data.email.strip().lower()
+    result = await db.execute(select(User).where(func.lower(User.email) == normalized_email))
     if result.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Email already registered")
 
@@ -53,7 +54,7 @@ async def register(request: Request, data: UserRegister, db: AsyncSession = Depe
     from sqlalchemy.exc import IntegrityError
 
     user = User(
-        email=data.email,
+        email=normalized_email,
         hashed_password=hash_password(data.password),
         full_name=data.full_name,
         referred_by=referred_by,
@@ -105,7 +106,7 @@ async def verify_email(data: dict, db: AsyncSession = Depends(get_db)):
     if not email:
         raise HTTPException(status_code=400, detail="Invalid or expired verification link")
 
-    result = await db.execute(select(User).where(User.email == email))
+    result = await db.execute(select(User).where(func.lower(User.email) == email.strip().lower()))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=400, detail="Invalid or expired verification link")
@@ -126,7 +127,7 @@ class ResendVerificationRequest(BaseModel):
 @limiter.limit("3/minute")
 async def resend_verification(request: Request, data: ResendVerificationRequest, db: AsyncSession = Depends(get_db)):
     # Always return success to avoid leaking which emails exist
-    result = await db.execute(select(User).where(User.email == data.email))
+    result = await db.execute(select(User).where(func.lower(User.email) == data.email.strip().lower()))
     user = result.scalar_one_or_none()
     if user and not user.email_verified:
         token = create_email_verification_token(user.email)
@@ -141,7 +142,7 @@ async def resend_verification(request: Request, data: ResendVerificationRequest,
 @router.post("/login", response_model=TokenResponse)
 @limiter.limit("10/minute")
 async def login(request: Request, data: UserLogin, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(User).where(User.email == data.email))
+    result = await db.execute(select(User).where(func.lower(User.email) == data.email.strip().lower()))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -203,7 +204,7 @@ async def me(
 @limiter.limit("3/minute")
 async def forgot_password(request: Request, data: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)):
     # Always return success to avoid leaking which emails exist
-    result = await db.execute(select(User).where(User.email == data.email))
+    result = await db.execute(select(User).where(func.lower(User.email) == data.email.strip().lower()))
     user = result.scalar_one_or_none()
     if user:
         token = create_reset_token(user.email)
@@ -223,7 +224,7 @@ async def reset_password(request: Request, data: ResetPasswordRequest, db: Async
     if not email:
         raise HTTPException(status_code=400, detail="Invalid or expired reset link")
 
-    result = await db.execute(select(User).where(User.email == email))
+    result = await db.execute(select(User).where(func.lower(User.email) == email.strip().lower()))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=400, detail="Invalid or expired reset link")
@@ -325,7 +326,7 @@ async def google_callback(data: GoogleCallbackRequest, db: AsyncSession = Depend
     user = result.scalar_one_or_none()
 
     if not user:
-        result = await db.execute(select(User).where(User.email == email))
+        result = await db.execute(select(User).where(func.lower(User.email) == email.strip().lower()))
         user = result.scalar_one_or_none()
 
     if user:
