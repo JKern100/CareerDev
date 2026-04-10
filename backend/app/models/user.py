@@ -12,10 +12,10 @@ import enum
 
 
 def _generate_referral_code() -> str:
-    """Generate a short unique referral code like 'JAYK-2X9F'."""
+    """Generate a short unique referral code like 'JAYK2-X9FRM'."""
     chars = string.ascii_uppercase + string.digits
-    part1 = "".join(secrets.choice(chars) for _ in range(4))
-    part2 = "".join(secrets.choice(chars) for _ in range(4))
+    part1 = "".join(secrets.choice(chars) for _ in range(5))
+    part2 = "".join(secrets.choice(chars) for _ in range(5))
     return f"{part1}-{part2}"
 
 

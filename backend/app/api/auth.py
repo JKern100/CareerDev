@@ -49,6 +49,9 @@ async def register(request: Request, data: UserRegister, db: AsyncSession = Depe
         if referrer:
             referred_by = referrer.id
 
+    from app.models.user import _generate_referral_code
+    from sqlalchemy.exc import IntegrityError
+
     user = User(
         email=data.email,
         hashed_password=hash_password(data.password),
@@ -56,7 +59,17 @@ async def register(request: Request, data: UserRegister, db: AsyncSession = Depe
         referred_by=referred_by,
     )
     db.add(user)
-    await db.commit()
+    # Retry on referral code collision (unique constraint)
+    for attempt in range(3):
+        try:
+            await db.commit()
+            break
+        except IntegrityError:
+            await db.rollback()
+            user.referral_code = _generate_referral_code()
+            db.add(user)
+    else:
+        raise HTTPException(status_code=500, detail="Registration failed, please try again")
     await db.refresh(user)
 
     # Send verification email in background (non-blocking)

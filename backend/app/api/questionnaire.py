@@ -399,12 +399,12 @@ async def submit_answers(
         user.last_tier_completed_at = datetime.utcnow()
 
     # Determine the current module from the submitted answers
+    qid_to_module = {q.question_id: q.module for q in get_question_bank()}
     submitted_modules = set()
     for ans in data.answers:
-        for q in get_question_bank():
-            if q.question_id == ans.question_id:
-                submitted_modules.add(q.module)
-                break
+        module = qid_to_module.get(ans.question_id)
+        if module:
+            submitted_modules.add(module)
 
     # Check if the submitted module(s) are now complete
     current_submitted_module = sorted(submitted_modules)[0] if submitted_modules else user.current_module
