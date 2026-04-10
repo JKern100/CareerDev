@@ -328,3 +328,39 @@ async def health():
         "email_from": settings.EMAIL_FROM,
         "frontend_url": settings.FRONTEND_URL,
     }
+
+
+@app.get("/debug/test-email")
+async def debug_test_email():
+    """Temporary endpoint to diagnose Resend email delivery. Remove after debugging."""
+    import httpx
+
+    api_key = settings.RESEND_API_KEY.strip()
+    if not api_key:
+        return {"error": "RESEND_API_KEY is empty"}
+
+    # Send a test email to Resend's test address
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "from": settings.EMAIL_FROM,
+                    "to": ["delivered@resend.dev"],
+                    "subject": "CrewTransition Email Test",
+                    "html": "<p>If you see this, email sending works.</p>",
+                },
+                timeout=10,
+            )
+            return {
+                "status_code": resp.status_code,
+                "response": resp.json() if resp.headers.get("content-type", "").startswith("application/json") else resp.text,
+                "from": settings.EMAIL_FROM,
+                "api_key_prefix": api_key[:8] + "...",
+            }
+    except Exception as e:
+        return {"error": str(e)}
