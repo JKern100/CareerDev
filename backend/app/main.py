@@ -322,4 +322,9 @@ app.include_router(referral.router)
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "email_configured": bool(settings.RESEND_API_KEY and settings.RESEND_API_KEY.strip()),
+        "email_from": settings.EMAIL_FROM,
+        "frontend_url": settings.FRONTEND_URL,
+    }

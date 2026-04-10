@@ -63,14 +63,16 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-import logging as _logging
-_logger = _logging.getLogger(__name__)
-_logger.info("RESEND_API_KEY configured: %s", bool(settings.RESEND_API_KEY))
-_logger.info("FRONTEND_URL: %s", settings.FRONTEND_URL)
+# Startup diagnostics — use print() so output appears in Railway deploy logs
+# (Python logging may not be configured yet at import time)
+print(f"[config] RESEND_API_KEY configured: {bool(settings.RESEND_API_KEY)} (len={len(settings.RESEND_API_KEY)})", flush=True)
+print(f"[config] EMAIL_FROM: {settings.EMAIL_FROM}", flush=True)
+print(f"[config] FRONTEND_URL: {settings.FRONTEND_URL}", flush=True)
+print(f"[config] DATABASE_URL starts with: {settings.DATABASE_URL[:20]}...", flush=True)
 
 if not settings.DEBUG and settings.SECRET_KEY == "change-me-in-production":
-    import logging as _logging
-    _logging.getLogger(__name__).critical(
-        "SECRET_KEY is still the default! Set a secure SECRET_KEY environment variable. "
-        "Using the default in production is a serious security risk."
+    print(
+        "[config] CRITICAL: SECRET_KEY is still the default! "
+        "Set a secure SECRET_KEY environment variable.",
+        flush=True,
     )

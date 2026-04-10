@@ -51,16 +51,19 @@ def _branded_email(body_content: str) -> str:
 
 async def _send_email(to: str, subject: str, html: str) -> bool:
     """Send an email via Resend API. Returns True on success."""
-    if not settings.RESEND_API_KEY:
+    api_key = settings.RESEND_API_KEY.strip()
+    if not api_key:
         logger.warning("RESEND_API_KEY not configured — email not sent. To: %s", to)
         return False
+
+    logger.info("Sending email to %s, subject=%r, from=%s", to, subject, settings.EMAIL_FROM)
 
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.post(
                 RESEND_API,
                 headers={
-                    "Authorization": f"Bearer {settings.RESEND_API_KEY}",
+                    "Authorization": f"Bearer {api_key}",
                     "Content-Type": "application/json",
                 },
                 json={
@@ -74,6 +77,7 @@ async def _send_email(to: str, subject: str, html: str) -> bool:
             if resp.status_code >= 400:
                 logger.error("Resend API error %s: %s", resp.status_code, resp.text)
                 return False
+            logger.info("Email sent successfully to %s (status=%s)", to, resp.status_code)
             return True
     except Exception:
         logger.exception("Failed to send email to %s", to)
