@@ -31,7 +31,11 @@ export default function RootLayout({
             borderTop: "1px solid var(--border)",
           }}
         >
-          {APP_VERSION}
+          <span>{APP_VERSION}</span>
+          {" · "}
+          <a href="/terms" style={{ color: "#64748b", textDecoration: "underline" }}>Terms</a>
+          {" · "}
+          <a href="/privacy" style={{ color: "#64748b", textDecoration: "underline" }}>Privacy</a>
         </footer>
       </body>
     </html>
