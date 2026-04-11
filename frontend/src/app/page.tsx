@@ -851,7 +851,12 @@ export default function Home() {
           fontSize: "0.8rem",
         }}
       >
-        CrewTransition {APP_VERSION} — Built for flight attendants worldwide
+        <div>CrewTransition {APP_VERSION} — Built for flight attendants worldwide</div>
+        <div style={{ marginTop: "0.5rem" }}>
+          <a href="/terms" style={{ color: "#64748b", textDecoration: "underline" }}>Terms</a>
+          {" · "}
+          <a href="/privacy" style={{ color: "#64748b", textDecoration: "underline" }}>Privacy</a>
+        </div>
       </footer>
     </div>
   );
