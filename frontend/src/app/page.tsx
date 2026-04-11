@@ -856,6 +856,8 @@ export default function Home() {
           <a href="/terms" style={{ color: "#64748b", textDecoration: "underline" }}>Terms</a>
           {" · "}
           <a href="/privacy" style={{ color: "#64748b", textDecoration: "underline" }}>Privacy</a>
+          {" · "}
+          <a href="/refund" style={{ color: "#64748b", textDecoration: "underline" }}>Refunds</a>
         </div>
       </footer>
     </div>

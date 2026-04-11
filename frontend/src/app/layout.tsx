@@ -36,6 +36,8 @@ export default function RootLayout({
           <a href="/terms" style={{ color: "#64748b", textDecoration: "underline" }}>Terms</a>
           {" · "}
           <a href="/privacy" style={{ color: "#64748b", textDecoration: "underline" }}>Privacy</a>
+          {" · "}
+          <a href="/refund" style={{ color: "#64748b", textDecoration: "underline" }}>Refunds</a>
         </footer>
       </body>
     </html>
