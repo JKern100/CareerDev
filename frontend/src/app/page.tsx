@@ -368,7 +368,7 @@ export default function Home() {
             {
               step: "01",
               title: "Complete the questionnaire",
-              desc: "A progressive 3-stage assessment: 18 quick-match questions for initial results, ~20 more to sharpen your scores, and an optional deep-dive for maximum personalisation.",
+              desc: "A progressive 3-stage assessment: 21 quick-match questions for initial results, ~22 more to sharpen your scores, and an optional deep-dive for maximum personalisation.",
             },
             {
               step: "02",
@@ -617,7 +617,7 @@ export default function Home() {
               fontSize: "1.05rem",
             }}
           >
-            CrewTransition doesn&apos;t send your answers to an AI and hope for the best. Every
+            CrewTransition doesn't send your answers to an AI and hope for the best. Every
             recommendation passes through a multi-layered analysis pipeline backed by
             structured knowledge documents, deterministic scoring, and domain-specific
             intelligence built exclusively for aviation professionals.
@@ -736,7 +736,7 @@ export default function Home() {
               },
               {
                 title: "Partial Completion Handling",
-                desc: "Adapts analysis depth to your completion level with explicit confidence disclosures, so you always know where the evidence is strong and where it&apos;s inferred.",
+                desc: "Adapts analysis depth to your completion level with explicit confidence disclosures, so you always know where the evidence is strong and where it's inferred.",
               },
             ].map((item) => (
               <div key={item.title}>

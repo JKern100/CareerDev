@@ -134,7 +134,7 @@ function BookPageInner() {
   }
 
   return (
-    <>
+    <div style={{ flex: 1 }}>
       <AppHeader />
       <div className="container" style={{ maxWidth: "900px" }}>
         <h1 style={{ marginBottom: "0.25rem" }}>Book a Session</h1>
@@ -273,6 +273,6 @@ function BookPageInner() {
           </button>
         </div>
       </div>
-    </>
+    </div>
   );
 }

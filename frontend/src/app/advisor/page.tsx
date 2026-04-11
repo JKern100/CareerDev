@@ -155,7 +155,7 @@ export default function AdvisorDashboard() {
   });
 
   return (
-    <>
+    <div style={{ flex: 1 }}>
       <AppHeader />
       <div className="container" style={{ maxWidth: "900px" }}>
         <h1 style={{ marginBottom: "0.25rem" }}>Advisor Dashboard</h1>
@@ -405,6 +405,6 @@ export default function AdvisorDashboard() {
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 }

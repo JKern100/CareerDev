@@ -18,6 +18,7 @@ interface Props {
   translation?: QuestionTranslation;
   uiStrings?: Record<string, string>;
   currencyCode?: string;
+  unitLabel?: string;
 }
 
 export default function QuestionField({
@@ -29,6 +30,7 @@ export default function QuestionField({
   translation,
   uiStrings,
   currencyCode,
+  unitLabel,
 }: Props) {
   const renderInput = () => {
     if (isNotSure) {
@@ -188,9 +190,9 @@ export default function QuestionField({
                 onChange(v === "" ? "" : parseFloat(v));
               }}
             />
-            {currencyCode && (
+            {(currencyCode || unitLabel) && (
               <span style={{ color: "var(--muted)", fontWeight: 500, fontSize: "0.9rem", whiteSpace: "nowrap" }}>
-                {currencyCode}
+                {currencyCode || unitLabel}
               </span>
             )}
           </div>

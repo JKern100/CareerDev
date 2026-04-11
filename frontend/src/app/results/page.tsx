@@ -95,7 +95,7 @@ export default function ResultsPage() {
 
   if (loading || generating) {
     return (
-      <>
+      <div style={{ flex: 1 }}>
         <AppHeader />
         {generating ? (
           <AnalysisLoader />
@@ -105,14 +105,14 @@ export default function ResultsPage() {
             <h2 style={{ marginTop: "1rem" }}>{t("ui.loading_short")}</h2>
           </div>
         )}
-      </>
+      </div>
     );
   }
 
   if (error) {
     const isTierError = error.toLowerCase().includes("complete") || error.toLowerCase().includes("stage") || error.toLowerCase().includes("questionnaire");
     return (
-      <>
+      <div style={{ flex: 1 }}>
         <AppHeader />
         <div className="container" style={{ textAlign: "center", marginTop: "4rem" }}>
           <p style={{ color: "var(--error)", marginBottom: "1rem" }}>{error}</p>
@@ -131,12 +131,12 @@ export default function ResultsPage() {
             </button>
           </div>
         </div>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
+    <div style={{ flex: 1 }}>
       <AppHeader />
       <div className="container" style={{ maxWidth: "860px" }}>
         <div className="card" style={{ marginTop: "1rem", padding: "1.25rem" }}>
@@ -260,6 +260,6 @@ export default function ResultsPage() {
           onClose={() => setShareOpen(false)}
         />
       )}
-    </>
+    </div>
   );
 }

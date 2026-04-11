@@ -268,10 +268,11 @@ def build_system_prompt() -> str:
         "[3 universally applicable actions for the next 7 days.]\n\n"
         "---\n\n"
         "*This analysis was generated based on your questionnaire responses.*\n\n"
-        "*Salary data sourced from Cooper Fitch UAE Salary Guide 2024 and regional market "
-        "references. Figures are indicative and should be verified for your specific target "
-        "role and location. Visa and immigration information is provided as general guidance "
-        "only — always verify with a registered immigration consultant before making decisions.*\n\n"
+        "*Salary data sourced from regional market references appropriate to the user's "
+        "selected country. Figures are indicative and should be verified for your specific "
+        "target role and location. Visa and immigration information is provided as general "
+        "guidance only — always verify with a registered immigration consultant before "
+        "making decisions.*\n\n"
         "END OF OUTPUT STRUCTURE"
     )
 
@@ -345,6 +346,7 @@ def build_user_message(answers: dict, user_name: str | None, completed_at: datet
 
     language = get_val("Q007") or "English"
     comm_style = get_val("Q008") or "Direct"
+    country = get_val("Q001") or "Not specified"
     name_display = user_name or "Anonymous"
     date_display = completed_at.strftime("%Y-%m-%d") if completed_at else datetime.utcnow().strftime("%Y-%m-%d")
 
@@ -376,8 +378,16 @@ def build_user_message(answers: dict, user_name: str | None, completed_at: datet
         f"- Overall completeness: {completeness_pct}% of core questions ({completeness_label}){enrichment_note}",
         f"- Tiers completed: {', '.join(tiers_completed) if tiers_completed else 'None'}",
         f"- Tiers NOT completed: {', '.join(tiers_not_completed) if tiers_not_completed else 'All tiers complete'}",
+        f"- Country / region (Q001): {country}",
         f"- Preferred language (Q007): {language}",
         f"- Communication style (Q008): {comm_style}",
+        "",
+        f"REGION-AWARE INSTRUCTIONS: The user is based in or targeting {country}. "
+        "ALL salary data, credential recommendations, job market references, and "
+        "regulatory guidance MUST be specific to this country/region. Do NOT cite "
+        "salary guides or recommend credentials from other regions (e.g., do not cite "
+        "UAE salary guides for a US user, do not recommend UK-specific certifications "
+        "like CIPD for a US user). Use locally recognised equivalents.",
         "",
         "QUESTIONNAIRE RESPONSES:",
     ])
@@ -400,6 +410,14 @@ def build_user_message(answers: dict, user_name: str | None, completed_at: datet
                     value_str = json.dumps(value)
                 else:
                     value_str = str(value)
+
+                # Add scale range for numeric/scale questions so AI knows the bounds
+                if q.question_type == "likert_1_5":
+                    value_str += " (scale: 1–5)"
+                elif q.question_type == "slider_0_10":
+                    low = q.min_val if q.min_val is not None else 0
+                    high = q.max_val if q.max_val is not None else 10
+                    value_str += f" (scale: {low}–{high})"
             else:
                 value_str = "[NULL]"
 

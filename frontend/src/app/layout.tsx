@@ -19,7 +19,9 @@ export default function RootLayout({
         <link rel="icon" href="/logo.svg" type="image/svg+xml" />
       </head>
       <body>
-        {children}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+          {children}
+        </div>
         <footer
           style={{
             textAlign: "center",
@@ -27,7 +29,6 @@ export default function RootLayout({
             fontSize: "0.75rem",
             color: "#64748b",
             borderTop: "1px solid var(--border)",
-            marginTop: "2rem",
           }}
         >
           {APP_VERSION}

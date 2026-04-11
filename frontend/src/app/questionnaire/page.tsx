@@ -359,7 +359,7 @@ function QuestionnaireContent() {
     ];
 
     return (
-      <>
+      <div style={{ flex: 1 }}>
         <AppHeader />
         <div className="container" style={{ maxWidth: "640px", marginTop: "2rem" }}>
           <div style={{ textAlign: "center", marginBottom: "2rem" }}>
@@ -516,7 +516,7 @@ function QuestionnaireContent() {
             </button>
           </div>
         </div>
-      </>
+      </div>
     );
   }
 
@@ -532,7 +532,7 @@ function QuestionnaireContent() {
     const minsLeft = Math.ceil((stageConf.screens - tierScreenNum + 1) * minsPerScreen);
 
     return (
-      <>
+      <div style={{ flex: 1 }}>
         <AppHeader />
         <div className="container">
           <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0.25rem" }}>
@@ -604,8 +604,15 @@ function QuestionnaireContent() {
                 isNotSure={answers[q.question_id]?.value === "not_sure"}
                 translation={qTr?.[q.question_id]}
                 uiStrings={ui}
-                currencyCode={q.question_type === "numeric" ? (
+                currencyCode={q.question_type === "numeric" && /currency|salary|compensation|rent|debt|budget|cash/i.test(q.prompt) ? (
                   (answers["Q003"]?.value as string) || currencyCode || undefined
+                ) : undefined}
+                unitLabel={q.question_type === "numeric" && !/currency|salary|compensation|rent|debt|budget|cash/i.test(q.prompt) ? (
+                  /year/i.test(q.prompt) ? "years"
+                  : /days?\b/i.test(q.prompt) ? "days"
+                  : /month/i.test(q.prompt) ? "months"
+                  : /hour/i.test(q.prompt) ? "hours"
+                  : undefined
                 ) : undefined}
                 onChange={(val) => {
                   setAnswers((prev) => ({
@@ -753,7 +760,7 @@ function QuestionnaireContent() {
             </>
           )}
         </div>
-      </>
+      </div>
     );
   }
 

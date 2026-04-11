@@ -137,7 +137,7 @@ export default function SummaryPage() {
   if (!summary) return null;
 
   return (
-    <>
+    <div style={{ flex: 1 }}>
     <AppHeader />
     <div className="container" style={{ maxWidth: "720px" }}>
       <p className="text-sm text-muted" style={{ textAlign: "right", marginBottom: "0.25rem" }}>
@@ -377,6 +377,6 @@ export default function SummaryPage() {
           : p("generated_plain")}
       </p>
     </div>
-    </>
+    </div>
   );
 }
