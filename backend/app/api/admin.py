@@ -931,12 +931,7 @@ async def get_coach_user_usage(
     db: AsyncSession = Depends(get_db),
 ):
     """Get AI coach usage for a specific user."""
-    try:
-        user_uuid = uuid.UUID(user_id)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid user ID")
-
-    user_result = await db.execute(select(User).where(User.id == user_uuid))
+    user_result = await db.execute(select(User).where(User.id == user_id))
     target_user = user_result.scalar_one_or_none()
     if not target_user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -946,30 +941,30 @@ async def get_coach_user_usage(
     week_ago = now - timedelta(days=7)
 
     total_result = await db.execute(
-        select(func.count()).select_from(CoachMessage).where(CoachMessage.user_id == user_uuid)
+        select(func.count()).select_from(CoachMessage).where(CoachMessage.user_id == user_id)
     )
     total = total_result.scalar() or 0
 
     user_msg_result = await db.execute(
         select(func.count()).select_from(CoachMessage).where(
-            CoachMessage.user_id == user_uuid, CoachMessage.role == "user"
+            CoachMessage.user_id == user_id, CoachMessage.role == "user"
         )
     )
     user_msgs = user_msg_result.scalar() or 0
 
     first_result = await db.execute(
-        select(func.min(CoachMessage.created_at)).where(CoachMessage.user_id == user_uuid)
+        select(func.min(CoachMessage.created_at)).where(CoachMessage.user_id == user_id)
     )
     first_at = first_result.scalar()
 
     last_result = await db.execute(
-        select(func.max(CoachMessage.created_at)).where(CoachMessage.user_id == user_uuid)
+        select(func.max(CoachMessage.created_at)).where(CoachMessage.user_id == user_id)
     )
     last_at = last_result.scalar()
 
     today_result = await db.execute(
         select(func.count()).select_from(CoachMessage).where(
-            CoachMessage.user_id == user_uuid,
+            CoachMessage.user_id == user_id,
             CoachMessage.role == "user",
             CoachMessage.created_at >= today_start,
         )
@@ -978,7 +973,7 @@ async def get_coach_user_usage(
 
     week_result = await db.execute(
         select(func.count()).select_from(CoachMessage).where(
-            CoachMessage.user_id == user_uuid,
+            CoachMessage.user_id == user_id,
             CoachMessage.role == "user",
             CoachMessage.created_at >= week_ago,
         )
@@ -986,7 +981,7 @@ async def get_coach_user_usage(
     week_count = week_result.scalar() or 0
 
     return CoachUserUsage(
-        user_id=str(user_uuid),
+        user_id=str(user_id),
         user_email=target_user.email,
         total_messages=total,
         user_messages=user_msgs,
