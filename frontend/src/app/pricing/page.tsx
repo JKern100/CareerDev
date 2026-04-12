@@ -1,10 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { getMe, createCheckout, validatePromo, redeemPromo, PromoValidation } from "@/lib/api";
+import { getMe, getPaddleCheckoutInfo, validatePromo, redeemPromo, PromoValidation } from "@/lib/api";
 import AppHeader from "@/components/AppHeader";
 import { useTranslation } from "@/hooks/useTranslation";
+
+declare global {
+  interface Window {
+    Paddle?: {
+      Initialize: (opts: { token: string; environment?: string }) => void;
+      Checkout: {
+        open: (opts: {
+          items: { priceId: string; quantity: number }[];
+          customer?: { email: string };
+          customData?: Record<string, string>;
+          settings?: { successUrl?: string };
+        }) => void;
+      };
+    };
+  }
+}
 
 export default function PricingPage() {
   const router = useRouter();
@@ -14,11 +30,14 @@ export default function PricingPage() {
   const [isPremium, setIsPremium] = useState(false);
   const [loading, setLoading] = useState<string | null>(null);
   const [loggedIn, setLoggedIn] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+  const [userId, setUserId] = useState("");
   const [promoInput, setPromoInput] = useState("");
   const [promoResult, setPromoResult] = useState<PromoValidation | null>(null);
   const [promoError, setPromoError] = useState("");
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoSuccess, setPromoSuccess] = useState("");
+  const paddleInitialized = useRef(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -29,23 +48,64 @@ export default function PricingPage() {
         setLoggedIn(true);
         setCurrentPlan(me.plan);
         setIsPremium(me.is_premium);
+        setUserEmail(me.email);
+        setUserId(me.id);
       })
       .catch(() => {});
   }, []);
 
-  async function handleCheckout(plan: "pro" | "monthly") {
+  // Load Paddle.js
+  useEffect(() => {
+    const clientToken = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN;
+    if (!clientToken || paddleInitialized.current) return;
+
+    const script = document.createElement("script");
+    script.src = "https://cdn.paddle.com/paddle/v2/paddle.js";
+    script.async = true;
+    script.onload = () => {
+      if (window.Paddle && !paddleInitialized.current) {
+        paddleInitialized.current = true;
+        window.Paddle.Initialize({
+          token: clientToken,
+        });
+      }
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      // Don't remove script on cleanup — Paddle should stay loaded
+    };
+  }, []);
+
+  async function handleCheckout(plan: "pro") {
     if (!loggedIn) {
       router.push("/register");
       return;
     }
     setLoading(plan);
     try {
-      const { checkout_url } = await createCheckout(plan);
-      window.location.href = checkout_url;
+      // Get the Paddle price ID from the backend
+      const info = await getPaddleCheckoutInfo(plan);
+
+      if (!window.Paddle) {
+        // Paddle.js not loaded — fall back to promo code section
+        setPromoError("Payment system is loading. Please try again in a moment, or use an access code below.");
+        document.getElementById("promo-section")?.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+
+      // Open the Paddle checkout overlay
+      window.Paddle.Checkout.open({
+        items: [{ priceId: info.price_id, quantity: 1 }],
+        customer: { email: userEmail },
+        customData: { user_id: userId },
+        settings: {
+          successUrl: `${window.location.origin}/dashboard?payment=success`,
+        },
+      });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "";
       if (msg.includes("not configured") || msg.includes("503") || msg.includes("Service Unavailable")) {
-        // Payment provider not set up — scroll to promo section
         setPromoError("Payment system is being set up. Use an access code below to unlock Pro.");
         document.getElementById("promo-section")?.scrollIntoView({ behavior: "smooth", block: "center" });
       } else {
@@ -67,7 +127,6 @@ export default function PricingPage() {
       const result = await validatePromo(promoInput.trim(), "pro");
       setPromoResult(result);
       if (result.is_free) {
-        // Auto-redeem full unlock codes
         const redeem = await redeemPromo(promoInput.trim(), "pro");
         if (redeem.redeemed) {
           setPromoSuccess(redeem.message);
@@ -155,7 +214,7 @@ export default function PricingPage() {
             </ul>
 
             <button
-              onClick={() => !alreadyPro && handleCheckout("monthly")}
+              onClick={() => !alreadyPro && handleCheckout("pro")}
               disabled={alreadyPro || loading !== null}
               style={{
                 ...styles.ctaBtn,
@@ -166,7 +225,7 @@ export default function PricingPage() {
                 cursor: alreadyPro ? "default" : "pointer",
               }}
             >
-              {loading === "monthly" ? p("redirecting") : alreadyPro ? p("current_plan") : p("start_pro")}
+              {loading === "pro" ? p("redirecting") : alreadyPro ? p("current_plan") : p("start_pro")}
             </button>
             {!alreadyPro && (
               <p style={{ color: "#475569", fontSize: "0.78rem", marginTop: "0.5rem", textAlign: "center" }}>

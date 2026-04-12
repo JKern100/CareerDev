@@ -35,14 +35,19 @@ class Settings(BaseSettings):
     LLM_MODEL: str = "gemini-2.5-flash"
     EMBEDDING_MODEL: str = "text-embedding-3-small"
 
-    # LemonSqueezy
+    # LemonSqueezy (legacy — kept for existing data)
     LEMONSQUEEZY_API_KEY: str = ""
     LEMONSQUEEZY_STORE_ID: str = ""
     LEMONSQUEEZY_WEBHOOK_SECRET: str = ""
-    # Product variant IDs for each tier (set in LemonSqueezy dashboard)
-    LEMONSQUEEZY_VARIANT_PRO: str = ""       # one-time ~$29
-    LEMONSQUEEZY_VARIANT_PREMIUM: str = ""   # one-time ~$49
-    LEMONSQUEEZY_VARIANT_MONTHLY: str = ""   # subscription ~$15/mo
+    LEMONSQUEEZY_VARIANT_PRO: str = ""
+    LEMONSQUEEZY_VARIANT_PREMIUM: str = ""
+    LEMONSQUEEZY_VARIANT_MONTHLY: str = ""
+
+    # Paddle
+    PADDLE_API_KEY: str = ""
+    PADDLE_WEBHOOK_SECRET: str = ""
+    PADDLE_PRICE_PRO: str = ""  # pri_xxx — $9/month subscription
+    PADDLE_ENVIRONMENT: str = "production"  # "sandbox" or "production"
 
     @property
     def async_database_url(self) -> str:

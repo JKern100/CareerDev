@@ -757,6 +757,15 @@ export async function getSubscription() {
   return request<SubscriptionStatus>("/payment/subscription");
 }
 
+export interface PaddleCheckoutInfo {
+  price_id: string;
+  environment: string;
+}
+
+export async function getPaddleCheckoutInfo(plan: string) {
+  return request<PaddleCheckoutInfo>(`/payment/paddle-info/${plan}`);
+}
+
 // Promo Codes
 export interface PromoValidation {
   valid: boolean;

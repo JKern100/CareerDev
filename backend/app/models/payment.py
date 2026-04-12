@@ -1,6 +1,6 @@
 """Payment and subscription models.
 
-Tracks user purchases and subscriptions via LemonSqueezy.
+Tracks user purchases and subscriptions via Paddle (and legacy LemonSqueezy).
 """
 
 import uuid
@@ -48,9 +48,14 @@ class Subscription(Base):
     plan: Mapped[str] = mapped_column(String(30), default="free")  # "free", "pro", "premium", "monthly"
     is_active: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    # LemonSqueezy subscription (for monthly plan only)
+    # LemonSqueezy (legacy)
     ls_subscription_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
     ls_customer_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+
+    # Paddle
+    paddle_subscription_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    paddle_customer_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    paddle_transaction_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     # Dates
     activated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
