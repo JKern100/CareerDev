@@ -449,23 +449,29 @@ def build_user_message(answers: dict, user_name: str | None, completed_at: datet
 
 
 def check_completion_gate(answers: dict) -> tuple[bool, str]:
-    """Check that all required questions are answered and consent is given.
+    """Check that all required Tier 1+2 questions are answered and consent is given.
+
+    Only checks questions from the progressive tier system (Tier 1 & 2).
+    Tier 3 is optional enrichment and should never block analysis.
 
     Returns:
         (passed, error_message) — passed is True if gate is satisfied.
     """
+    from app.services.routing import TIER1_QUESTION_IDS, TIER2_QUESTION_IDS
+
     qbank = get_question_bank()
     answered_ids = set(answers.keys())
+    tier12_ids = TIER1_QUESTION_IDS | TIER2_QUESTION_IDS
 
     # Check consent
     q005 = answers.get("Q005")
     if not q005 or q005.get("value") != "Yes":
         return False, "Consent to data processing (Q005) must be 'Yes' before analysis can run."
 
-    # Check all required questions
+    # Check required questions in Tier 1 & 2 only
     missing = []
     for q in qbank:
-        if q.required and q.question_id not in answered_ids:
+        if q.required and q.question_id in tier12_ids and q.question_id not in answered_ids:
             missing.append(f"{q.question_id} ({q.prompt[:50]}...)")
 
     if missing:
