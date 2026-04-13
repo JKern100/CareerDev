@@ -15,10 +15,6 @@ const nextConfig = {
         source: "/(.*)",
         headers: [
           {
-            key: "X-Frame-Options",
-            value: "DENY",
-          },
-          {
             key: "X-Content-Type-Options",
             value: "nosniff",
           },
@@ -42,8 +38,8 @@ const nextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.paddle.com",
-              "style-src 'self' 'unsafe-inline'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.paddle.com https://*.paddle.com",
+              "style-src 'self' 'unsafe-inline' https://*.paddle.com",
               "img-src 'self' data: blob: https:",
               "font-src 'self' data:",
               "connect-src 'self' https://accounts.google.com https://oauth2.googleapis.com https://*.lemonsqueezy.com https://*.paddle.com",
