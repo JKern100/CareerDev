@@ -1,7 +1,7 @@
 """Payment API routes.
 
-Handles checkout URL creation for authenticated users and
-LemonSqueezy webhook processing for payment events.
+Handles Paddle checkout integration, webhook processing, and subscription
+status management. Legacy LemonSqueezy webhook kept for existing integrations.
 """
 
 import json
@@ -28,7 +28,9 @@ from app.services.payment import (
     activate_plan,
     handle_subscription_cancelled,
     handle_subscription_expired,
+    handle_subscription_renewed,
     verify_webhook_signature,
+    verify_paddle_webhook,
     is_premium,
     _variant_map,
 )
@@ -43,12 +45,14 @@ router = APIRouter(prefix="/payment", tags=["payment"])
 # ── Schemas ──────────────────────────────────────────────────────────────
 
 class CheckoutRequest(BaseModel):
-    plan: str  # "pro", "premium", "monthly"
-
+    plan: str
 
 class CheckoutResponse(BaseModel):
     checkout_url: str
 
+class PaddleCheckoutInfoResponse(BaseModel):
+    price_id: str
+    environment: str
 
 class SubscriptionOut(BaseModel):
     plan: str
@@ -59,7 +63,37 @@ class SubscriptionOut(BaseModel):
     cancelled_at: str | None
 
 
-# ── Checkout ─────────────────────────────────────────────────────────────
+# ── Paddle Checkout Info ────────────────────────────────────────────────
+
+PADDLE_PLAN_PRICES = {
+    "pro": lambda: settings.PADDLE_PRICE_PRO,
+}
+
+
+@router.get("/paddle-info/{plan}", response_model=PaddleCheckoutInfoResponse)
+async def get_paddle_checkout_info(
+    plan: str,
+    user: User = Depends(get_current_user),
+):
+    """Return the Paddle price ID and environment for the given plan.
+
+    The frontend uses this to open the Paddle.js checkout overlay.
+    """
+    price_getter = PADDLE_PLAN_PRICES.get(plan)
+    if not price_getter:
+        raise HTTPException(status_code=400, detail=f"Invalid plan: {plan}")
+
+    price_id = price_getter()
+    if not price_id:
+        raise HTTPException(status_code=503, detail="Payment system not configured for this plan")
+
+    return PaddleCheckoutInfoResponse(
+        price_id=price_id,
+        environment=settings.PADDLE_ENVIRONMENT,
+    )
+
+
+# ── Legacy LemonSqueezy Checkout ────────────────────────────────────────
 
 PLAN_TO_VARIANT = {
     "pro": lambda: settings.LEMONSQUEEZY_VARIANT_PRO,
@@ -76,7 +110,7 @@ async def create_checkout(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Create a LemonSqueezy checkout URL for the given plan."""
+    """Create a LemonSqueezy checkout URL (legacy fallback)."""
     if data.plan not in PLAN_TO_VARIANT:
         raise HTTPException(status_code=400, detail=f"Invalid plan: {data.plan}")
 
@@ -118,19 +152,198 @@ async def get_subscription_status(
     )
 
 
-# ── Webhook ──────────────────────────────────────────────────────────────
+# ── Paddle Webhook ───────────────────────────────────────────────────────
+
+@router.post("/webhook/paddle")
+async def paddle_webhook(request: Request):
+    """Handle Paddle Billing webhook events.
+
+    Events handled:
+    - transaction.completed: Payment succeeded
+    - subscription.activated: Subscription started
+    - subscription.updated: Subscription renewed or changed
+    - subscription.canceled: User cancelled
+    - subscription.past_due: Payment failed
+    """
+    body = await request.body()
+    signature = request.headers.get("paddle-signature", "")
+
+    if not verify_paddle_webhook(body, signature):
+        logger.warning("Paddle webhook signature verification failed")
+        raise HTTPException(status_code=403, detail="Invalid signature")
+
+    try:
+        payload = json.loads(body)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid JSON")
+
+    event_type = payload.get("event_type", "")
+    data = payload.get("data", {})
+
+    logger.info("Paddle webhook: %s", event_type)
+
+    async with async_session() as db:
+        try:
+            if event_type == "transaction.completed":
+                await _handle_paddle_transaction_completed(data, db)
+            elif event_type == "subscription.activated":
+                await _handle_paddle_subscription_activated(data, db)
+            elif event_type == "subscription.updated":
+                await _handle_paddle_subscription_updated(data, db)
+            elif event_type == "subscription.canceled":
+                sub_id = data.get("id", "")
+                await handle_subscription_cancelled(sub_id, db)
+            elif event_type == "subscription.past_due":
+                sub_id = data.get("id", "")
+                await handle_subscription_expired(sub_id, db)
+            else:
+                logger.info("Unhandled Paddle event: %s", event_type)
+        except Exception:
+            logger.exception("Paddle webhook processing failed for %s", event_type)
+            raise HTTPException(status_code=500, detail="Webhook processing failed")
+
+    return {"status": "ok"}
+
+
+async def _handle_paddle_transaction_completed(data: dict, db: AsyncSession):
+    """Process a completed Paddle transaction."""
+    transaction_id = data.get("id", "")
+    customer_id = data.get("customer_id", "")
+    subscription_id = data.get("subscription_id")
+    custom_data = data.get("custom_data") or {}
+    user_id_str = custom_data.get("user_id")
+
+    if not user_id_str:
+        # Try to find user by email from the checkout
+        logger.warning("Paddle transaction %s missing user_id in custom_data", transaction_id)
+        return
+
+    try:
+        user_id = UUID(user_id_str)
+    except ValueError:
+        logger.error("Invalid user_id in Paddle transaction: %s", user_id_str)
+        return
+
+    items = data.get("items", [])
+    total = data.get("details", {}).get("totals", {}).get("total", "0")
+    currency = data.get("currency_code", "USD")
+    next_billed_at = data.get("next_billed_at")
+
+    # Determine plan from price ID
+    plan = "pro"  # default
+    for item in items:
+        price_id = item.get("price", {}).get("id", "")
+        if price_id == settings.PADDLE_PRICE_PRO:
+            plan = "pro"
+
+    amount_cents = int(total) if total else 0
+
+    # Parse expiry from billing period or next_billed_at
+    expires_at = None
+    if next_billed_at:
+        try:
+            expires_at = datetime.fromisoformat(next_billed_at.replace("Z", "+00:00"))
+        except (ValueError, AttributeError):
+            pass
+    elif subscription_id:
+        billing_period = data.get("billing_period", {})
+        ends_at = billing_period.get("ends_at")
+        if ends_at:
+            try:
+                expires_at = datetime.fromisoformat(ends_at.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                pass
+
+    await activate_plan(
+        user_id=user_id,
+        plan=plan,
+        order_id=f"paddle-{transaction_id}",
+        customer_id=customer_id,
+        variant_id=settings.PADDLE_PRICE_PRO,
+        amount_cents=amount_cents,
+        currency=currency,
+        subscription_id=subscription_id,
+        expires_at=expires_at,
+        db=db,
+        paddle_subscription_id=subscription_id,
+        paddle_customer_id=customer_id,
+        paddle_transaction_id=transaction_id,
+    )
+    logger.info("Paddle: activated plan %s for user %s (txn %s)", plan, user_id, transaction_id)
+
+
+async def _handle_paddle_subscription_activated(data: dict, db: AsyncSession):
+    """Process a Paddle subscription activation."""
+    subscription_id = data.get("id", "")
+    customer_id = data.get("customer_id", "")
+    custom_data = data.get("custom_data") or {}
+    user_id_str = custom_data.get("user_id")
+    next_billed_at = data.get("next_billed_at")
+
+    if not user_id_str:
+        logger.warning("Paddle subscription %s missing user_id in custom_data", subscription_id)
+        return
+
+    try:
+        user_id = UUID(user_id_str)
+    except ValueError:
+        logger.error("Invalid user_id in Paddle subscription: %s", user_id_str)
+        return
+
+    items = data.get("items", [])
+    plan = "pro"
+    amount_cents = 0
+    currency = data.get("currency_code", "USD")
+    for item in items:
+        price_id = item.get("price", {}).get("id", "")
+        if price_id == settings.PADDLE_PRICE_PRO:
+            plan = "pro"
+        unit_price = item.get("price", {}).get("unit_price", {})
+        amount_cents = int(unit_price.get("amount", "0"))
+
+    expires_at = None
+    if next_billed_at:
+        try:
+            expires_at = datetime.fromisoformat(next_billed_at.replace("Z", "+00:00"))
+        except (ValueError, AttributeError):
+            pass
+
+    await activate_plan(
+        user_id=user_id,
+        plan=plan,
+        order_id=f"paddle-sub-{subscription_id}",
+        customer_id=customer_id,
+        variant_id=settings.PADDLE_PRICE_PRO,
+        amount_cents=amount_cents,
+        currency=currency,
+        subscription_id=subscription_id,
+        expires_at=expires_at,
+        db=db,
+        paddle_subscription_id=subscription_id,
+        paddle_customer_id=customer_id,
+    )
+    logger.info("Paddle: subscription %s activated for user %s", subscription_id, user_id)
+
+
+async def _handle_paddle_subscription_updated(data: dict, db: AsyncSession):
+    """Process a Paddle subscription update (renewal, plan change)."""
+    subscription_id = data.get("id", "")
+    status = data.get("status", "")
+    next_billed_at = data.get("next_billed_at")
+
+    if status == "active":
+        await handle_subscription_renewed(subscription_id, next_billed_at, db)
+    elif status in ("past_due", "paused"):
+        await handle_subscription_expired(subscription_id, db)
+    elif status == "canceled":
+        await handle_subscription_cancelled(subscription_id, db)
+
+
+# ── Legacy LemonSqueezy Webhook ──────────────────────────────────────────
 
 @router.post("/webhook/lemonsqueezy")
 async def lemonsqueezy_webhook(request: Request):
-    """Handle LemonSqueezy webhook events.
-
-    Events handled:
-    - order_created: One-time purchase completed
-    - subscription_created: Monthly subscription started
-    - subscription_updated: Subscription renewed or changed
-    - subscription_cancelled: User cancelled (still active until period end)
-    - subscription_expired: Subscription period ended
-    """
+    """Handle LemonSqueezy webhook events (legacy)."""
     body = await request.body()
     signature = request.headers.get("x-signature", "")
 
@@ -145,7 +358,6 @@ async def lemonsqueezy_webhook(request: Request):
     event_name = payload.get("meta", {}).get("event_name", "")
     custom_data = payload.get("meta", {}).get("custom_data", {})
     user_id_str = custom_data.get("user_id")
-
     attrs = payload.get("data", {}).get("attributes", {})
 
     logger.info("LemonSqueezy webhook: %s (user: %s)", event_name, user_id_str)
@@ -153,128 +365,58 @@ async def lemonsqueezy_webhook(request: Request):
     async with async_session() as db:
         try:
             if event_name == "order_created":
-                await _handle_order_created(user_id_str, attrs, db)
+                await _handle_ls_order_created(user_id_str, attrs, db)
             elif event_name == "subscription_created":
-                await _handle_subscription_created(user_id_str, attrs, db)
-            elif event_name == "subscription_updated":
-                await _handle_subscription_updated(attrs, db)
-            elif event_name == "subscription_cancelled":
+                await _handle_ls_subscription_created(user_id_str, attrs, db)
+            elif event_name in ("subscription_cancelled",):
                 sub_id = str(payload.get("data", {}).get("id", ""))
                 await handle_subscription_cancelled(sub_id, db)
-            elif event_name == "subscription_expired":
+            elif event_name in ("subscription_expired",):
                 sub_id = str(payload.get("data", {}).get("id", ""))
                 await handle_subscription_expired(sub_id, db)
-            else:
-                logger.info("Unhandled webhook event: %s", event_name)
-        except ValueError as e:
-            logger.error("Webhook data error for event %s: %s", event_name, e)
-            raise HTTPException(status_code=400, detail=f"Invalid webhook data: {e}")
         except Exception:
-            logger.exception("Webhook processing failed for event %s", event_name)
-            raise HTTPException(status_code=500, detail="Webhook processing failed")
+            logger.exception("LemonSqueezy webhook failed for %s", event_name)
 
     return {"status": "ok"}
 
 
-async def _handle_order_created(user_id_str: str | None, attrs: dict, db: AsyncSession):
-    """Process a one-time purchase."""
+async def _handle_ls_order_created(user_id_str: str | None, attrs: dict, db: AsyncSession):
     if not user_id_str:
-        logger.warning("Order webhook missing user_id in custom_data")
         return
-
-    try:
-        user_id = UUID(user_id_str)
-    except ValueError:
-        raise ValueError(f"Invalid user_id in order webhook: {user_id_str!r}")
+    user_id = UUID(user_id_str)
     order_id = str(attrs.get("identifier", attrs.get("order_number", "")))
     customer_id = str(attrs.get("customer_id", ""))
     variant_id = str(attrs.get("first_order_item", {}).get("variant_id", ""))
-    total = attrs.get("total", 0)
-    currency = attrs.get("currency", "USD")
-
-    plan = _variant_map().get(variant_id, "pro")
-
-    # Skip if this is a subscription order (handled by subscription_created)
     if attrs.get("first_order_item", {}).get("is_subscription", False):
         return
-
+    plan = _variant_map().get(variant_id, "pro")
     await activate_plan(
-        user_id=user_id,
-        plan=plan,
-        order_id=order_id,
-        customer_id=customer_id,
-        variant_id=variant_id,
-        amount_cents=total,
-        currency=currency,
-        subscription_id=None,
-        expires_at=None,  # one-time = lifetime
-        db=db,
+        user_id=user_id, plan=plan, order_id=order_id, customer_id=customer_id,
+        variant_id=variant_id, amount_cents=attrs.get("total", 0),
+        currency=attrs.get("currency", "USD"), subscription_id=None,
+        expires_at=None, db=db,
     )
-    logger.info("Activated plan %s for user %s (order %s)", plan, user_id, order_id)
 
 
-async def _handle_subscription_created(user_id_str: str | None, attrs: dict, db: AsyncSession):
-    """Process a new subscription."""
+async def _handle_ls_subscription_created(user_id_str: str | None, attrs: dict, db: AsyncSession):
     if not user_id_str:
-        logger.warning("Subscription webhook missing user_id in custom_data")
         return
-
-    try:
-        user_id = UUID(user_id_str)
-    except ValueError:
-        raise ValueError(f"Invalid user_id in subscription webhook: {user_id_str!r}")
+    user_id = UUID(user_id_str)
     order_id = str(attrs.get("order_id", ""))
     customer_id = str(attrs.get("customer_id", ""))
     subscription_id = str(attrs.get("subscription_id", attrs.get("id", "")))
     variant_id = str(attrs.get("variant_id", ""))
     renews_at = attrs.get("renews_at")
-
     expires = None
     if renews_at:
         try:
             expires = datetime.fromisoformat(renews_at.replace("Z", "+00:00"))
         except (ValueError, AttributeError):
             pass
-
     plan = _variant_map().get(variant_id, "monthly")
-
     await activate_plan(
-        user_id=user_id,
-        plan=plan,
-        order_id=f"sub-{order_id}",
-        customer_id=customer_id,
-        variant_id=variant_id,
-        amount_cents=attrs.get("total", 0),
-        currency=attrs.get("currency", "USD"),
-        subscription_id=subscription_id,
-        expires_at=expires,
-        db=db,
+        user_id=user_id, plan=plan, order_id=f"sub-{order_id}", customer_id=customer_id,
+        variant_id=variant_id, amount_cents=attrs.get("total", 0),
+        currency=attrs.get("currency", "USD"), subscription_id=subscription_id,
+        expires_at=expires, db=db,
     )
-    logger.info("Subscription created for user %s (sub %s)", user_id, subscription_id)
-
-
-async def _handle_subscription_updated(attrs: dict, db: AsyncSession):
-    """Process a subscription renewal/update."""
-    subscription_id = str(attrs.get("id", ""))
-    renews_at = attrs.get("renews_at")
-    status = attrs.get("status", "")
-
-    result = await db.execute(
-        select(Subscription).where(Subscription.ls_subscription_id == subscription_id)
-    )
-    sub = result.scalar_one_or_none()
-    if not sub:
-        return
-
-    if status == "active":
-        sub.is_active = True
-        sub.cancelled_at = None
-        if renews_at:
-            try:
-                sub.expires_at = datetime.fromisoformat(renews_at.replace("Z", "+00:00"))
-            except (ValueError, AttributeError):
-                pass
-    elif status in ("past_due", "unpaid"):
-        sub.is_active = False
-
-    await db.commit()

@@ -1,7 +1,7 @@
-"""LemonSqueezy payment service.
+"""Payment service.
 
-Handles checkout URL generation, webhook processing, and subscription
-status management.
+Handles Paddle checkout, webhook verification, and subscription management.
+Legacy LemonSqueezy support kept for existing data.
 """
 
 import hashlib
@@ -19,13 +19,13 @@ from app.models.payment import Payment, Subscription
 
 logger = logging.getLogger(__name__)
 
-LS_API = "https://api.lemonsqueezy.com/v1"
+# ── LemonSqueezy legacy ─────────────────────────────────────────────────
 
-VARIANT_TO_PLAN = {}  # populated at first use
+LS_API = "https://api.lemonsqueezy.com/v1"
+VARIANT_TO_PLAN = {}
 
 
 def _variant_map() -> dict[str, str]:
-    """Build variant_id → plan name mapping from config."""
     global VARIANT_TO_PLAN
     if not VARIANT_TO_PLAN:
         if settings.LEMONSQUEEZY_VARIANT_PRO:
@@ -49,7 +49,6 @@ def verify_webhook_signature(payload: bytes, signature: str) -> bool:
     """Verify LemonSqueezy webhook HMAC-SHA256 signature."""
     secret = settings.LEMONSQUEEZY_WEBHOOK_SECRET
     if not secret:
-        logger.warning("LEMONSQUEEZY_WEBHOOK_SECRET not set — rejecting webhook")
         return False
     expected = hmac.new(secret.encode(), payload, hashlib.sha256).hexdigest()
     return hmac.compare_digest(expected, signature)
@@ -61,10 +60,7 @@ async def create_checkout_url(
     user_email: str,
     user_name: str | None = None,
 ) -> str:
-    """Create a LemonSqueezy checkout URL for the given variant.
-
-    Passes user_id as custom data so we can link the payment back to the user.
-    """
+    """Create a LemonSqueezy checkout URL (legacy)."""
     if not settings.LEMONSQUEEZY_API_KEY:
         raise RuntimeError("LemonSqueezy API key not configured")
 
@@ -75,42 +71,73 @@ async def create_checkout_url(
                 "checkout_data": {
                     "email": user_email,
                     "name": user_name or "",
-                    "custom": {
-                        "user_id": str(user_id),
-                    },
+                    "custom": {"user_id": str(user_id)},
                 },
                 "product_options": {
                     "redirect_url": f"{settings.FRONTEND_URL}/plan?payment=success",
                 },
             },
             "relationships": {
-                "store": {
-                    "data": {
-                        "type": "stores",
-                        "id": settings.LEMONSQUEEZY_STORE_ID,
-                    }
-                },
-                "variant": {
-                    "data": {
-                        "type": "variants",
-                        "id": variant_id,
-                    }
-                },
+                "store": {"data": {"type": "stores", "id": settings.LEMONSQUEEZY_STORE_ID}},
+                "variant": {"data": {"type": "variants", "id": variant_id}},
             },
         }
     }
 
     async with httpx.AsyncClient() as client:
-        resp = await client.post(
-            f"{LS_API}/checkouts",
-            json=payload,
-            headers=_ls_headers(),
-            timeout=15,
-        )
+        resp = await client.post(f"{LS_API}/checkouts", json=payload, headers=_ls_headers(), timeout=15)
         resp.raise_for_status()
         data = resp.json()
         return data["data"]["attributes"]["url"]
 
+
+# ── Paddle ───────────────────────────────────────────────────────────────
+
+PADDLE_API = "https://api.paddle.com"
+PADDLE_SANDBOX_API = "https://sandbox-api.paddle.com"
+
+
+def _paddle_api_url() -> str:
+    if settings.PADDLE_ENVIRONMENT == "sandbox":
+        return PADDLE_SANDBOX_API
+    return PADDLE_API
+
+
+def _paddle_headers() -> dict[str, str]:
+    return {
+        "Authorization": f"Bearer {settings.PADDLE_API_KEY}",
+        "Content-Type": "application/json",
+    }
+
+
+def verify_paddle_webhook(payload: bytes, signature_header: str) -> bool:
+    """Verify Paddle webhook signature.
+
+    Paddle Billing sends a Paddle-Signature header with format:
+    ts=<timestamp>;h1=<hash>
+    The hash is HMAC-SHA256 of "<timestamp>:<payload>" using the webhook secret.
+    """
+    secret = settings.PADDLE_WEBHOOK_SECRET
+    if not secret:
+        logger.warning("PADDLE_WEBHOOK_SECRET not set — rejecting webhook")
+        return False
+
+    try:
+        parts = dict(p.split("=", 1) for p in signature_header.split(";"))
+        ts = parts.get("ts", "")
+        h1 = parts.get("h1", "")
+        if not ts or not h1:
+            return False
+
+        signed_payload = f"{ts}:{payload.decode()}"
+        expected = hmac.new(secret.encode(), signed_payload.encode(), hashlib.sha256).hexdigest()
+        return hmac.compare_digest(expected, h1)
+    except Exception:
+        logger.exception("Paddle webhook signature verification failed")
+        return False
+
+
+# ── Shared helpers ───────────────────────────────────────────────────────
 
 async def get_or_create_subscription(user_id: UUID, db: AsyncSession) -> Subscription:
     """Get or create the subscription record for a user."""
@@ -137,9 +164,11 @@ async def activate_plan(
     subscription_id: str | None,
     expires_at: datetime | None,
     db: AsyncSession,
+    paddle_subscription_id: str | None = None,
+    paddle_customer_id: str | None = None,
+    paddle_transaction_id: str | None = None,
 ) -> Subscription:
     """Record a payment and activate the user's plan."""
-    # Record payment
     payment = Payment(
         user_id=user_id,
         ls_order_id=order_id,
@@ -153,20 +182,30 @@ async def activate_plan(
     )
     db.add(payment)
 
-    # Update subscription
     sub = await get_or_create_subscription(user_id, db)
-    # Only upgrade, never downgrade
     plan_rank = {"free": 0, "pro": 1, "monthly": 2, "premium": 3}
     if plan_rank.get(plan, 0) >= plan_rank.get(sub.plan, 0):
         sub.plan = plan
         sub.is_active = True
         sub.activated_at = datetime.utcnow()
-        sub.ls_customer_id = customer_id
-        if subscription_id:
+        sub.cancelled_at = None
+
+        # Paddle IDs
+        if paddle_subscription_id:
+            sub.paddle_subscription_id = paddle_subscription_id
+        if paddle_customer_id:
+            sub.paddle_customer_id = paddle_customer_id
+        if paddle_transaction_id:
+            sub.paddle_transaction_id = paddle_transaction_id
+
+        # Legacy LS IDs
+        if customer_id and not paddle_customer_id:
+            sub.ls_customer_id = customer_id
+        if subscription_id and not paddle_subscription_id:
             sub.ls_subscription_id = subscription_id
+
         if expires_at:
             sub.expires_at = expires_at
-        sub.cancelled_at = None
 
     await db.commit()
     await db.refresh(sub)
@@ -178,10 +217,16 @@ async def handle_subscription_cancelled(
     db: AsyncSession,
 ) -> None:
     """Handle subscription cancellation — mark as cancelled but keep active until expiry."""
+    # Check Paddle first, then legacy LS
     result = await db.execute(
-        select(Subscription).where(Subscription.ls_subscription_id == subscription_id)
+        select(Subscription).where(Subscription.paddle_subscription_id == subscription_id)
     )
     sub = result.scalar_one_or_none()
+    if not sub:
+        result = await db.execute(
+            select(Subscription).where(Subscription.ls_subscription_id == subscription_id)
+        )
+        sub = result.scalar_one_or_none()
     if sub:
         sub.cancelled_at = datetime.utcnow()
         await db.commit()
@@ -193,12 +238,38 @@ async def handle_subscription_expired(
 ) -> None:
     """Handle subscription expiry — deactivate."""
     result = await db.execute(
-        select(Subscription).where(Subscription.ls_subscription_id == subscription_id)
+        select(Subscription).where(Subscription.paddle_subscription_id == subscription_id)
     )
     sub = result.scalar_one_or_none()
-    if sub and sub.plan == "monthly":
+    if not sub:
+        result = await db.execute(
+            select(Subscription).where(Subscription.ls_subscription_id == subscription_id)
+        )
+        sub = result.scalar_one_or_none()
+    if sub and sub.plan in ("monthly", "pro"):
         sub.is_active = False
         sub.plan = "free"
+        await db.commit()
+
+
+async def handle_subscription_renewed(
+    subscription_id: str,
+    next_billed_at: str | None,
+    db: AsyncSession,
+) -> None:
+    """Handle subscription renewal — extend expiry."""
+    result = await db.execute(
+        select(Subscription).where(Subscription.paddle_subscription_id == subscription_id)
+    )
+    sub = result.scalar_one_or_none()
+    if sub:
+        sub.is_active = True
+        sub.cancelled_at = None
+        if next_billed_at:
+            try:
+                sub.expires_at = datetime.fromisoformat(next_billed_at.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                pass
         await db.commit()
 
 
@@ -208,10 +279,10 @@ def is_premium(sub: Subscription | None) -> bool:
         return False
     if not sub.is_active:
         return False
-    # One-time purchases (pro/premium) never expire
     if sub.plan in ("pro", "premium"):
+        if sub.expires_at and sub.expires_at < datetime.utcnow():
+            return False
         return True
-    # Monthly subscription — check expiry
     if sub.plan == "monthly":
         if sub.expires_at and sub.expires_at < datetime.utcnow():
             return False
