@@ -67,6 +67,7 @@ export default function PricingPage() {
         paddleInitialized.current = true;
         window.Paddle.Initialize({
           token: clientToken,
+          environment: "production",
         });
       }
     };
