@@ -86,6 +86,8 @@ export default function PricingPage() {
     try {
       // Get the Paddle price ID from the backend
       const info = await getPaddleCheckoutInfo(plan);
+      console.log("[Paddle] price_id:", info.price_id, "env:", info.environment);
+      console.log("[Paddle] window.Paddle:", !!window.Paddle);
 
       if (!window.Paddle) {
         // Paddle.js not loaded — fall back to promo code section
