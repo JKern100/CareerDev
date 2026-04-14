@@ -97,7 +97,6 @@ export default function PricingPage() {
       // Open the Paddle checkout overlay
       window.Paddle.Checkout.open({
         items: [{ priceId: info.price_id, quantity: 1 }],
-        customer: { email: userEmail },
       });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "";
