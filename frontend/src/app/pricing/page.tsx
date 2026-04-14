@@ -98,10 +98,6 @@ export default function PricingPage() {
       window.Paddle.Checkout.open({
         items: [{ priceId: info.price_id, quantity: 1 }],
         customer: { email: userEmail },
-        customData: { user_id: userId },
-        settings: {
-          successUrl: `${window.location.origin}/dashboard?payment=success`,
-        },
       });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "";
