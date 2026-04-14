@@ -9,6 +9,8 @@ import logging
 from datetime import datetime
 from uuid import UUID
 
+import httpx
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -91,6 +93,48 @@ async def get_paddle_checkout_info(
         price_id=price_id,
         environment=settings.PADDLE_ENVIRONMENT,
     )
+
+
+# ── Paddle Transaction (debug) ──────────────────────────────────────────
+
+@router.post("/paddle-create-transaction")
+async def paddle_create_transaction(
+    request: Request,
+    user: User = Depends(get_current_user),
+):
+    """Create a Paddle transaction via API — returns transactionId for checkout.
+
+    Also useful for debugging: returns the raw Paddle API response.
+    """
+    price_id = settings.PADDLE_PRICE_PRO
+    if not price_id or not settings.PADDLE_API_KEY:
+        raise HTTPException(status_code=503, detail="Paddle not configured")
+
+    paddle_api = "https://api.paddle.com"
+    payload = {
+        "items": [{"price_id": price_id, "quantity": 1}],
+        "customer_email": user.email,
+        "custom_data": {"user_id": str(user.id)},
+    }
+
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            f"{paddle_api}/transactions",
+            json=payload,
+            headers={
+                "Authorization": f"Bearer {settings.PADDLE_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            timeout=15,
+        )
+        body = resp.json()
+        logger.info("Paddle create transaction: status=%s body=%s", resp.status_code, json.dumps(body)[:500])
+
+        if resp.status_code >= 400:
+            return {"error": True, "status": resp.status_code, "detail": body}
+
+        transaction_id = body.get("data", {}).get("id")
+        return {"error": False, "transaction_id": transaction_id, "detail": body}
 
 
 # ── Legacy LemonSqueezy Checkout ────────────────────────────────────────
