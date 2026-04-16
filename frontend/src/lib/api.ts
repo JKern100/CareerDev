@@ -757,6 +757,12 @@ export async function getSubscription() {
   return request<SubscriptionStatus>("/payment/subscription");
 }
 
+export async function cancelSubscription() {
+  return request<SubscriptionStatus>("/payment/cancel-subscription", {
+    method: "POST",
+  });
+}
+
 export interface PaddleCheckoutInfo {
   price_id: string;
   environment: string;

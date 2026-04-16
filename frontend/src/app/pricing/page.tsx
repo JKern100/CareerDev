@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { getMe, getPaddleCheckoutInfo, validatePromo, redeemPromo, PromoValidation } from "@/lib/api";
+import { getMe, getPaddleCheckoutInfo, getSubscription, cancelSubscription, validatePromo, redeemPromo, PromoValidation, SubscriptionStatus } from "@/lib/api";
 import AppHeader from "@/components/AppHeader";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -37,6 +37,10 @@ export default function PricingPage() {
   const [promoError, setPromoError] = useState("");
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoSuccess, setPromoSuccess] = useState("");
+  const [subscription, setSubscription] = useState<SubscriptionStatus | null>(null);
+  const [cancelConfirm, setCancelConfirm] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState("");
   const paddleInitialized = useRef(false);
 
   useEffect(() => {
@@ -50,7 +54,9 @@ export default function PricingPage() {
         setIsPremium(me.is_premium);
         setUserEmail(me.email);
         setUserId(me.id);
+        return getSubscription();
       })
+      .then((sub) => setSubscription(sub))
       .catch(() => {});
   }, []);
 
@@ -138,6 +144,20 @@ export default function PricingPage() {
       setPromoError(err instanceof Error ? err.message : "Invalid code");
     } finally {
       setPromoLoading(false);
+    }
+  }
+
+  async function handleCancelSubscription() {
+    setCancelling(true);
+    setCancelError("");
+    try {
+      const sub = await cancelSubscription();
+      setSubscription(sub);
+      setCancelConfirm(false);
+    } catch (err: unknown) {
+      setCancelError(err instanceof Error ? err.message : "Failed to cancel subscription");
+    } finally {
+      setCancelling(false);
     }
   }
 
@@ -233,6 +253,49 @@ export default function PricingPage() {
             )}
           </div>
         </div>
+
+        {/* Cancel Subscription */}
+        {alreadyPro && subscription && !subscription.cancelled_at && (
+          <div style={{ textAlign: "center", marginBottom: "2rem", padding: "1.25rem", background: "rgba(255,255,255,0.02)", border: "1px solid #1e293b", borderRadius: "12px" }}>
+            {!cancelConfirm ? (
+              <button
+                onClick={() => setCancelConfirm(true)}
+                style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", fontSize: "0.82rem", textDecoration: "underline" }}
+              >
+                Cancel subscription
+              </button>
+            ) : (
+              <div>
+                <p style={{ color: "#f1f5f9", fontSize: "0.9rem", marginBottom: "0.75rem" }}>
+                  Are you sure? You&apos;ll keep Pro access until {subscription.expires_at ? new Date(subscription.expires_at).toLocaleDateString() : "the end of your billing period"}.
+                </p>
+                <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
+                  <button
+                    onClick={handleCancelSubscription}
+                    disabled={cancelling}
+                    style={{ background: "#dc2626", color: "white", border: "none", padding: "0.5rem 1.25rem", borderRadius: "8px", cursor: "pointer", fontSize: "0.85rem", fontWeight: 600, opacity: cancelling ? 0.6 : 1 }}
+                  >
+                    {cancelling ? "Cancelling..." : "Yes, cancel"}
+                  </button>
+                  <button
+                    onClick={() => { setCancelConfirm(false); setCancelError(""); }}
+                    style={{ background: "rgba(255,255,255,0.06)", color: "#e2e8f0", border: "1px solid #334155", padding: "0.5rem 1.25rem", borderRadius: "8px", cursor: "pointer", fontSize: "0.85rem" }}
+                  >
+                    Keep subscription
+                  </button>
+                </div>
+                {cancelError && <p style={{ color: "#f87171", fontSize: "0.82rem", marginTop: "0.5rem" }}>{cancelError}</p>}
+              </div>
+            )}
+          </div>
+        )}
+        {alreadyPro && subscription?.cancelled_at && (
+          <div style={{ textAlign: "center", marginBottom: "2rem", padding: "1rem", background: "rgba(234,179,8,0.06)", border: "1px solid rgba(234,179,8,0.2)", borderRadius: "12px" }}>
+            <p style={{ color: "#fbbf24", fontSize: "0.85rem" }}>
+              Your subscription is cancelled. You have Pro access until {subscription.expires_at ? new Date(subscription.expires_at).toLocaleDateString() : "the end of your billing period"}.
+            </p>
+          </div>
+        )}
 
         {/* Promo Code */}
         <div id="promo-section" style={styles.promoSection}>

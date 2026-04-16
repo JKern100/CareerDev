@@ -273,6 +273,36 @@ async def handle_subscription_renewed(
         await db.commit()
 
 
+async def cancel_paddle_subscription(
+    user_id: UUID,
+    db: AsyncSession,
+) -> Subscription:
+    """Cancel a user's Paddle subscription at end of billing period."""
+    sub = await get_or_create_subscription(user_id, db)
+    if not sub.paddle_subscription_id:
+        raise ValueError("No active Paddle subscription found")
+    if sub.cancelled_at:
+        raise ValueError("Subscription is already cancelled")
+
+    api_url = _paddle_api_url()
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            f"{api_url}/subscriptions/{sub.paddle_subscription_id}/cancel",
+            json={"effective_from": "next_billing_period"},
+            headers=_paddle_headers(),
+            timeout=15,
+        )
+        if resp.status_code >= 400:
+            body = resp.json()
+            logger.error("Paddle cancel failed: %s %s", resp.status_code, body)
+            raise RuntimeError(f"Paddle cancel failed: {body.get('error', {}).get('detail', 'Unknown error')}")
+
+    sub.cancelled_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(sub)
+    return sub
+
+
 def is_premium(sub: Subscription | None) -> bool:
     """Check if user has an active paid plan."""
     if not sub:

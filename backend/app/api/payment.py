@@ -34,6 +34,7 @@ from app.services.payment import (
     verify_webhook_signature,
     verify_paddle_webhook,
     is_premium,
+    cancel_paddle_subscription,
     _variant_map,
 )
 from app.services.activity import log_activity
@@ -186,6 +187,28 @@ async def get_subscription_status(
 ):
     """Get the current user's subscription status."""
     sub = await get_or_create_subscription(user.id, db)
+    return SubscriptionOut(
+        plan=sub.plan,
+        is_active=sub.is_active,
+        is_premium=is_premium(sub),
+        activated_at=sub.activated_at.isoformat() if sub.activated_at else None,
+        expires_at=sub.expires_at.isoformat() if sub.expires_at else None,
+        cancelled_at=sub.cancelled_at.isoformat() if sub.cancelled_at else None,
+    )
+
+
+@router.post("/cancel-subscription", response_model=SubscriptionOut)
+async def cancel_subscription(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Cancel the current user's Paddle subscription at end of billing period."""
+    try:
+        sub = await cancel_paddle_subscription(user.id, db)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=502, detail=str(e))
     return SubscriptionOut(
         plan=sub.plan,
         is_active=sub.is_active,
