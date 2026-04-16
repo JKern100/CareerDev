@@ -249,23 +249,61 @@ async def paddle_webhook(request: Request):
     return {"status": "ok"}
 
 
+async def _resolve_paddle_user(
+    custom_data: dict,
+    customer_id: str,
+    db: AsyncSession,
+) -> UUID | None:
+    """Resolve a user_id from Paddle custom_data or by looking up the customer email."""
+    from sqlalchemy import func
+
+    user_id_str = (custom_data or {}).get("user_id")
+    if user_id_str:
+        try:
+            return UUID(user_id_str)
+        except ValueError:
+            logger.warning("Invalid user_id in Paddle custom_data: %s", user_id_str)
+
+    # Fall back: look up the customer email via Paddle API, match in our DB
+    if not customer_id or not settings.PADDLE_API_KEY:
+        return None
+
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                f"https://api.paddle.com/customers/{customer_id}",
+                headers={"Authorization": f"Bearer {settings.PADDLE_API_KEY}"},
+                timeout=10,
+            )
+            if resp.status_code >= 400:
+                logger.warning("Paddle customer lookup failed: %s", resp.status_code)
+                return None
+            email = resp.json().get("data", {}).get("email", "")
+            if not email:
+                return None
+            result = await db.execute(
+                select(User).where(func.lower(User.email) == email.strip().lower())
+            )
+            user = result.scalar_one_or_none()
+            if user:
+                logger.info("Paddle: resolved user %s via email fallback", user.id)
+                return user.id
+    except Exception:
+        logger.exception("Paddle customer email lookup failed")
+
+    return None
+
+
 async def _handle_paddle_transaction_completed(data: dict, db: AsyncSession):
     """Process a completed Paddle transaction."""
     transaction_id = data.get("id", "")
     customer_id = data.get("customer_id", "")
     subscription_id = data.get("subscription_id")
     custom_data = data.get("custom_data") or {}
-    user_id_str = custom_data.get("user_id")
 
-    if not user_id_str:
-        # Try to find user by email from the checkout
-        logger.warning("Paddle transaction %s missing user_id in custom_data", transaction_id)
-        return
-
-    try:
-        user_id = UUID(user_id_str)
-    except ValueError:
-        logger.error("Invalid user_id in Paddle transaction: %s", user_id_str)
+    user_id = await _resolve_paddle_user(custom_data, customer_id, db)
+    if not user_id:
+        logger.warning("Paddle transaction %s: could not resolve user", transaction_id)
         return
 
     items = data.get("items", [])
@@ -321,17 +359,11 @@ async def _handle_paddle_subscription_activated(data: dict, db: AsyncSession):
     subscription_id = data.get("id", "")
     customer_id = data.get("customer_id", "")
     custom_data = data.get("custom_data") or {}
-    user_id_str = custom_data.get("user_id")
     next_billed_at = data.get("next_billed_at")
 
-    if not user_id_str:
-        logger.warning("Paddle subscription %s missing user_id in custom_data", subscription_id)
-        return
-
-    try:
-        user_id = UUID(user_id_str)
-    except ValueError:
-        logger.error("Invalid user_id in Paddle subscription: %s", user_id_str)
+    user_id = await _resolve_paddle_user(custom_data, customer_id, db)
+    if not user_id:
+        logger.warning("Paddle subscription %s: could not resolve user", subscription_id)
         return
 
     items = data.get("items", [])
