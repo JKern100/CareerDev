@@ -23,6 +23,7 @@ import {
   getUserNotes,
   addUserNote,
   deleteUserNote,
+  adminActivatePlan,
   DashboardStats,
   AdminUser,
   AdminQuestion,
@@ -741,6 +742,17 @@ export default function AdminPage() {
     }
   }
 
+  async function handleActivatePlan(userId: string, email: string) {
+    if (!confirm(`Activate Pro plan for ${email}?`)) return;
+    try {
+      const result = await adminActivatePlan(userId, "pro");
+      setActionMsg(result.detail);
+      await loadUsers();
+    } catch (err: unknown) {
+      setActionMsg(err instanceof Error ? err.message : "Failed to activate plan");
+    }
+  }
+
   async function handleImpersonate(userId: string, email: string) {
     if (!confirm(`Log in as ${email}? You'll be viewing the app as this user.`)) return;
     try {
@@ -1008,6 +1020,12 @@ export default function AdminPage() {
                         {reportLoading ? "Loading..." : "View Report"}
                       </button>
                     )}
+                    <button
+                      style={{ ...styles.btnOutline, borderColor: "#22c55e", color: "#4ade80" }}
+                      onClick={() => handleActivatePlan(selectedUser.id, selectedUser.email)}
+                    >
+                      Activate Pro
+                    </button>
                     <button
                       style={{ ...styles.btnOutline, borderColor: "#2563eb", color: "#60a5fa" }}
                       onClick={() => handleImpersonate(selectedUser.id, selectedUser.email)}

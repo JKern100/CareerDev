@@ -744,6 +744,7 @@ export interface SubscriptionStatus {
   activated_at: string | null;
   expires_at: string | null;
   cancelled_at: string | null;
+  has_paddle_subscription: boolean;
 }
 
 export async function createCheckout(plan: "pro" | "premium" | "monthly") {
@@ -899,5 +900,12 @@ export async function addUserNote(userId: string, content: string) {
 export async function deleteUserNote(noteId: string) {
   return request<{ ok: boolean }>(`/admin/notes/${noteId}`, {
     method: "DELETE",
+  });
+}
+
+export async function adminActivatePlan(userId: string, plan: string = "pro") {
+  return request<{ detail: string }>(`/admin/users/${userId}/activate-plan`, {
+    method: "POST",
+    body: JSON.stringify({ plan }),
   });
 }

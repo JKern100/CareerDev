@@ -1225,3 +1225,39 @@ async def delete_user_note(
     await db.delete(note)
     await db.commit()
     return {"ok": True}
+
+
+# ── Subscription Management ────────────────────────────────────────────
+
+
+class ActivatePlanRequest(BaseModel):
+    plan: str = "pro"
+
+
+@router.post("/users/{user_id}/activate-plan")
+async def admin_activate_plan(
+    user_id: UUID,
+    data: ActivatePlanRequest,
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Manually activate a user's plan (e.g. when webhook missed them)."""
+    result = await db.execute(select(User).where(User.id == user_id))
+    u = result.scalar_one_or_none()
+    if not u:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    result = await db.execute(select(Subscription).where(Subscription.user_id == user_id))
+    sub = result.scalar_one_or_none()
+    if not sub:
+        sub = Subscription(user_id=user_id, plan="free", is_active=False)
+        db.add(sub)
+
+    sub.plan = data.plan
+    sub.is_active = True
+    sub.activated_at = datetime.now(timezone.utc)
+    sub.cancelled_at = None
+    await db.commit()
+
+    await log_activity(db, admin, "admin_activate_plan", f"Activated {data.plan} for {u.email}")
+    return {"detail": f"Activated {data.plan} for {u.email}"}

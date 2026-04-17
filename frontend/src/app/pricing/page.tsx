@@ -255,7 +255,7 @@ export default function PricingPage() {
         </div>
 
         {/* Cancel Subscription */}
-        {alreadyPro && subscription && !subscription.cancelled_at && (
+        {alreadyPro && subscription?.has_paddle_subscription && !subscription.cancelled_at && (
           <div style={{ textAlign: "center", marginBottom: "2rem", padding: "1.25rem", background: "rgba(255,255,255,0.02)", border: "1px solid #1e293b", borderRadius: "12px" }}>
             {!cancelConfirm ? (
               <button

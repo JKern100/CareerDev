@@ -64,6 +64,7 @@ class SubscriptionOut(BaseModel):
     activated_at: str | None
     expires_at: str | None
     cancelled_at: str | None
+    has_paddle_subscription: bool
 
 
 # ── Paddle Checkout Info ────────────────────────────────────────────────
@@ -187,14 +188,7 @@ async def get_subscription_status(
 ):
     """Get the current user's subscription status."""
     sub = await get_or_create_subscription(user.id, db)
-    return SubscriptionOut(
-        plan=sub.plan,
-        is_active=sub.is_active,
-        is_premium=is_premium(sub),
-        activated_at=sub.activated_at.isoformat() if sub.activated_at else None,
-        expires_at=sub.expires_at.isoformat() if sub.expires_at else None,
-        cancelled_at=sub.cancelled_at.isoformat() if sub.cancelled_at else None,
-    )
+    return _sub_out(sub)
 
 
 @router.post("/cancel-subscription", response_model=SubscriptionOut)
@@ -209,6 +203,10 @@ async def cancel_subscription(
         raise HTTPException(status_code=400, detail=str(e))
     except RuntimeError as e:
         raise HTTPException(status_code=502, detail=str(e))
+    return _sub_out(sub)
+
+
+def _sub_out(sub: Subscription) -> SubscriptionOut:
     return SubscriptionOut(
         plan=sub.plan,
         is_active=sub.is_active,
@@ -216,6 +214,7 @@ async def cancel_subscription(
         activated_at=sub.activated_at.isoformat() if sub.activated_at else None,
         expires_at=sub.expires_at.isoformat() if sub.expires_at else None,
         cancelled_at=sub.cancelled_at.isoformat() if sub.cancelled_at else None,
+        has_paddle_subscription=bool(sub.paddle_subscription_id),
     )
 
 

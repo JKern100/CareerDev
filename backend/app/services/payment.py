@@ -303,18 +303,25 @@ async def cancel_paddle_subscription(
     return sub
 
 
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _is_expired(expires_at: datetime | None) -> bool:
+    if not expires_at:
+        return False
+    now = _utcnow()
+    if expires_at.tzinfo is None:
+        return expires_at < now.replace(tzinfo=None)
+    return expires_at < now
+
+
 def is_premium(sub: Subscription | None) -> bool:
     """Check if user has an active paid plan."""
     if not sub:
         return False
     if not sub.is_active:
         return False
-    if sub.plan in ("pro", "premium"):
-        if sub.expires_at and sub.expires_at < datetime.utcnow():
-            return False
-        return True
-    if sub.plan == "monthly":
-        if sub.expires_at and sub.expires_at < datetime.utcnow():
-            return False
-        return True
+    if sub.plan in ("pro", "premium", "monthly"):
+        return not _is_expired(sub.expires_at)
     return False
