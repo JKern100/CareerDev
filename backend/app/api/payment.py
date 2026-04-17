@@ -66,6 +66,14 @@ class SubscriptionOut(BaseModel):
     cancelled_at: str | None
     has_paddle_subscription: bool
 
+class PaymentOut(BaseModel):
+    id: str
+    plan: str
+    amount_cents: int
+    currency: str
+    status: str
+    created_at: str
+
 
 # ── Paddle Checkout Info ────────────────────────────────────────────────
 
@@ -216,6 +224,35 @@ def _sub_out(sub: Subscription) -> SubscriptionOut:
         cancelled_at=sub.cancelled_at.isoformat() if sub.cancelled_at else None,
         has_paddle_subscription=bool(sub.paddle_subscription_id),
     )
+
+
+# ── Payment History ─────────────────────────────────────────────────────
+
+from app.models.payment import Payment
+
+@router.get("/history", response_model=list[PaymentOut])
+async def get_payment_history(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get the current user's payment history."""
+    result = await db.execute(
+        select(Payment)
+        .where(Payment.user_id == user.id)
+        .order_by(Payment.created_at.desc())
+    )
+    payments = result.scalars().all()
+    return [
+        PaymentOut(
+            id=str(p.id),
+            plan=p.plan,
+            amount_cents=p.amount_cents,
+            currency=p.currency,
+            status=p.status,
+            created_at=p.created_at.isoformat() if p.created_at else "",
+        )
+        for p in payments
+    ]
 
 
 # ── Paddle Webhook ───────────────────────────────────────────────────────

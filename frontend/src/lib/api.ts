@@ -764,6 +764,19 @@ export async function cancelSubscription() {
   });
 }
 
+export interface PaymentRecord {
+  id: string;
+  plan: string;
+  amount_cents: number;
+  currency: string;
+  status: string;
+  created_at: string;
+}
+
+export async function getPaymentHistory() {
+  return request<PaymentRecord[]>("/payment/history");
+}
+
 export interface PaddleCheckoutInfo {
   price_id: string;
   environment: string;

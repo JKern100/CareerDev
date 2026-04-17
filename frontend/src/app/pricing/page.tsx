@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { getMe, getPaddleCheckoutInfo, getSubscription, cancelSubscription, validatePromo, redeemPromo, PromoValidation, SubscriptionStatus } from "@/lib/api";
+import { getMe, getPaddleCheckoutInfo, getSubscription, cancelSubscription, getPaymentHistory, validatePromo, redeemPromo, PromoValidation, SubscriptionStatus, PaymentRecord } from "@/lib/api";
 import AppHeader from "@/components/AppHeader";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -38,6 +38,7 @@ export default function PricingPage() {
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoSuccess, setPromoSuccess] = useState("");
   const [subscription, setSubscription] = useState<SubscriptionStatus | null>(null);
+  const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [cancelConfirm, setCancelConfirm] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState("");
@@ -54,9 +55,9 @@ export default function PricingPage() {
         setIsPremium(me.is_premium);
         setUserEmail(me.email);
         setUserId(me.id);
-        return getSubscription();
+        getSubscription().then((sub) => setSubscription(sub)).catch(() => {});
+        getPaymentHistory().then((p) => setPayments(p)).catch(() => {});
       })
-      .then((sub) => setSubscription(sub))
       .catch(() => {});
   }, []);
 
@@ -366,10 +367,68 @@ export default function PricingPage() {
             <span>{p("cancel_anytime_desc")}</span>
           </div>
         </div>
+
+        {/* Payment History */}
+        {payments.length > 0 && (
+          <div style={{ marginTop: "2rem" }}>
+            <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "0.75rem", color: "#f1f5f9" }}>
+              Payment History
+            </h3>
+            <div style={{ border: "1px solid #1e293b", borderRadius: "12px", overflow: "hidden" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+                <thead>
+                  <tr style={{ background: "rgba(255,255,255,0.03)", borderBottom: "1px solid #1e293b" }}>
+                    <th style={thStyle}>Date</th>
+                    <th style={thStyle}>Plan</th>
+                    <th style={thStyle}>Amount</th>
+                    <th style={thStyle}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payments.map((pay) => (
+                    <tr key={pay.id} style={{ borderBottom: "1px solid #1e293b" }}>
+                      <td style={tdStyle}>
+                        {pay.created_at ? new Date(pay.created_at).toLocaleDateString() : "—"}
+                      </td>
+                      <td style={tdStyle}>
+                        <span style={{ textTransform: "capitalize" }}>{pay.plan}</span>
+                      </td>
+                      <td style={tdStyle}>
+                        {pay.amount_cents > 0
+                          ? `${(pay.amount_cents / 100).toFixed(2)} ${pay.currency}`
+                          : "Free"}
+                      </td>
+                      <td style={tdStyle}>
+                        <span style={{
+                          padding: "0.15rem 0.5rem",
+                          borderRadius: "6px",
+                          fontSize: "0.78rem",
+                          fontWeight: 600,
+                          background: pay.status === "paid" ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)",
+                          color: pay.status === "paid" ? "#4ade80" : "#f87171",
+                        }}>
+                          {pay.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
+const thStyle: React.CSSProperties = {
+  textAlign: "left", padding: "0.6rem 1rem", color: "#94a3b8", fontWeight: 600, fontSize: "0.78rem",
+  letterSpacing: "0.03em", textTransform: "uppercase",
+};
+const tdStyle: React.CSSProperties = {
+  padding: "0.6rem 1rem", color: "#cbd5e1",
+};
 
 const styles: Record<string, React.CSSProperties> = {
   page: { background: "#0a0e1a", color: "#f1f5f9", minHeight: "100vh" },
