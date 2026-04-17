@@ -187,7 +187,7 @@ async def activate_plan(
     if plan_rank.get(plan, 0) >= plan_rank.get(sub.plan, 0):
         sub.plan = plan
         sub.is_active = True
-        sub.activated_at = datetime.utcnow()
+        sub.activated_at = datetime.now(timezone.utc)
         sub.cancelled_at = None
 
         # Paddle IDs
@@ -228,7 +228,7 @@ async def handle_subscription_cancelled(
         )
         sub = result.scalar_one_or_none()
     if sub:
-        sub.cancelled_at = datetime.utcnow()
+        sub.cancelled_at = datetime.now(timezone.utc)
         await db.commit()
 
 

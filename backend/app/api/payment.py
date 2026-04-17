@@ -22,7 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db, async_session
 from app.models.user import User
-from app.models.payment import Subscription
+from app.models.payment import Payment, Subscription
 from app.api.deps import get_current_user
 from app.services.payment import (
     create_checkout_url,
@@ -227,8 +227,6 @@ def _sub_out(sub: Subscription) -> SubscriptionOut:
 
 
 # ── Payment History ─────────────────────────────────────────────────────
-
-from app.models.payment import Payment
 
 @router.get("/history", response_model=list[PaymentOut])
 async def get_payment_history(

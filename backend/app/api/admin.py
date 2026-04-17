@@ -814,10 +814,9 @@ async def get_user_activity(
 ):
     """Get activity events for a specific user."""
     cutoff = datetime.utcnow() - timedelta(days=days)
-    user_uuid = uuid.UUID(user_id)
     query = (
         select(ActivityEvent)
-        .where(ActivityEvent.user_id == user_uuid, ActivityEvent.created_at >= cutoff)
+        .where(ActivityEvent.user_id == user_id, ActivityEvent.created_at >= cutoff)
     )
     if action:
         query = query.where(ActivityEvent.action == action)
@@ -1274,9 +1273,8 @@ async def admin_activate_plan(
     sub.is_active = True
     sub.activated_at = datetime.now(timezone.utc)
     sub.cancelled_at = None
-    await db.commit()
-
     await log_activity(db, admin, "admin_activate_plan", f"Activated {data.plan} for {u.email}")
+    await db.commit()
     return {"detail": f"Activated {data.plan} for {u.email}"}
 
 
