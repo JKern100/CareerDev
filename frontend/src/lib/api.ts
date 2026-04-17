@@ -290,6 +290,8 @@ export interface AdminUser {
   is_online: boolean;
   login_count: number;
   created_at: string;
+  plan: string;
+  is_premium: boolean;
 }
 
 export interface DashboardStats {

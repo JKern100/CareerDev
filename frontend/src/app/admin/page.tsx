@@ -961,6 +961,13 @@ export default function AdminPage() {
                   <p style={styles.muted}>{selectedUser.email}</p>
                   <div style={{ display: "flex", gap: "0.5rem", margin: "0.75rem 0", flexWrap: "wrap" }}>
                     <span style={styles.badge}>Role: {selectedUser.role}</span>
+                    <span style={{
+                      ...styles.badge,
+                      background: selectedUser.is_premium ? "rgba(59,130,246,0.15)" : undefined,
+                      color: selectedUser.is_premium ? "#60a5fa" : undefined,
+                    }}>
+                      Plan: {selectedUser.plan}{selectedUser.is_premium ? " (active)" : ""}
+                    </span>
                     <span style={styles.badge}>Answers: {selectedUser.answers_count}</span>
                     <span style={styles.badge}>Reports: {selectedUser.reports_count}</span>
                     <span style={styles.badge}>
@@ -1215,6 +1222,16 @@ export default function AdminPage() {
                           }}>
                             {u.role}
                           </span>
+                          {u.is_premium && (
+                            <span style={{
+                              ...styles.roleBadge,
+                              background: "#dbeafe",
+                              color: "#1e40af",
+                              marginLeft: "4px",
+                            }}>
+                              PRO
+                            </span>
+                          )}
                         </td>
                         <td style={styles.td}>
                           {u.questionnaire_completed ? (

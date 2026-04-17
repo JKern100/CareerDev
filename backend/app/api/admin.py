@@ -53,6 +53,8 @@ class AdminUserOut(BaseModel):
     is_online: bool
     login_count: int
     created_at: datetime
+    plan: str
+    is_premium: bool
 
 
 class AdminUserUpdate(BaseModel):
@@ -210,16 +212,24 @@ async def list_users(
         .subquery()
     )
 
+    sub_plan_sub = (
+        select(Subscription.user_id, Subscription.plan, Subscription.is_active)
+        .subquery()
+    )
+
     query = (
         select(
             User,
             func.coalesce(answers_sub.c.cnt, 0).label("answers_count"),
             func.coalesce(reports_sub.c.cnt, 0).label("reports_count"),
             func.coalesce(analysis_sub.c.cnt, 0).label("analysis_count"),
+            func.coalesce(sub_plan_sub.c.plan, "free").label("user_plan"),
+            func.coalesce(sub_plan_sub.c.is_active, False).label("plan_active"),
         )
         .outerjoin(answers_sub, User.id == answers_sub.c.user_id)
         .outerjoin(reports_sub, User.id == reports_sub.c.user_id)
         .outerjoin(analysis_sub, User.id == analysis_sub.c.user_id)
+        .outerjoin(sub_plan_sub, User.id == sub_plan_sub.c.user_id)
         .order_by(User.created_at.desc())
     )
 
@@ -247,8 +257,10 @@ async def list_users(
             is_online=u.last_active_at is not None and u.last_active_at >= online_threshold,
             login_count=u.login_count or 0,
             created_at=u.created_at,
+            plan=user_plan or "free",
+            is_premium=bool(plan_active) and user_plan in ("pro", "premium", "monthly"),
         )
-        for u, answers_count, reports_count, analysis_count in rows
+        for u, answers_count, reports_count, analysis_count, user_plan, plan_active in rows
     ]
 
 
@@ -273,6 +285,9 @@ async def get_user(
         select(func.count(AnalysisReport.id)).where(AnalysisReport.user_id == u.id)
     )).scalar() or 0
 
+    sub_result = await db.execute(select(Subscription).where(Subscription.user_id == u.id))
+    sub = sub_result.scalar_one_or_none()
+
     now = datetime.utcnow()
     online_threshold = now - timedelta(minutes=5)
 
@@ -293,6 +308,8 @@ async def get_user(
         is_online=u.last_active_at is not None and u.last_active_at >= online_threshold,
         login_count=u.login_count or 0,
         created_at=u.created_at,
+        plan=sub.plan if sub else "free",
+        is_premium=bool(sub and sub.is_active and sub.plan in ("pro", "premium", "monthly")),
     )
 
 
@@ -1261,3 +1278,49 @@ async def admin_activate_plan(
 
     await log_activity(db, admin, "admin_activate_plan", f"Activated {data.plan} for {u.email}")
     return {"detail": f"Activated {data.plan} for {u.email}"}
+
+
+@router.get("/users/{user_id}/subscription")
+async def admin_get_user_subscription(
+    user_id: UUID,
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """View a user's subscription details for diagnostics."""
+    result = await db.execute(select(User).where(User.id == user_id))
+    u = result.scalar_one_or_none()
+    if not u:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    result = await db.execute(select(Subscription).where(Subscription.user_id == user_id))
+    sub = result.scalar_one_or_none()
+
+    result = await db.execute(
+        select(Payment).where(Payment.user_id == user_id).order_by(Payment.created_at.desc())
+    )
+    payments = result.scalars().all()
+
+    return {
+        "user_email": u.email,
+        "subscription": {
+            "plan": sub.plan if sub else "free",
+            "is_active": sub.is_active if sub else False,
+            "paddle_subscription_id": sub.paddle_subscription_id if sub else None,
+            "paddle_customer_id": sub.paddle_customer_id if sub else None,
+            "paddle_transaction_id": sub.paddle_transaction_id if sub else None,
+            "activated_at": sub.activated_at.isoformat() if sub and sub.activated_at else None,
+            "expires_at": sub.expires_at.isoformat() if sub and sub.expires_at else None,
+            "cancelled_at": sub.cancelled_at.isoformat() if sub and sub.cancelled_at else None,
+        } if sub else None,
+        "payments": [
+            {
+                "id": str(p.id),
+                "plan": p.plan,
+                "amount_cents": p.amount_cents,
+                "currency": p.currency,
+                "status": p.status,
+                "created_at": p.created_at.isoformat() if p.created_at else None,
+            }
+            for p in payments
+        ],
+    }

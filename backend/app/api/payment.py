@@ -362,7 +362,10 @@ async def _handle_paddle_transaction_completed(data: dict, db: AsyncSession):
 
     user_id = await _resolve_paddle_user(custom_data, customer_id, db)
     if not user_id:
-        logger.warning("Paddle transaction %s: could not resolve user", transaction_id)
+        logger.warning(
+            "Paddle transaction %s: could not resolve user. customer_id=%s custom_data=%s",
+            transaction_id, customer_id, json.dumps(custom_data),
+        )
         return
 
     items = data.get("items", [])
@@ -422,7 +425,10 @@ async def _handle_paddle_subscription_activated(data: dict, db: AsyncSession):
 
     user_id = await _resolve_paddle_user(custom_data, customer_id, db)
     if not user_id:
-        logger.warning("Paddle subscription %s: could not resolve user", subscription_id)
+        logger.warning(
+            "Paddle subscription %s: could not resolve user. customer_id=%s custom_data=%s",
+            subscription_id, customer_id, json.dumps(custom_data),
+        )
         return
 
     items = data.get("items", [])
