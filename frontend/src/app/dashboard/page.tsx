@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { getMe, getSummary, getCareerReport, getProgress, resendVerification } from "@/lib/api";
+import { useRouter, useSearchParams } from "next/navigation";
+import { getMe, getSummary, getCareerReport, getProgress, resendVerification, syncSubscription } from "@/lib/api";
 import FlowerSpinner from "@/components/FlowerSpinner";
 import ReferralCard from "@/components/ReferralCard";
 import { useTranslation, LANGUAGES, LangCode } from "@/hooks/useTranslation";
@@ -25,10 +25,12 @@ interface UserState {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { lang, setLang, t } = useTranslation();
   const [user, setUser] = useState<UserState | null>(null);
   const [loading, setLoading] = useState(true);
   const [langOpen, setLangOpen] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -39,7 +41,21 @@ export default function DashboardPage() {
 
     async function load() {
       try {
-        const [me, progress] = await Promise.all([getMe(), getProgress()]);
+        const [meInitial, progress] = await Promise.all([getMe(), getProgress()]);
+        let me = meInitial;
+
+        // If returning from payment, sync with Paddle to activate plan
+        if (searchParams.get("payment") === "success" && !me.is_premium) {
+          try {
+            const sub = await syncSubscription();
+            if (sub.is_premium) {
+              me = await getMe();
+              setPaymentSuccess(true);
+            }
+          } catch { /* continue with current state */ }
+        } else if (searchParams.get("payment") === "success" && me.is_premium) {
+          setPaymentSuccess(true);
+        }
         const [summaryResult, analysisResult] = await Promise.allSettled([
           getSummary(),
           getCareerReport(),
@@ -187,6 +203,25 @@ export default function DashboardPage() {
           </button>
         </div>
       </nav>
+
+      {/* Payment success banner */}
+      {paymentSuccess && (
+        <div style={{ maxWidth: "900px", margin: "0 auto", padding: "0 1rem" }}>
+          <div style={{
+            background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.25)",
+            borderRadius: "10px", padding: "0.75rem 1rem", display: "flex",
+            alignItems: "center", justifyContent: "space-between", fontSize: "0.85rem",
+            marginBottom: "0.5rem",
+          }}>
+            <span style={{ color: "#4ade80" }}>
+              Payment successful! Your Pro plan is now active.
+            </span>
+            <button onClick={() => setPaymentSuccess(false)} style={{
+              background: "none", border: "none", color: "#64748b", cursor: "pointer", fontSize: "1rem",
+            }}>&times;</button>
+          </div>
+        </div>
+      )}
 
       {/* Email verification banner */}
       {!user.emailVerified && <VerifyBanner email={user.email} />}

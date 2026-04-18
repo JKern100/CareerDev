@@ -2,14 +2,14 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { getMe, getPaddleCheckoutInfo, getSubscription, cancelSubscription, getPaymentHistory, validatePromo, redeemPromo, PromoValidation, SubscriptionStatus, PaymentRecord } from "@/lib/api";
+import { getMe, getPaddleCheckoutInfo, getSubscription, syncSubscription, cancelSubscription, getPaymentHistory, validatePromo, redeemPromo, PromoValidation, SubscriptionStatus, PaymentRecord } from "@/lib/api";
 import AppHeader from "@/components/AppHeader";
 import { useTranslation } from "@/hooks/useTranslation";
 
 declare global {
   interface Window {
     Paddle?: {
-      Initialize: (opts: { token: string; environment?: string }) => void;
+      Initialize: (opts: { token: string; eventCallback?: (event: { name: string }) => void }) => void;
       Checkout: {
         open: (opts: {
           items: { priceId: string; quantity: number }[];
@@ -74,6 +74,23 @@ export default function PricingPage() {
         paddleInitialized.current = true;
         window.Paddle.Initialize({
           token: clientToken,
+          eventCallback: (event) => {
+            if (event.name === "checkout.completed") {
+              // Verify payment with Paddle API and activate plan
+              setTimeout(async () => {
+                try {
+                  const sub = await syncSubscription();
+                  if (sub.is_premium) {
+                    setCurrentPlan(sub.plan);
+                    setIsPremium(true);
+                    setSubscription(sub);
+                    getPaymentHistory().then(setPayments).catch(() => {});
+                    router.push("/dashboard?payment=success");
+                  }
+                } catch { /* webhook will handle it */ }
+              }, 2000);
+            }
+          },
         });
       }
     };

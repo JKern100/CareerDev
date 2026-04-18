@@ -226,6 +226,132 @@ def _sub_out(sub: Subscription) -> SubscriptionOut:
     )
 
 
+# ── Payment Sync (verify with Paddle directly) ─────────────────────────
+
+@router.post("/sync", response_model=SubscriptionOut)
+@limiter.limit("5/minute")
+async def sync_subscription(
+    request: Request,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Check Paddle for the user's transactions and activate their plan.
+
+    This is a fallback for when the webhook fails to fire or link the payment.
+    The frontend calls this after a successful checkout.
+    """
+    if not settings.PADDLE_API_KEY:
+        raise HTTPException(status_code=503, detail="Payment system not configured")
+
+    api_url = "https://api.paddle.com"
+    if settings.PADDLE_ENVIRONMENT == "sandbox":
+        api_url = "https://sandbox-api.paddle.com"
+
+    headers = {
+        "Authorization": f"Bearer {settings.PADDLE_API_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    sub = await get_or_create_subscription(user.id, db)
+
+    # If already active Pro, just return current status
+    if is_premium(sub):
+        return _sub_out(sub)
+
+    # Search Paddle for transactions with this user's email
+    try:
+        async with httpx.AsyncClient() as client:
+            # First, find customers by email
+            resp = await client.get(
+                f"{api_url}/customers",
+                params={"search": user.email},
+                headers=headers,
+                timeout=15,
+            )
+            if resp.status_code >= 400:
+                logger.warning("Paddle customer search failed: %s", resp.status_code)
+                return _sub_out(sub)
+
+            customers = resp.json().get("data", [])
+            if not customers:
+                logger.info("Paddle sync: no customer found for %s", user.email)
+                return _sub_out(sub)
+
+            customer_id = customers[0].get("id", "")
+
+            # Get transactions for this customer
+            resp = await client.get(
+                f"{api_url}/transactions",
+                params={"customer_id": customer_id, "status": "completed"},
+                headers=headers,
+                timeout=15,
+            )
+            if resp.status_code >= 400:
+                logger.warning("Paddle transaction search failed: %s", resp.status_code)
+                return _sub_out(sub)
+
+            transactions = resp.json().get("data", [])
+            if not transactions:
+                logger.info("Paddle sync: no completed transactions for %s", user.email)
+                return _sub_out(sub)
+
+            # Use the most recent completed transaction
+            txn = transactions[0]
+            transaction_id = txn.get("id", "")
+            subscription_id = txn.get("subscription_id")
+            total = txn.get("details", {}).get("totals", {}).get("total", "0")
+            currency = txn.get("currency_code", "USD")
+
+            # Check if we already recorded this transaction
+            existing = await db.execute(
+                select(Payment).where(Payment.ls_order_id == f"paddle-{transaction_id}")
+            )
+            if existing.scalar_one_or_none():
+                logger.info("Paddle sync: transaction %s already recorded", transaction_id)
+                return _sub_out(sub)
+
+            # Parse expiry
+            expires_at = None
+            next_billed = txn.get("next_billed_at")
+            if next_billed:
+                try:
+                    expires_at = datetime.fromisoformat(next_billed.replace("Z", "+00:00"))
+                except (ValueError, AttributeError):
+                    pass
+            elif subscription_id:
+                bp = txn.get("billing_period", {})
+                ends_at = bp.get("ends_at")
+                if ends_at:
+                    try:
+                        expires_at = datetime.fromisoformat(ends_at.replace("Z", "+00:00"))
+                    except (ValueError, AttributeError):
+                        pass
+
+            await activate_plan(
+                user_id=user.id,
+                plan="pro",
+                order_id=f"paddle-{transaction_id}",
+                customer_id=customer_id,
+                variant_id=settings.PADDLE_PRICE_PRO,
+                amount_cents=int(total) if total else 0,
+                currency=currency,
+                subscription_id=subscription_id,
+                expires_at=expires_at,
+                db=db,
+                paddle_subscription_id=subscription_id,
+                paddle_customer_id=customer_id,
+                paddle_transaction_id=transaction_id,
+            )
+            logger.info("Paddle sync: activated pro for %s (txn %s)", user.email, transaction_id)
+
+            sub = await get_or_create_subscription(user.id, db)
+            return _sub_out(sub)
+
+    except Exception:
+        logger.exception("Paddle sync failed for %s", user.email)
+        return _sub_out(sub)
+
+
 # ── Payment History ─────────────────────────────────────────────────────
 
 @router.get("/history", response_model=list[PaymentOut])

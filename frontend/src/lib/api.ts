@@ -760,6 +760,10 @@ export async function getSubscription() {
   return request<SubscriptionStatus>("/payment/subscription");
 }
 
+export async function syncSubscription() {
+  return request<SubscriptionStatus>("/payment/sync", { method: "POST" });
+}
+
 export async function cancelSubscription() {
   return request<SubscriptionStatus>("/payment/cancel-subscription", {
     method: "POST",
