@@ -185,6 +185,15 @@ async def me(
     impersonated = getattr(user, "_impersonated", False)
     is_admin = user.role in ("admin", "auditor")
 
+    # Admins/auditors always get Pro for their own account.
+    # Impersonation shows the user's real plan so admins can diagnose issues.
+    if is_admin and not impersonated:
+        plan = "pro"
+        premium = True
+    else:
+        plan = sub.plan if sub else "free"
+        premium = _is_premium(sub)
+
     return {
         "id": str(user.id),
         "email": user.email,
@@ -195,8 +204,8 @@ async def me(
         "can_regenerate_summary": user.can_regenerate_summary,
         "last_tier_completed_at": user.last_tier_completed_at.isoformat() if user.last_tier_completed_at else None,
         "email_verified": user.email_verified,
-        "plan": "pro" if (impersonated or is_admin) else (sub.plan if sub else "free"),
-        "is_premium": True if (impersonated or is_admin) else _is_premium(sub),
+        "plan": plan,
+        "is_premium": premium,
     }
 
 
