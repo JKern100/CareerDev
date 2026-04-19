@@ -188,7 +188,7 @@ async def activate_plan(
     if plan_rank.get(plan, 0) >= plan_rank.get(sub.plan, 0):
         sub.plan = plan
         sub.is_active = True
-        sub.activated_at = datetime.now(timezone.utc)
+        sub.activated_at = _utcnow()
         sub.cancelled_at = None
 
         # Paddle IDs
@@ -242,7 +242,7 @@ async def handle_subscription_cancelled(
         )
         sub = result.scalars().first()
     if sub:
-        sub.cancelled_at = datetime.now(timezone.utc)
+        sub.cancelled_at = _utcnow()
         await db.commit()
 
 
@@ -311,14 +311,14 @@ async def cancel_paddle_subscription(
             logger.error("Paddle cancel failed: %s %s", resp.status_code, body)
             raise RuntimeError(f"Paddle cancel failed: {body.get('error', {}).get('detail', 'Unknown error')}")
 
-    sub.cancelled_at = datetime.now(timezone.utc)
+    sub.cancelled_at = _utcnow()
     await db.commit()
     await db.refresh(sub)
     return sub
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def _is_expired(expires_at: datetime | None) -> bool:

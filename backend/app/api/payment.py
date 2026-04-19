@@ -621,7 +621,7 @@ async def _handle_paddle_refund(data: dict, db: AsyncSession):
     if sub.plan != "free":
         sub.plan = "free"
         sub.is_active = False
-        sub.cancelled_at = datetime.now(timezone.utc)
+        sub.cancelled_at = datetime.utcnow()
         await db.commit()
         logger.info("Paddle refund: revoked plan for user %s (txn %s)", user_id, transaction_id)
 

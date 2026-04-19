@@ -1275,7 +1275,7 @@ async def admin_activate_plan(
 
         sub.plan = data.plan
         sub.is_active = True
-        sub.activated_at = datetime.now(timezone.utc)
+        sub.activated_at = datetime.utcnow()
         sub.cancelled_at = None
         await log_activity(db, admin, "admin_activate_plan", f"Activated {data.plan} for {u.email}")
         await db.commit()
@@ -1307,7 +1307,7 @@ async def admin_revoke_plan(
 
         sub.plan = "free"
         sub.is_active = False
-        sub.cancelled_at = datetime.now(timezone.utc)
+        sub.cancelled_at = datetime.utcnow()
         await log_activity(db, admin, "admin_revoke_plan", f"Revoked plan for {u.email}")
         await db.commit()
         return {"detail": f"Revoked plan for {u.email}"}
