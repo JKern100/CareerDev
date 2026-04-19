@@ -613,15 +613,10 @@ async def _handle_paddle_refund(data: dict, db: AsyncSession):
     payment_result = await db.execute(
         select(Payment).where(
             Payment.user_id == user_id,
-            Payment.ls_order_id.like(f"paddle-%{transaction_id}%"),
+            Payment.ls_order_id == f"paddle-{transaction_id}",
         )
     )
     refunded_payments = payment_result.scalars().all()
-    if not refunded_payments:
-        payment_result = await db.execute(
-            select(Payment).where(Payment.user_id == user_id).order_by(Payment.created_at.desc())
-        )
-        refunded_payments = payment_result.scalars().all()[:1]
 
     for p in refunded_payments:
         p.status = "refunded"

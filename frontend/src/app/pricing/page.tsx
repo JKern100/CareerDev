@@ -478,8 +478,12 @@ export default function PricingPage() {
                           borderRadius: "6px",
                           fontSize: "0.78rem",
                           fontWeight: 600,
-                          background: pay.status === "paid" ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)",
-                          color: pay.status === "paid" ? "#4ade80" : "#f87171",
+                          background: pay.status === "paid" ? "rgba(34,197,94,0.12)"
+                            : pay.status === "refunded" ? "rgba(100,116,139,0.12)"
+                            : "rgba(239,68,68,0.12)",
+                          color: pay.status === "paid" ? "#4ade80"
+                            : pay.status === "refunded" ? "#94a3b8"
+                            : "#f87171",
                         }}>
                           {pay.status}
                         </span>
