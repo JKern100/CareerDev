@@ -137,3 +137,38 @@ async def send_reset_email(to_email: str, reset_token: str) -> bool:
 
     html = _branded_email(body)
     return await _send_email(to_email, "Reset your CrewTransition password", html)
+
+
+async def send_pro_welcome_email(to_email: str, user_name: str | None = None) -> bool:
+    """Send a welcome email when a user activates Pro."""
+    name = user_name or "there"
+    dashboard_url = f"{settings.FRONTEND_URL}/dashboard"
+
+    body = f"""\
+              <h2 style="color: #1e293b; font-size: 20px; margin: 0 0 16px;">Welcome to Pro, {name}!</h2>
+              <p style="margin: 0 0 12px;">Your Pro plan is now active. Here&rsquo;s what you&rsquo;ve unlocked:</p>
+              <ul style="margin: 0 0 20px; padding-left: 20px; color: #334155;">
+                <li style="margin-bottom: 8px;"><strong>Full Career Analysis</strong> &mdash; AI-powered career pathways with salary data and credentials</li>
+                <li style="margin-bottom: 8px;"><strong>AI Career Coach</strong> &mdash; unlimited conversations to guide your transition</li>
+                <li style="margin-bottom: 8px;"><strong>Action Plan</strong> &mdash; personalised steps to move forward</li>
+                <li style="margin-bottom: 8px;"><strong>Advanced Questionnaire</strong> &mdash; deeper insights for better recommendations</li>
+              </ul>
+              <p style="margin: 0 0 24px;">Head to your dashboard to get started:</p>
+              <table cellpadding="0" cellspacing="0" style="margin: 0 0 24px;">
+                <tr>
+                  <td align="center" style="background: #2563eb; border-radius: 8px;">
+                    <a href="{dashboard_url}"
+                       style="display: inline-block; padding: 14px 32px; color: #ffffff;
+                              text-decoration: none; font-weight: 600; font-size: 15px;">
+                      Go to Dashboard
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="color: #64748b; font-size: 13px; margin: 0;">
+                You can manage your subscription anytime from the Pricing page.
+                Questions? Reply to this email or contact support@crewtransition.com.
+              </p>"""
+
+    html = _branded_email(body)
+    return await _send_email(to_email, "You're now a CrewTransition Pro!", html)

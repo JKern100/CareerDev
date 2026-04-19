@@ -184,6 +184,7 @@ async def activate_plan(
 
     sub = await get_or_create_subscription(user_id, db)
     plan_rank = {"free": 0, "pro": 1, "monthly": 2, "premium": 3}
+    was_free = sub.plan == "free" or not sub.is_active
     if plan_rank.get(plan, 0) >= plan_rank.get(sub.plan, 0):
         sub.plan = plan
         sub.is_active = True
@@ -209,6 +210,19 @@ async def activate_plan(
 
     await db.commit()
     await db.refresh(sub)
+
+    # Send welcome email on first Pro activation
+    if was_free and sub.plan != "free":
+        try:
+            from app.models.user import User
+            from app.services.email import send_pro_welcome_email
+            result = await db.execute(select(User).where(User.id == user_id))
+            user = result.scalar_one_or_none()
+            if user:
+                await send_pro_welcome_email(user.email, user.full_name)
+        except Exception:
+            logger.exception("Failed to send Pro welcome email")
+
     return sub
 
 
