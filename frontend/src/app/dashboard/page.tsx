@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getMe, getSummary, getCareerReport, getProgress, resendVerification, syncSubscription } from "@/lib/api";
+import { getMe, getSummary, getCareerReport, getProgress, syncSubscription } from "@/lib/api";
 import FlowerSpinner from "@/components/FlowerSpinner";
 import ReferralCard from "@/components/ReferralCard";
 import { useTranslation, LANGUAGES, LangCode } from "@/hooks/useTranslation";
@@ -230,9 +230,6 @@ function DashboardContent() {
           </div>
         </div>
       )}
-
-      {/* Email verification banner */}
-      {!user.emailVerified && <VerifyBanner email={user.email} />}
 
       {/* Main content */}
       <div style={{ maxWidth: "900px", margin: "0 auto", padding: "0 1rem 3rem" }}>
@@ -479,88 +476,6 @@ function StepCard({ step, title, description, cta, done, partial, active, locked
         {cta}
       </div>
     </button>
-  );
-}
-
-function VerifyBanner({ email }: { email: string }) {
-  const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
-
-  if (dismissed) return null;
-
-  async function handleResend() {
-    setSending(true);
-    try {
-      await resendVerification(email);
-      setSent(true);
-    } catch {
-      // silently fail
-    } finally {
-      setSending(false);
-    }
-  }
-
-  return (
-    <div style={{
-      maxWidth: "900px",
-      margin: "0 auto",
-      padding: "0 1rem",
-    }}>
-      <div style={{
-        background: "rgba(234,179,8,0.08)",
-        border: "1px solid rgba(234,179,8,0.25)",
-        borderRadius: "10px",
-        padding: "0.75rem 1rem",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: "0.75rem",
-        flexWrap: "wrap",
-        fontSize: "0.85rem",
-      }}>
-        <span style={{ color: "#fbbf24" }}>
-          Please verify your email to unlock all features.
-        </span>
-        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-          {sent ? (
-            <span style={{ color: "#4ade80", fontSize: "0.8rem" }}>Verification email sent!</span>
-          ) : (
-            <button
-              onClick={handleResend}
-              disabled={sending}
-              style={{
-                background: "rgba(234,179,8,0.15)",
-                border: "1px solid rgba(234,179,8,0.3)",
-                color: "#fbbf24",
-                padding: "0.35rem 0.75rem",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontSize: "0.8rem",
-                fontWeight: 600,
-              }}
-            >
-              {sending ? "Sending..." : "Resend email"}
-            </button>
-          )}
-          <button
-            onClick={() => setDismissed(true)}
-            style={{
-              background: "none",
-              border: "none",
-              color: "#64748b",
-              cursor: "pointer",
-              fontSize: "1rem",
-              padding: "0 0.25rem",
-              lineHeight: 1,
-            }}
-            aria-label="Dismiss"
-          >
-            &times;
-          </button>
-        </div>
-      </div>
-    </div>
   );
 }
 

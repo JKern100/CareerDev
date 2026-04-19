@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { getMe, getPaddleCheckoutInfo, getSubscription, syncSubscription, cancelSubscription, getPaymentHistory, validatePromo, redeemPromo, PromoValidation, SubscriptionStatus, PaymentRecord } from "@/lib/api";
+import { getMe, getPaddleCheckoutInfo, getSubscription, syncSubscription, cancelSubscription, getPaymentHistory, validatePromo, redeemPromo, resendVerification, PromoValidation, SubscriptionStatus, PaymentRecord } from "@/lib/api";
 import AppHeader from "@/components/AppHeader";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -42,6 +42,10 @@ export default function PricingPage() {
   const [cancelConfirm, setCancelConfirm] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState("");
+  const [emailVerified, setEmailVerified] = useState(true);
+  const [showVerifyPrompt, setShowVerifyPrompt] = useState(false);
+  const [verifySending, setVerifySending] = useState(false);
+  const [verifySent, setVerifySent] = useState(false);
   const paddleInitialized = useRef(false);
 
   useEffect(() => {
@@ -55,6 +59,7 @@ export default function PricingPage() {
         setIsPremium(me.is_premium);
         setUserEmail(me.email);
         setUserId(me.id);
+        setEmailVerified(me.email_verified);
         getSubscription().then((sub) => setSubscription(sub)).catch(() => {});
         getPaymentHistory().then((p) => setPayments(p)).catch(() => {});
       })
@@ -101,17 +106,31 @@ export default function PricingPage() {
     };
   }, []);
 
+  async function handleResendVerification() {
+    setVerifySending(true);
+    try {
+      await resendVerification(userEmail);
+      setVerifySent(true);
+    } catch {
+      // silently fail
+    } finally {
+      setVerifySending(false);
+    }
+  }
+
   async function handleCheckout(plan: "pro") {
     if (!loggedIn) {
       router.push("/register");
+      return;
+    }
+    if (!emailVerified) {
+      setShowVerifyPrompt(true);
       return;
     }
     setLoading(plan);
     try {
       // Get the Paddle price ID from the backend
       const info = await getPaddleCheckoutInfo(plan);
-      console.log("[Paddle] price_id:", info.price_id, "env:", info.environment);
-      console.log("[Paddle] window.Paddle:", !!window.Paddle);
 
       if (!window.Paddle) {
         // Paddle.js not loaded — fall back to promo code section
@@ -264,10 +283,47 @@ export default function PricingPage() {
             >
               {loading === "pro" ? p("redirecting") : alreadyPro ? p("current_plan") : p("start_pro")}
             </button>
-            {!alreadyPro && (
+            {!alreadyPro && !showVerifyPrompt && (
               <p style={{ color: "#475569", fontSize: "0.78rem", marginTop: "0.5rem", textAlign: "center" }}>
                 {p("cancel_note")}
               </p>
+            )}
+            {showVerifyPrompt && (
+              <div style={{
+                marginTop: "1rem",
+                padding: "1rem",
+                background: "rgba(234,179,8,0.08)",
+                border: "1px solid rgba(234,179,8,0.25)",
+                borderRadius: "10px",
+                textAlign: "center",
+              }}>
+                <p style={{ color: "#fbbf24", fontSize: "0.9rem", fontWeight: 600, marginBottom: "0.5rem" }}>
+                  Please verify your email before subscribing
+                </p>
+                <p style={{ color: "#94a3b8", fontSize: "0.82rem", marginBottom: "0.75rem" }}>
+                  We sent a verification link to <strong style={{ color: "#e2e8f0" }}>{userEmail}</strong>. Check your inbox (and spam folder), then come back here.
+                </p>
+                {verifySent ? (
+                  <span style={{ color: "#4ade80", fontSize: "0.82rem" }}>Verification email sent! Check your inbox.</span>
+                ) : (
+                  <button
+                    onClick={handleResendVerification}
+                    disabled={verifySending}
+                    style={{
+                      background: "rgba(234,179,8,0.15)",
+                      border: "1px solid rgba(234,179,8,0.3)",
+                      color: "#fbbf24",
+                      padding: "0.4rem 1rem",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      fontSize: "0.82rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {verifySending ? "Sending..." : "Resend verification email"}
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>
