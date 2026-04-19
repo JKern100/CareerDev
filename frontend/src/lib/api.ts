@@ -928,3 +928,9 @@ export async function adminActivatePlan(userId: string, plan: string = "pro") {
     body: JSON.stringify({ plan }),
   });
 }
+
+export async function adminRevokePlan(userId: string) {
+  return request<{ detail: string }>(`/admin/users/${userId}/revoke-plan`, {
+    method: "POST",
+  });
+}

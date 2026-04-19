@@ -6,7 +6,7 @@ status management. Legacy LemonSqueezy webhook kept for existing integrations.
 
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 
 import httpx
@@ -423,6 +423,8 @@ async def paddle_webhook(request: Request):
             elif event_type == "subscription.past_due":
                 sub_id = data.get("id", "")
                 await handle_subscription_expired(sub_id, db)
+            elif event_type in ("transaction.refunded", "adjustment.created"):
+                await _handle_paddle_refund(data, db)
             else:
                 logger.info("Unhandled Paddle event: %s", event_type)
         except Exception:
@@ -602,6 +604,26 @@ async def _handle_paddle_subscription_updated(data: dict, db: AsyncSession):
         await handle_subscription_expired(subscription_id, db)
     elif status == "canceled":
         await handle_subscription_cancelled(subscription_id, db)
+
+
+async def _handle_paddle_refund(data: dict, db: AsyncSession):
+    """Handle a Paddle refund — revoke the user's plan."""
+    transaction_id = data.get("transaction_id") or data.get("id", "")
+    customer_id = data.get("customer_id", "")
+    custom_data = data.get("custom_data") or {}
+
+    user_id = await _resolve_paddle_user(custom_data, customer_id, db)
+    if not user_id:
+        logger.warning("Paddle refund: could not resolve user for txn %s", transaction_id)
+        return
+
+    sub = await get_or_create_subscription(user_id, db)
+    if sub.plan != "free":
+        sub.plan = "free"
+        sub.is_active = False
+        sub.cancelled_at = datetime.now(timezone.utc)
+        await db.commit()
+        logger.info("Paddle refund: revoked plan for user %s (txn %s)", user_id, transaction_id)
 
 
 # ── Legacy LemonSqueezy Webhook ──────────────────────────────────────────

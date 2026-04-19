@@ -1278,6 +1278,31 @@ async def admin_activate_plan(
     return {"detail": f"Activated {data.plan} for {u.email}"}
 
 
+@router.post("/users/{user_id}/revoke-plan")
+async def admin_revoke_plan(
+    user_id: UUID,
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Revoke a user's plan (e.g. after a refund)."""
+    result = await db.execute(select(User).where(User.id == user_id))
+    u = result.scalar_one_or_none()
+    if not u:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    result = await db.execute(select(Subscription).where(Subscription.user_id == user_id))
+    sub = result.scalar_one_or_none()
+    if not sub or sub.plan == "free":
+        raise HTTPException(status_code=400, detail="User is already on the free plan")
+
+    sub.plan = "free"
+    sub.is_active = False
+    sub.cancelled_at = datetime.now(timezone.utc)
+    await log_activity(db, admin, "admin_revoke_plan", f"Revoked plan for {u.email}")
+    await db.commit()
+    return {"detail": f"Revoked plan for {u.email}"}
+
+
 @router.get("/users/{user_id}/subscription")
 async def admin_get_user_subscription(
     user_id: UUID,
