@@ -198,6 +198,9 @@ function DashboardContent() {
               {d("advisor_dashboard")}
             </button>
           )}
+          <button onClick={() => router.push("/pricing")} style={navBtn("#6366f1", "#818cf8")}>
+            {pro ? "Manage Subscription" : "Upgrade"}
+          </button>
           <button
             onClick={() => {
               localStorage.removeItem("token");
