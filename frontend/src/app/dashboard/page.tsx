@@ -198,6 +198,9 @@ function DashboardContent() {
               {d("advisor_dashboard")}
             </button>
           )}
+          <button onClick={() => router.push("/pricing")} style={navBtn("#6366f1", "#818cf8")}>
+            {pro ? "Manage Subscription" : "Upgrade"}
+          </button>
           <button
             onClick={() => {
               localStorage.removeItem("token");
@@ -242,28 +245,16 @@ function DashboardContent() {
             {user.progressPct > 0 ? d("subtitle_returning") : d("subtitle_new")}
           </p>
           {pro && (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.25rem", marginTop: "0.5rem" }}>
-              <span style={{
-                display: "inline-block",
-                padding: "3px 12px", borderRadius: "999px",
-                background: "linear-gradient(135deg, rgba(59,130,246,0.15), rgba(139,92,246,0.15))",
-                border: "1px solid rgba(99,102,241,0.3)",
-                color: "#818cf8", fontSize: "0.75rem", fontWeight: 700,
-                letterSpacing: "0.05em",
-              }}>
-                PRO
-              </span>
-              <button
-                onClick={() => router.push("/pricing")}
-                style={{
-                  background: "none", border: "none", color: "#64748b",
-                  cursor: "pointer", fontSize: "0.75rem", textDecoration: "underline",
-                  padding: "0.15rem 0",
-                }}
-              >
-                Manage subscription
-              </button>
-            </div>
+            <span style={{
+              display: "inline-block", marginTop: "0.5rem",
+              padding: "3px 12px", borderRadius: "999px",
+              background: "linear-gradient(135deg, rgba(59,130,246,0.15), rgba(139,92,246,0.15))",
+              border: "1px solid rgba(99,102,241,0.3)",
+              color: "#818cf8", fontSize: "0.75rem", fontWeight: 700,
+              letterSpacing: "0.05em",
+            }}>
+              PRO
+            </span>
           )}
         </div>
 
