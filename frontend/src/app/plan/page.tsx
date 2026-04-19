@@ -7,6 +7,7 @@ import {
   getActionPlan,
   generateActionPlan,
   updateActionStep,
+  getCareerReport,
   ActionPlan,
   ActionStepData,
 } from "@/lib/api";
@@ -50,6 +51,7 @@ export default function PlanPage() {
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
 
   const [needsUpgrade, setNeedsUpgrade] = useState(false);
+  const [hasAnalysis, setHasAnalysis] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -58,13 +60,24 @@ export default function PlanPage() {
     async function load() {
       try {
         await getMe();
-        const data = await getActionPlan();
-        if (data.total > 0) setPlan(data);
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : "";
-        if (msg.includes("paid plan") || msg.includes("pricing")) {
-          setNeedsUpgrade(true);
+        const [planResult, analysisResult] = await Promise.allSettled([
+          getActionPlan(),
+          getCareerReport(),
+        ]);
+        if (planResult.status === "fulfilled" && planResult.value.total > 0) {
+          setPlan(planResult.value);
         }
+        if (analysisResult.status === "fulfilled") {
+          setHasAnalysis(true);
+        }
+        if (planResult.status === "rejected") {
+          const msg = planResult.reason instanceof Error ? planResult.reason.message : "";
+          if (msg.includes("paid plan") || msg.includes("pricing")) {
+            setNeedsUpgrade(true);
+          }
+        }
+      } catch {
+        // unexpected error
       } finally {
         setLoading(false);
       }
@@ -195,7 +208,44 @@ export default function PlanPage() {
     );
   }
 
-  // No plan yet — show generate CTA
+  // No career analysis yet — redirect user to complete it first
+  if (!plan && !hasAnalysis) {
+    return (
+      <div style={styles.page}>
+        <AppHeader />
+        <div style={{ ...styles.container, textAlign: "center", paddingTop: "4rem" }}>
+          <div style={{
+            width: "64px", height: "64px", borderRadius: "50%",
+            background: "linear-gradient(135deg, rgba(37,99,235,0.15), rgba(139,92,246,0.15))",
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            fontSize: "1.75rem", marginBottom: "1.5rem",
+          }}>
+            &#128203;
+          </div>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.75rem" }}>{p("title")}</h1>
+          <p style={{ color: "#94a3b8", maxWidth: "460px", margin: "0 auto 1.5rem", lineHeight: 1.7 }}>
+            Complete your career analysis first. Your action plan will break down the analysis into concrete next steps you can start working on right away.
+          </p>
+          <button
+            onClick={() => router.push("/results")}
+            style={styles.primaryBtn}
+          >
+            Go to Career Analysis
+          </button>
+          <div style={{ marginTop: "1rem" }}>
+            <button
+              onClick={() => router.push("/dashboard")}
+              style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", fontSize: "0.85rem", textDecoration: "underline" }}
+            >
+              Back to dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Has analysis but no plan yet — show generate CTA
   if (!plan) {
     return (
       <div style={styles.page}>
