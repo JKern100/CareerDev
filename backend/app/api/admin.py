@@ -2,6 +2,7 @@
 
 import csv
 import hmac
+import logging
 import io
 import json
 import os
@@ -30,6 +31,8 @@ from app.api.deps import get_admin_user
 from app.services.auth import hash_password, create_access_token
 from app.services.activity import log_activity
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -1258,24 +1261,30 @@ async def admin_activate_plan(
     db: AsyncSession = Depends(get_db),
 ):
     """Manually activate a user's plan (e.g. when webhook missed them)."""
-    result = await db.execute(select(User).where(User.id == user_id))
-    u = result.scalar_one_or_none()
-    if not u:
-        raise HTTPException(status_code=404, detail="User not found")
+    try:
+        result = await db.execute(select(User).where(User.id == user_id))
+        u = result.scalar_one_or_none()
+        if not u:
+            raise HTTPException(status_code=404, detail="User not found")
 
-    result = await db.execute(select(Subscription).where(Subscription.user_id == user_id))
-    sub = result.scalar_one_or_none()
-    if not sub:
-        sub = Subscription(user_id=user_id, plan="free", is_active=False)
-        db.add(sub)
+        result = await db.execute(select(Subscription).where(Subscription.user_id == user_id))
+        sub = result.scalar_one_or_none()
+        if not sub:
+            sub = Subscription(user_id=user_id, plan="free", is_active=False)
+            db.add(sub)
 
-    sub.plan = data.plan
-    sub.is_active = True
-    sub.activated_at = datetime.now(timezone.utc)
-    sub.cancelled_at = None
-    await log_activity(db, admin, "admin_activate_plan", f"Activated {data.plan} for {u.email}")
-    await db.commit()
-    return {"detail": f"Activated {data.plan} for {u.email}"}
+        sub.plan = data.plan
+        sub.is_active = True
+        sub.activated_at = datetime.now(timezone.utc)
+        sub.cancelled_at = None
+        await log_activity(db, admin, "admin_activate_plan", f"Activated {data.plan} for {u.email}")
+        await db.commit()
+        return {"detail": f"Activated {data.plan} for {u.email}"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("admin_activate_plan failed for user_id=%s", user_id)
+        raise HTTPException(status_code=500, detail=f"Activate failed: {e}")
 
 
 @router.post("/users/{user_id}/revoke-plan")
@@ -1285,22 +1294,28 @@ async def admin_revoke_plan(
     db: AsyncSession = Depends(get_db),
 ):
     """Revoke a user's plan (e.g. after a refund)."""
-    result = await db.execute(select(User).where(User.id == user_id))
-    u = result.scalar_one_or_none()
-    if not u:
-        raise HTTPException(status_code=404, detail="User not found")
+    try:
+        result = await db.execute(select(User).where(User.id == user_id))
+        u = result.scalar_one_or_none()
+        if not u:
+            raise HTTPException(status_code=404, detail="User not found")
 
-    result = await db.execute(select(Subscription).where(Subscription.user_id == user_id))
-    sub = result.scalar_one_or_none()
-    if not sub or sub.plan == "free":
-        raise HTTPException(status_code=400, detail="User is already on the free plan")
+        result = await db.execute(select(Subscription).where(Subscription.user_id == user_id))
+        sub = result.scalar_one_or_none()
+        if not sub or sub.plan == "free":
+            raise HTTPException(status_code=400, detail="User is already on the free plan")
 
-    sub.plan = "free"
-    sub.is_active = False
-    sub.cancelled_at = datetime.now(timezone.utc)
-    await log_activity(db, admin, "admin_revoke_plan", f"Revoked plan for {u.email}")
-    await db.commit()
-    return {"detail": f"Revoked plan for {u.email}"}
+        sub.plan = "free"
+        sub.is_active = False
+        sub.cancelled_at = datetime.now(timezone.utc)
+        await log_activity(db, admin, "admin_revoke_plan", f"Revoked plan for {u.email}")
+        await db.commit()
+        return {"detail": f"Revoked plan for {u.email}"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("admin_revoke_plan failed for user_id=%s", user_id)
+        raise HTTPException(status_code=500, detail=f"Revoke failed: {e}")
 
 
 @router.get("/users/{user_id}/subscription")
