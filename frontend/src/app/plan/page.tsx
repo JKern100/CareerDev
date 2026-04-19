@@ -208,7 +208,7 @@ export default function PlanPage() {
     );
   }
 
-  // No career analysis yet — redirect user to complete it first
+  // No career analysis yet — send user to the questionnaire (the actual first step)
   if (!plan && !hasAnalysis) {
     return (
       <div style={styles.page}>
@@ -224,13 +224,13 @@ export default function PlanPage() {
           </div>
           <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.75rem" }}>{p("title")}</h1>
           <p style={{ color: "#94a3b8", maxWidth: "460px", margin: "0 auto 1.5rem", lineHeight: 1.7 }}>
-            Complete your career analysis first. Your action plan will break down the analysis into concrete next steps you can start working on right away.
+            Your action plan is built from your career analysis. To get there, complete the questionnaire first — it only takes a few minutes.
           </p>
           <button
-            onClick={() => router.push("/results")}
+            onClick={() => router.push("/questionnaire")}
             style={styles.primaryBtn}
           >
-            Go to Career Analysis
+            Start Questionnaire
           </button>
           <div style={{ marginTop: "1rem" }}>
             <button
