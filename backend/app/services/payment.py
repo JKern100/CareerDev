@@ -281,7 +281,8 @@ async def handle_subscription_renewed(
         sub.cancelled_at = None
         if next_billed_at:
             try:
-                sub.expires_at = datetime.fromisoformat(next_billed_at.replace("Z", "+00:00"))
+                dt = datetime.fromisoformat(next_billed_at.replace("Z", "+00:00"))
+                sub.expires_at = dt.replace(tzinfo=None)
             except (ValueError, AttributeError):
                 pass
         await db.commit()

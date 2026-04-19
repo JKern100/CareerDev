@@ -9,6 +9,15 @@ import logging
 from datetime import datetime, timezone
 from uuid import UUID
 
+
+def _parse_paddle_datetime(iso_str: str) -> datetime | None:
+    """Parse a Paddle ISO datetime string to a naive UTC datetime."""
+    try:
+        dt = datetime.fromisoformat(iso_str.replace("Z", "+00:00"))
+        return dt.replace(tzinfo=None)
+    except (ValueError, AttributeError):
+        return None
+
 import httpx
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -314,18 +323,12 @@ async def sync_subscription(
             expires_at = None
             next_billed = txn.get("next_billed_at")
             if next_billed:
-                try:
-                    expires_at = datetime.fromisoformat(next_billed.replace("Z", "+00:00"))
-                except (ValueError, AttributeError):
-                    pass
+                expires_at = _parse_paddle_datetime(next_billed)
             elif subscription_id:
                 bp = txn.get("billing_period", {})
                 ends_at = bp.get("ends_at")
                 if ends_at:
-                    try:
-                        expires_at = datetime.fromisoformat(ends_at.replace("Z", "+00:00"))
-                    except (ValueError, AttributeError):
-                        pass
+                    expires_at = _parse_paddle_datetime(ends_at)
 
             await activate_plan(
                 user_id=user.id,
@@ -511,18 +514,12 @@ async def _handle_paddle_transaction_completed(data: dict, db: AsyncSession):
     # Parse expiry from billing period or next_billed_at
     expires_at = None
     if next_billed_at:
-        try:
-            expires_at = datetime.fromisoformat(next_billed_at.replace("Z", "+00:00"))
-        except (ValueError, AttributeError):
-            pass
+        expires_at = _parse_paddle_datetime(next_billed_at)
     elif subscription_id:
         billing_period = data.get("billing_period", {})
         ends_at = billing_period.get("ends_at")
         if ends_at:
-            try:
-                expires_at = datetime.fromisoformat(ends_at.replace("Z", "+00:00"))
-            except (ValueError, AttributeError):
-                pass
+            expires_at = _parse_paddle_datetime(ends_at)
 
     await activate_plan(
         user_id=user_id,
@@ -568,12 +565,7 @@ async def _handle_paddle_subscription_activated(data: dict, db: AsyncSession):
         unit_price = item.get("price", {}).get("unit_price", {})
         amount_cents = int(unit_price.get("amount", "0"))
 
-    expires_at = None
-    if next_billed_at:
-        try:
-            expires_at = datetime.fromisoformat(next_billed_at.replace("Z", "+00:00"))
-        except (ValueError, AttributeError):
-            pass
+    expires_at = _parse_paddle_datetime(next_billed_at) if next_billed_at else None
 
     await activate_plan(
         user_id=user_id,
@@ -694,12 +686,7 @@ async def _handle_ls_subscription_created(user_id_str: str | None, attrs: dict, 
     subscription_id = str(attrs.get("subscription_id", attrs.get("id", "")))
     variant_id = str(attrs.get("variant_id", ""))
     renews_at = attrs.get("renews_at")
-    expires = None
-    if renews_at:
-        try:
-            expires = datetime.fromisoformat(renews_at.replace("Z", "+00:00"))
-        except (ValueError, AttributeError):
-            pass
+    expires = _parse_paddle_datetime(renews_at) if renews_at else None
     plan = _variant_map().get(variant_id, "monthly")
     await activate_plan(
         user_id=user_id, plan=plan, order_id=f"sub-{order_id}", customer_id=customer_id,

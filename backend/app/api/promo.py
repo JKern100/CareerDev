@@ -151,7 +151,7 @@ async def create_promo_code(
     expires = None
     if data.expires_at:
         try:
-            expires = datetime.fromisoformat(data.expires_at.replace("Z", "+00:00"))
+            expires = datetime.fromisoformat(data.expires_at.replace("Z", "+00:00")).replace(tzinfo=None)
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid expires_at format")
 
@@ -201,7 +201,7 @@ async def update_promo_code(
         promo.max_uses_per_user = data.max_uses_per_user
     if data.expires_at is not None:
         try:
-            promo.expires_at = datetime.fromisoformat(data.expires_at.replace("Z", "+00:00")) if data.expires_at else None
+            promo.expires_at = datetime.fromisoformat(data.expires_at.replace("Z", "+00:00")).replace(tzinfo=None) if data.expires_at else None
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid expires_at format")
     if data.note is not None:
