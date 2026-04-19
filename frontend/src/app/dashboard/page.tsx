@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getMe, getSummary, getCareerReport, getProgress, resendVerification, syncSubscription } from "@/lib/api";
 import FlowerSpinner from "@/components/FlowerSpinner";
@@ -24,6 +24,14 @@ interface UserState {
 }
 
 export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div style={{ background: "#0a0e1a", color: "#f1f5f9", minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}><FlowerSpinner size={48} /></div>}>
+      <DashboardContent />
+    </Suspense>
+  );
+}
+
+function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { lang, setLang, t } = useTranslation();
