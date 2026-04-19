@@ -180,7 +180,7 @@ async def me(
     from app.services.payment import is_premium as _is_premium
 
     result = await db.execute(select(Subscription).where(Subscription.user_id == user.id))
-    sub = result.scalar_one_or_none()
+    sub = result.scalars().first()
 
     impersonated = getattr(user, "_impersonated", False)
     is_admin = user.role in ("admin", "auditor")

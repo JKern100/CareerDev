@@ -144,7 +144,7 @@ async def get_or_create_subscription(user_id: UUID, db: AsyncSession) -> Subscri
     result = await db.execute(
         select(Subscription).where(Subscription.user_id == user_id)
     )
-    sub = result.scalar_one_or_none()
+    sub = result.scalars().first()
     if not sub:
         sub = Subscription(user_id=user_id, plan="free", is_active=False)
         db.add(sub)
@@ -235,12 +235,12 @@ async def handle_subscription_cancelled(
     result = await db.execute(
         select(Subscription).where(Subscription.paddle_subscription_id == subscription_id)
     )
-    sub = result.scalar_one_or_none()
+    sub = result.scalars().first()
     if not sub:
         result = await db.execute(
             select(Subscription).where(Subscription.ls_subscription_id == subscription_id)
         )
-        sub = result.scalar_one_or_none()
+        sub = result.scalars().first()
     if sub:
         sub.cancelled_at = datetime.now(timezone.utc)
         await db.commit()
@@ -254,12 +254,12 @@ async def handle_subscription_expired(
     result = await db.execute(
         select(Subscription).where(Subscription.paddle_subscription_id == subscription_id)
     )
-    sub = result.scalar_one_or_none()
+    sub = result.scalars().first()
     if not sub:
         result = await db.execute(
             select(Subscription).where(Subscription.ls_subscription_id == subscription_id)
         )
-        sub = result.scalar_one_or_none()
+        sub = result.scalars().first()
     if sub and sub.plan in ("monthly", "pro"):
         sub.is_active = False
         sub.plan = "free"
@@ -275,7 +275,7 @@ async def handle_subscription_renewed(
     result = await db.execute(
         select(Subscription).where(Subscription.paddle_subscription_id == subscription_id)
     )
-    sub = result.scalar_one_or_none()
+    sub = result.scalars().first()
     if sub:
         sub.is_active = True
         sub.cancelled_at = None

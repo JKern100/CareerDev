@@ -218,6 +218,33 @@ async def _backfill_existing_users_verified():
             logger.info("Backfilled %d existing users as email_verified", updated)
 
 
+async def _dedup_subscriptions():
+    """Remove duplicate subscription records, keeping the most recently activated."""
+    from app.models.payment import Subscription
+    from sqlalchemy import func as sqlfunc
+    async with async_session() as session:
+        dupes = await session.execute(
+            select(Subscription.user_id)
+            .group_by(Subscription.user_id)
+            .having(sqlfunc.count(Subscription.id) > 1)
+        )
+        dup_user_ids = [row[0] for row in dupes.all()]
+        removed = 0
+        for uid in dup_user_ids:
+            result = await session.execute(
+                select(Subscription)
+                .where(Subscription.user_id == uid)
+                .order_by(Subscription.activated_at.desc().nullslast(), Subscription.created_at.desc())
+            )
+            subs = result.scalars().all()
+            for extra in subs[1:]:
+                await session.delete(extra)
+                removed += 1
+        if removed:
+            await session.commit()
+            logger.info("Removed %d duplicate subscription records for %d users", removed, len(dup_user_ids))
+
+
 async def _backfill_referral_codes():
     """Generate referral codes for existing users who don't have one."""
     from app.models.user import User, _generate_referral_code
@@ -267,6 +294,8 @@ async def lifespan(app: FastAPI):
         await _seed_questions()
         await _repair_question_data()
         await _backfill_existing_users_verified()
+        print("[startup] Deduplicating subscriptions...", flush=True)
+        await _dedup_subscriptions()
         print("[startup] Backfilling referral codes...", flush=True)
         await _backfill_referral_codes()
         print("[startup] All startup tasks complete — app ready", flush=True)

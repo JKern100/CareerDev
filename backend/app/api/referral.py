@@ -105,7 +105,7 @@ async def claim_referral_reward(
     result = await db.execute(
         select(Subscription).where(Subscription.user_id == user.id)
     )
-    sub = result.scalar_one_or_none()
+    sub = result.scalars().first()
 
     if not sub:
         sub = Subscription(user_id=user.id, plan="free", is_active=False)

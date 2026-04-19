@@ -154,7 +154,7 @@ async def get_next_core(
         sub_result = await db.execute(
             select(Subscription).where(Subscription.user_id == user.id)
         )
-        sub = sub_result.scalar_one_or_none()
+        sub = sub_result.scalars().first()
         if not is_premium(sub) and not getattr(user, "_impersonated", False):
             return CoreScreenOut(
                 screen_id="upgrade_required",

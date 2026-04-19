@@ -80,7 +80,7 @@ async def require_premium(
     result = await db.execute(
         select(Subscription).where(Subscription.user_id == user.id)
     )
-    sub = result.scalar_one_or_none()
+    sub = result.scalars().first()
     if not is_premium(sub):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

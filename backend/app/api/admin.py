@@ -289,7 +289,7 @@ async def get_user(
     )).scalar() or 0
 
     sub_result = await db.execute(select(Subscription).where(Subscription.user_id == u.id))
-    sub = sub_result.scalar_one_or_none()
+    sub = sub_result.scalars().first()
 
     now = datetime.utcnow()
     online_threshold = now - timedelta(minutes=5)
@@ -1268,7 +1268,7 @@ async def admin_activate_plan(
             raise HTTPException(status_code=404, detail="User not found")
 
         result = await db.execute(select(Subscription).where(Subscription.user_id == user_id))
-        sub = result.scalar_one_or_none()
+        sub = result.scalars().first()
         if not sub:
             sub = Subscription(user_id=user_id, plan="free", is_active=False)
             db.add(sub)
@@ -1301,7 +1301,7 @@ async def admin_revoke_plan(
             raise HTTPException(status_code=404, detail="User not found")
 
         result = await db.execute(select(Subscription).where(Subscription.user_id == user_id))
-        sub = result.scalar_one_or_none()
+        sub = result.scalars().first()
         if not sub or sub.plan == "free":
             raise HTTPException(status_code=400, detail="User is already on the free plan")
 
@@ -1331,7 +1331,7 @@ async def admin_get_user_subscription(
         raise HTTPException(status_code=404, detail="User not found")
 
     result = await db.execute(select(Subscription).where(Subscription.user_id == user_id))
-    sub = result.scalar_one_or_none()
+    sub = result.scalars().first()
 
     result = await db.execute(
         select(Payment).where(Payment.user_id == user_id).order_by(Payment.created_at.desc())
