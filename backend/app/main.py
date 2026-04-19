@@ -195,23 +195,25 @@ async def _repair_question_data():
 
 
 async def _backfill_existing_users_verified():
-    """Mark pre-existing users as email_verified so they aren't locked out."""
+    """Mark pre-existing users as email_verified so they aren't locked out.
+
+    Any user who has logged in, completed questionnaire answers, or has a
+    Google account is clearly real and should be auto-verified.
+    """
     from app.models.user import User
     async with async_session() as session:
         result = await session.execute(
-            select(User).where(
-                User.email_verified == False,  # noqa: E712
-                User.has_logged_in == False,  # noqa: E712
-                User.created_at < datetime.utcnow(),
-            )
+            select(User).where(User.email_verified == False)  # noqa: E712
         )
         users = result.scalars().all()
         updated = 0
         for user in users:
-            # If the user has any answers, they clearly existed before verification was added
-            if len(user.answers) > 0 or user.questionnaire_completed:
+            if (user.has_logged_in
+                    or user.questionnaire_completed
+                    or len(user.answers) > 0
+                    or user.auth_provider == "google"
+                    or user.role in ("admin", "auditor")):
                 user.email_verified = True
-                user.has_logged_in = True
                 updated += 1
         if updated:
             await session.commit()
