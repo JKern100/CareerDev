@@ -599,7 +599,7 @@ async def _handle_paddle_subscription_updated(data: dict, db: AsyncSession):
 
 
 async def _handle_paddle_refund(data: dict, db: AsyncSession):
-    """Handle a Paddle refund — revoke the user's plan."""
+    """Handle a Paddle refund — revoke the user's plan and mark payment as refunded."""
     transaction_id = data.get("transaction_id") or data.get("id", "")
     customer_id = data.get("customer_id", "")
     custom_data = data.get("custom_data") or {}
@@ -609,13 +609,31 @@ async def _handle_paddle_refund(data: dict, db: AsyncSession):
         logger.warning("Paddle refund: could not resolve user for txn %s", transaction_id)
         return
 
+    # Mark matching payment records as refunded
+    payment_result = await db.execute(
+        select(Payment).where(
+            Payment.user_id == user_id,
+            Payment.ls_order_id.like(f"paddle-%{transaction_id}%"),
+        )
+    )
+    refunded_payments = payment_result.scalars().all()
+    if not refunded_payments:
+        payment_result = await db.execute(
+            select(Payment).where(Payment.user_id == user_id).order_by(Payment.created_at.desc())
+        )
+        refunded_payments = payment_result.scalars().all()[:1]
+
+    for p in refunded_payments:
+        p.status = "refunded"
+
     sub = await get_or_create_subscription(user_id, db)
     if sub.plan != "free":
         sub.plan = "free"
         sub.is_active = False
         sub.cancelled_at = datetime.utcnow()
-        await db.commit()
-        logger.info("Paddle refund: revoked plan for user %s (txn %s)", user_id, transaction_id)
+
+    await db.commit()
+    logger.info("Paddle refund: revoked plan for user %s (txn %s, %d payments marked)", user_id, transaction_id, len(refunded_payments))
 
 
 # ── Legacy LemonSqueezy Webhook ──────────────────────────────────────────
