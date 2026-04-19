@@ -161,6 +161,7 @@ export default function PricingPage() {
   async function handlePromoValidate() {
     if (!promoInput.trim()) return;
     if (!loggedIn) { router.push("/register"); return; }
+    if (!emailVerified) { setShowVerifyPrompt(true); return; }
     setPromoLoading(true);
     setPromoError("");
     setPromoResult(null);
