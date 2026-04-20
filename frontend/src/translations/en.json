@@ -64,6 +64,8 @@
     "career_coach": "Career Coach",
     "advisor": "Advisor",
     "admin_panel": "Admin Panel",
+    "manage_subscription": "Manage Subscription",
+    "upgrade": "Upgrade",
     "log_out": "Log out",
     "viewing_as": "Viewing as",
     "back_to_admin": "Back to Admin"
@@ -243,6 +245,10 @@
       "cat_first_step": "First Steps (30-90 Days)",
       "cat_credential": "Credentials to Pursue",
       "add_notes": "Add notes...",
+      "needs_upgrade": "Your action plan turns your career analysis into concrete next steps. Upgrade to Pro to unlock this feature along with the AI career coach and full career analysis.",
+      "needs_analysis": "Your action plan is built from your career analysis. To get there, complete the questionnaire first — it only takes a few minutes.",
+      "start_questionnaire": "Start Questionnaire",
+      "back_to_dashboard": "Back to dashboard",
       "error_generate": "Failed to generate action plan",
       "error_update": "Failed to update step",
       "error_skip": "Failed to skip step"

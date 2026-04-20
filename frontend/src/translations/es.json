@@ -64,6 +64,8 @@
     "career_coach": "Coach de carrera",
     "advisor": "Asesor",
     "admin_panel": "Panel de admin",
+    "manage_subscription": "Gestionar suscripción",
+    "upgrade": "Mejorar plan",
     "log_out": "Cerrar sesión",
     "viewing_as": "Viendo como",
     "back_to_admin": "Volver a admin"
@@ -243,6 +245,10 @@
       "cat_first_step": "Primeros pasos (30-90 días)",
       "cat_credential": "Credenciales a obtener",
       "add_notes": "Añadir notas...",
+      "needs_upgrade": "Tu plan de acción convierte tu análisis de carrera en pasos concretos. Mejora a Pro para desbloquear esta función junto con el coach de carrera AI y el análisis completo.",
+      "needs_analysis": "Tu plan de acción se genera a partir de tu análisis de carrera. Para llegar ahí, completa el cuestionario primero — solo toma unos minutos.",
+      "start_questionnaire": "Iniciar cuestionario",
+      "back_to_dashboard": "Volver al panel",
       "error_generate": "Error al generar plan de acción",
       "error_update": "Error al actualizar paso",
       "error_skip": "Error al omitir paso"

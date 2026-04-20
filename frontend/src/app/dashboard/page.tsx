@@ -199,7 +199,7 @@ function DashboardContent() {
             </button>
           )}
           <button onClick={() => router.push("/pricing")} style={navBtn("#6366f1", "#818cf8")}>
-            {pro ? "Manage Subscription" : "Upgrade"}
+            {pro ? t("nav.manage_subscription") : t("nav.upgrade")}
           </button>
           <button
             onClick={() => {

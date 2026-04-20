@@ -187,20 +187,20 @@ export default function PlanPage() {
           </div>
           <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.75rem" }}>{p("title")}</h1>
           <p style={{ color: "#94a3b8", maxWidth: "460px", margin: "0 auto 1.5rem", lineHeight: 1.7 }}>
-            Your action plan turns your career analysis into concrete next steps. Upgrade to Pro to unlock this feature along with the AI career coach and full career analysis.
+            {p("needs_upgrade")}
           </p>
           <button
             onClick={() => router.push("/pricing")}
             style={styles.primaryBtn}
           >
-            Upgrade to Pro
+            {t("ui.upgrade_to_pro")}
           </button>
           <div style={{ marginTop: "1rem" }}>
             <button
               onClick={() => router.push("/dashboard")}
               style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", fontSize: "0.85rem", textDecoration: "underline" }}
             >
-              Back to dashboard
+              {p("back_to_dashboard")}
             </button>
           </div>
         </div>
@@ -224,20 +224,20 @@ export default function PlanPage() {
           </div>
           <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.75rem" }}>{p("title")}</h1>
           <p style={{ color: "#94a3b8", maxWidth: "460px", margin: "0 auto 1.5rem", lineHeight: 1.7 }}>
-            Your action plan is built from your career analysis. To get there, complete the questionnaire first — it only takes a few minutes.
+            {p("needs_analysis")}
           </p>
           <button
             onClick={() => router.push("/questionnaire")}
             style={styles.primaryBtn}
           >
-            Start Questionnaire
+            {p("start_questionnaire")}
           </button>
           <div style={{ marginTop: "1rem" }}>
             <button
               onClick={() => router.push("/dashboard")}
               style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", fontSize: "0.85rem", textDecoration: "underline" }}
             >
-              Back to dashboard
+              {p("back_to_dashboard")}
             </button>
           </div>
         </div>
