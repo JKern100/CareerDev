@@ -53,11 +53,24 @@ class Settings(BaseSettings):
     def async_database_url(self) -> str:
         """Convert standard DATABASE_URL to async version for deployment platforms."""
         url = self.DATABASE_URL
-        # Railway/Render provide postgres:// or postgresql://, convert to postgresql+asyncpg://
         if url.startswith("postgres://"):
             return url.replace("postgres://", "postgresql+asyncpg://", 1)
         if url.startswith("postgresql://"):
             return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return url
+
+    @property
+    def sync_database_url(self) -> str:
+        """Return a sync DB URL suitable for Alembic / synchronous engines."""
+        if self.DATABASE_URL_SYNC != "sqlite:///./careerdev.db":
+            return self.DATABASE_URL_SYNC
+        url = self.DATABASE_URL
+        if url.startswith("postgres://"):
+            return url.replace("postgres://", "postgresql://", 1)
+        for prefix in ("postgresql+asyncpg://", "sqlite+aiosqlite://"):
+            sync = prefix.split("+")[0] + "://"
+            if url.startswith(prefix):
+                return url.replace(prefix, sync, 1)
         return url
 
     class Config:

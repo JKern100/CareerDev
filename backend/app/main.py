@@ -41,7 +41,7 @@ def _add_missing_columns(conn):
         "TEXT": "TEXT DEFAULT ''",
         "INTEGER": "INTEGER DEFAULT 0",
         "JSON": "JSON",
-        "BOOLEAN": "BOOLEAN DEFAULT false",
+        "BOOLEAN": "BOOLEAN DEFAULT true",
         "DATETIME": "TIMESTAMP",
         "UUID": "UUID",
     }
