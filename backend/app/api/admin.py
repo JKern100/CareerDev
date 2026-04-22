@@ -1375,7 +1375,7 @@ async def get_email_logs(
     db: AsyncSession = Depends(get_db),
     _admin: User = Depends(get_admin_user),
 ):
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    cutoff = datetime.utcnow() - timedelta(days=days)
     q = select(EmailLog).where(EmailLog.created_at >= cutoff)
     if email_type:
         q = q.where(EmailLog.email_type == email_type)
