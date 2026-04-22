@@ -266,64 +266,6 @@ async def _backfill_referral_codes():
             logger.info("Backfilled referral codes for %d existing users", updated)
 
 
-async def _backfill_stage1_emails():
-    """Send Stage 1 results email to existing completers who never got one."""
-    import asyncio
-    import secrets as _secrets
-    from app.models.user import User
-    from app.models.questionnaire import Answer
-    from app.services.routing import is_tier1_complete
-    from app.services.scoring import score_pathways
-    from app.services.email import send_stage1_results_email
-
-    async with async_session() as session:
-        result = await session.execute(
-            select(User).where(
-                User.stage1_email_sent_at == None,  # noqa: E711
-                User.email_nudges_enabled == True,  # noqa: E712
-            )
-        )
-        users = result.scalars().all()
-        sent = 0
-        for user in users:
-            ans_result = await session.execute(
-                select(Answer).where(Answer.user_id == user.id)
-            )
-            answers = ans_result.scalars().all()
-            answered_ids = {a.question_id for a in answers}
-            if not is_tier1_complete(answered_ids):
-                continue
-            answers_dict = {
-                a.question_id: {
-                    "value": a.value_json.get("value") if a.value_json else None,
-                    "value_json": a.value_json,
-                    "confidence": a.confidence,
-                    "evidence_refs": a.evidence_refs,
-                }
-                for a in answers
-            }
-            scored = score_pathways(answers_dict)
-            if not scored:
-                continue
-            top = scored[0]
-            match_pct = max(0, min(100, int(round(top.adjusted_score * 100))))
-            if not user.unsubscribe_token:
-                user.unsubscribe_token = _secrets.token_urlsafe(32)
-            user.stage1_email_sent_at = datetime.now(timezone.utc)
-            asyncio.create_task(
-                send_stage1_results_email(
-                    to_email=user.email,
-                    user_name=user.full_name,
-                    top_pathway_name=top.pathway_name,
-                    match_pct=match_pct,
-                    unsubscribe_token=user.unsubscribe_token,
-                )
-            )
-            sent += 1
-        if sent:
-            await session.commit()
-            logger.info("Backfilled Stage 1 results email for %d users", sent)
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -359,8 +301,6 @@ async def lifespan(app: FastAPI):
         await _dedup_subscriptions()
         print("[startup] Backfilling referral codes...", flush=True)
         await _backfill_referral_codes()
-        print("[startup] Backfilling Stage 1 emails...", flush=True)
-        await _backfill_stage1_emails()
         print("[startup] All startup tasks complete — app ready", flush=True)
     except Exception:
         import traceback
