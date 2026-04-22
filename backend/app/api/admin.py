@@ -17,7 +17,7 @@ from sqlalchemy import select, func, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.models.user import User, UserRole, UserNote
+from app.models.user import User, UserRole, UserNote, EmailLog
 from app.models.questionnaire import Answer, Question, Evidence
 from app.models.report import Report, AnalysisReport
 from app.models.pathway import PathwayScore
@@ -1362,3 +1362,40 @@ async def admin_get_user_subscription(
             for p in payments
         ],
     }
+
+
+# ── Email Log ────────────────────────────────────────────────────────────
+
+@router.get("/email-logs")
+async def get_email_logs(
+    email_type: str | None = None,
+    status: str | None = None,
+    days: int = 30,
+    limit: int = 200,
+    db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
+):
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    q = select(EmailLog).where(EmailLog.created_at >= cutoff)
+    if email_type:
+        q = q.where(EmailLog.email_type == email_type)
+    if status:
+        q = q.where(EmailLog.status == status)
+    q = q.order_by(EmailLog.created_at.desc()).limit(limit)
+
+    result = await db.execute(q)
+    logs = result.scalars().all()
+    return [
+        {
+            "id": str(e.id),
+            "to_email": e.to_email,
+            "user_id": str(e.user_id) if e.user_id else None,
+            "subject": e.subject,
+            "email_type": e.email_type,
+            "status": e.status,
+            "error_detail": e.error_detail,
+            "resend_id": e.resend_id,
+            "created_at": e.created_at.isoformat() if e.created_at else None,
+        }
+        for e in logs
+    ]

@@ -929,6 +929,28 @@ export async function deleteUserNote(noteId: string) {
   });
 }
 
+// Email Logs
+export interface EmailLogEntry {
+  id: string;
+  to_email: string;
+  user_id: string | null;
+  subject: string;
+  email_type: string;
+  status: string;
+  error_detail: string | null;
+  resend_id: string | null;
+  created_at: string;
+}
+
+export async function getEmailLogs(params?: { email_type?: string; status?: string; days?: number }) {
+  const sp = new URLSearchParams();
+  if (params?.email_type) sp.set("email_type", params.email_type);
+  if (params?.status) sp.set("status", params.status);
+  if (params?.days) sp.set("days", String(params.days));
+  const qs = sp.toString();
+  return request<EmailLogEntry[]>(`/admin/email-logs${qs ? `?${qs}` : ""}`);
+}
+
 export async function adminActivatePlan(userId: string, plan: string = "pro") {
   return request<{ detail: string }>(`/admin/users/${userId}/activate-plan`, {
     method: "POST",

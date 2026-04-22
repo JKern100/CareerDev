@@ -1,14 +1,47 @@
 """Email sending service using Resend."""
 
 import logging
+import uuid
 
 import httpx
+from sqlalchemy import select
 
 from app.config import settings
+from app.database import async_session
 
 logger = logging.getLogger(__name__)
 
 RESEND_API = "https://api.resend.com/emails"
+
+
+async def _log_email(
+    to: str,
+    subject: str,
+    email_type: str,
+    status: str,
+    error_detail: str | None = None,
+    resend_id: str | None = None,
+):
+    try:
+        from app.models.user import User, EmailLog
+        async with async_session() as session:
+            result = await session.execute(
+                select(User.id).where(User.email == to)
+            )
+            user_id = result.scalar_one_or_none()
+            session.add(EmailLog(
+                id=uuid.uuid4(),
+                to_email=to,
+                user_id=user_id,
+                subject=subject,
+                email_type=email_type,
+                status=status,
+                error_detail=error_detail,
+                resend_id=resend_id,
+            ))
+            await session.commit()
+    except Exception:
+        logger.exception("Failed to log email to %s", to)
 
 
 def _branded_email(body_content: str) -> str:
@@ -49,11 +82,12 @@ def _branded_email(body_content: str) -> str:
 </html>"""
 
 
-async def _send_email(to: str, subject: str, html: str) -> bool:
+async def _send_email(to: str, subject: str, html: str, email_type: str = "unknown") -> bool:
     """Send an email via Resend API. Returns True on success."""
     api_key = settings.RESEND_API_KEY.strip()
     if not api_key:
         logger.warning("RESEND_API_KEY not configured — email not sent. To: %s", to)
+        await _log_email(to, subject, email_type, "skipped", error_detail="RESEND_API_KEY not configured")
         return False
 
     logger.info("Sending email to %s, subject=%r, from=%s", to, subject, settings.EMAIL_FROM)
@@ -76,11 +110,19 @@ async def _send_email(to: str, subject: str, html: str) -> bool:
             )
             if resp.status_code >= 400:
                 logger.error("Resend API error %s: %s", resp.status_code, resp.text)
+                await _log_email(to, subject, email_type, "failed", error_detail=resp.text[:500])
                 return False
+            resend_id = None
+            try:
+                resend_id = resp.json().get("id")
+            except Exception:
+                pass
             logger.info("Email sent successfully to %s (status=%s)", to, resp.status_code)
+            await _log_email(to, subject, email_type, "sent", resend_id=resend_id)
             return True
-    except Exception:
+    except Exception as exc:
         logger.exception("Failed to send email to %s", to)
+        await _log_email(to, subject, email_type, "error", error_detail=str(exc)[:500])
         return False
 
 
@@ -108,7 +150,7 @@ async def send_verification_email(to_email: str, token: str) -> bool:
               </p>"""
 
     html = _branded_email(body)
-    return await _send_email(to_email, "Verify your CrewTransition email", html)
+    return await _send_email(to_email, "Verify your CrewTransition email", html, "verification")
 
 
 async def send_reset_email(to_email: str, reset_token: str) -> bool:
@@ -136,7 +178,7 @@ async def send_reset_email(to_email: str, reset_token: str) -> bool:
               </p>"""
 
     html = _branded_email(body)
-    return await _send_email(to_email, "Reset your CrewTransition password", html)
+    return await _send_email(to_email, "Reset your CrewTransition password", html, "password_reset")
 
 
 async def send_stage1_results_email(
@@ -202,7 +244,7 @@ async def send_stage1_results_email(
               {unsub_html}"""
 
     html = _branded_email(body)
-    return await _send_email(to_email, f"Your top career match: {top_pathway_name}", html)
+    return await _send_email(to_email, f"Your top career match: {top_pathway_name}", html, "stage1_results")
 
 
 async def send_pro_welcome_email(to_email: str, user_name: str | None = None) -> bool:
@@ -237,4 +279,4 @@ async def send_pro_welcome_email(to_email: str, user_name: str | None = None) ->
               </p>"""
 
     html = _branded_email(body)
-    return await _send_email(to_email, "You're now a CrewTransition Pro!", html)
+    return await _send_email(to_email, "You're now a CrewTransition Pro!", html, "pro_welcome")

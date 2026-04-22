@@ -41,8 +41,9 @@ import AdminPromo from "@/components/AdminPromo";
 import AdminCoachUsage from "@/components/AdminCoachUsage";
 import AdminReferrals from "@/components/AdminReferrals";
 import AdminResources from "@/components/AdminResources";
+import AdminEmailLogs from "@/components/AdminEmailLogs";
 
-type Tab = "dashboard" | "users" | "questions" | "activity" | "promo" | "coach-usage" | "referrals" | "ai-resources";
+type Tab = "dashboard" | "users" | "questions" | "activity" | "promo" | "coach-usage" | "referrals" | "ai-resources" | "email-logs";
 
 function formatTimeAgo(dateStr: string): string {
   const now = Date.now();
@@ -181,6 +182,19 @@ const HELP_CONTENT: Record<Tab, { title: string; sections: { heading: string; bo
       {
         heading: "Cost Control",
         body: "Each user is limited to 100 messages per day (resets at midnight UTC). The quota is shown in the chat UI. Adjust the DAILY_MESSAGE_LIMIT constant in the backend to change the cap.",
+      },
+    ],
+  },
+  "email-logs": {
+    title: "Email Logs Help",
+    sections: [
+      {
+        heading: "Overview",
+        body: "View a log of every email sent by the platform — verification, password reset, Stage 1 results, and Pro welcome emails. Filter by type, status, or time window.",
+      },
+      {
+        heading: "Statuses",
+        body: `- **sent**: Successfully delivered to Resend API.\n- **failed**: Resend API returned an error.\n- **error**: Network or other exception before reaching Resend.\n- **skipped**: RESEND_API_KEY was not configured.`,
       },
     ],
   },
@@ -885,11 +899,12 @@ export default function AdminPage() {
 
       {/* Tabs */}
       <div style={styles.tabs}>
-        {(["dashboard", "users", "activity", "questions", "ai-resources", "promo", "coach-usage", "referrals"] as Tab[]).map((t) => {
+        {(["dashboard", "users", "activity", "questions", "ai-resources", "promo", "coach-usage", "referrals", "email-logs"] as Tab[]).map((t) => {
           const labels: Record<Tab, string> = {
             dashboard: "Dashboard", users: "Users", activity: "Activity",
             questions: "Questions", "ai-resources": "AI Resources",
             promo: "Promo Codes", "coach-usage": "Coach Usage", referrals: "Referrals",
+            "email-logs": "Email Logs",
           };
           return (
             <button
@@ -1549,6 +1564,12 @@ export default function AdminPage() {
         {tab === "ai-resources" && (
           <div style={{ padding: "1rem" }}>
             <AdminResources />
+          </div>
+        )}
+
+        {tab === "email-logs" && (
+          <div style={{ padding: "1rem" }}>
+            <AdminEmailLogs />
           </div>
         )}
       </div>

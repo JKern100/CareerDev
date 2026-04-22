@@ -88,6 +88,20 @@ class User(Base):
     reports: Mapped[list["Report"]] = relationship("Report", back_populates="user", lazy="selectin")
 
 
+class EmailLog(Base):
+    __tablename__ = "email_logs"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    to_email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    user_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    subject: Mapped[str] = mapped_column(String(500), nullable=False)
+    email_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(20), nullable=False)
+    error_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+    resend_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
 class UserNote(Base):
     __tablename__ = "user_notes"
 
