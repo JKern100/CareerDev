@@ -405,10 +405,9 @@ async def submit_answers(
         user.can_regenerate = True
         user.last_tier_completed_at = datetime.utcnow()
 
-    # On first-time Stage 1 completion, email the user their top match
+    # Send results email once Stage 1 is complete (idempotent via stage1_email_sent_at)
     if (
         t1_now
-        and not t1_was
         and user.stage1_email_sent_at is None
         and user.email_nudges_enabled
     ):
