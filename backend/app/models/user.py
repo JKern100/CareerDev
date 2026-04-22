@@ -75,6 +75,11 @@ class User(Base):
     referral_code: Mapped[str | None] = mapped_column(String(20), unique=True, nullable=True, default=_generate_referral_code)
     referred_by: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("users.id"), nullable=True)
 
+    # Email nudges
+    email_nudges_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    unsubscribe_token: Mapped[str | None] = mapped_column(String(64), unique=True, nullable=True, index=True)
+    stage1_email_sent_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

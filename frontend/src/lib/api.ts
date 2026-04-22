@@ -81,6 +81,13 @@ export async function resendVerification(email: string) {
   });
 }
 
+export async function unsubscribeEmail(token: string) {
+  return request<{ detail: string }>("/auth/unsubscribe", {
+    method: "POST",
+    body: JSON.stringify({ token }),
+  });
+}
+
 export async function getMe() {
   return request<{
     id: string;

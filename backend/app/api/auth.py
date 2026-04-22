@@ -249,6 +249,21 @@ async def logout():
     return {"detail": "Logged out"}
 
 
+@router.post("/unsubscribe")
+async def unsubscribe(data: dict, db: AsyncSession = Depends(get_db)):
+    """Public one-click unsubscribe — sets email_nudges_enabled=False."""
+    token = (data.get("token") or "").strip()
+    if not token:
+        raise HTTPException(status_code=400, detail="Missing token")
+    result = await db.execute(select(User).where(User.unsubscribe_token == token))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Invalid or expired token")
+    user.email_nudges_enabled = False
+    await db.commit()
+    return {"detail": "Unsubscribed successfully"}
+
+
 # ── Google OAuth ─────────────────────────────────────────
 
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"

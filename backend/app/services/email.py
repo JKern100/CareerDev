@@ -139,6 +139,72 @@ async def send_reset_email(to_email: str, reset_token: str) -> bool:
     return await _send_email(to_email, "Reset your CrewTransition password", html)
 
 
+async def send_stage1_results_email(
+    to_email: str,
+    user_name: str | None,
+    top_pathway_name: str,
+    match_pct: int,
+    unsubscribe_token: str | None,
+) -> bool:
+    """Sent when a user completes Stage 1 of the questionnaire.
+
+    Highlights their top career match and invites them back to see full results.
+    """
+    name = (user_name or "").split(" ")[0] or "there"
+    dashboard_url = f"{settings.FRONTEND_URL}/dashboard"
+    unsubscribe_url = (
+        f"{settings.FRONTEND_URL}/unsubscribe?token={unsubscribe_token}"
+        if unsubscribe_token
+        else None
+    )
+
+    unsub_html = (
+        f"""<p style="color: #94a3b8; font-size: 11px; line-height: 1.5; margin: 12px 0 0; text-align: center;">
+            Don't want these updates? <a href="{unsubscribe_url}" style="color: #94a3b8; text-decoration: underline;">Unsubscribe</a>
+          </p>"""
+        if unsubscribe_url
+        else ""
+    )
+
+    body = f"""\
+              <h2 style="color: #1e293b; font-size: 20px; margin: 0 0 16px;">Your first career match is in, {name}!</h2>
+              <p style="margin: 0 0 16px;">Based on your answers, here&rsquo;s your top career match so far:</p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 100%); border: 1px solid #dbeafe; border-radius: 12px; margin: 0 0 20px;">
+                <tr>
+                  <td style="padding: 20px 24px;">
+                    <p style="color: #3b82f6; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin: 0 0 6px;">Top Match</p>
+                    <p style="color: #1e293b; font-size: 20px; font-weight: 700; margin: 0 0 4px;">{top_pathway_name}</p>
+                    <p style="color: #64748b; font-size: 13px; margin: 0;">{match_pct}% fit based on your profile</p>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin: 0 0 16px;">Your full results include:</p>
+              <ul style="margin: 0 0 20px; padding-left: 20px; color: #334155;">
+                <li style="margin-bottom: 6px;">Your top 5 career pathways, ranked</li>
+                <li style="margin-bottom: 6px;">Salary benchmarks for each</li>
+                <li style="margin-bottom: 6px;">Credentials worth pursuing</li>
+                <li style="margin-bottom: 6px;">A step-by-step action plan</li>
+              </ul>
+              <table cellpadding="0" cellspacing="0" style="margin: 0 0 24px;">
+                <tr>
+                  <td align="center" style="background: #2563eb; border-radius: 8px;">
+                    <a href="{dashboard_url}"
+                       style="display: inline-block; padding: 14px 32px; color: #ffffff;
+                              text-decoration: none; font-weight: 600; font-size: 15px;">
+                      See my full results
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="color: #64748b; font-size: 13px; margin: 0;">
+                Share your results with crew friends who might be exploring too &mdash; your referral code is in the dashboard.
+              </p>
+              {unsub_html}"""
+
+    html = _branded_email(body)
+    return await _send_email(to_email, f"Your top career match: {top_pathway_name}", html)
+
+
 async def send_pro_welcome_email(to_email: str, user_name: str | None = None) -> bool:
     """Send a welcome email when a user activates Pro."""
     name = user_name or "there"

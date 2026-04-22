@@ -1,3 +1,6 @@
+import asyncio
+import logging
+import secrets
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -8,6 +11,10 @@ from app.database import get_db
 from app.models.user import User
 from app.models.questionnaire import Answer, Question
 from app.services.activity import log_activity
+from app.services.email import send_stage1_results_email
+from app.services.scoring import score_pathways
+
+logger = logging.getLogger(__name__)
 from app.schemas.questionnaire import (
     QuestionOut,
     QuestionSetOut,
@@ -397,6 +404,43 @@ async def submit_answers(
         user.can_regenerate_summary = True
         user.can_regenerate = True
         user.last_tier_completed_at = datetime.utcnow()
+
+    # On first-time Stage 1 completion, email the user their top match
+    if (
+        t1_now
+        and not t1_was
+        and user.stage1_email_sent_at is None
+        and user.email_nudges_enabled
+    ):
+        try:
+            ans_result = await db.execute(select(Answer).where(Answer.user_id == user.id))
+            answers_dict = {
+                a.question_id: {
+                    "value": a.value_json.get("value") if a.value_json else None,
+                    "value_json": a.value_json,
+                    "confidence": a.confidence,
+                    "evidence_refs": a.evidence_refs,
+                }
+                for a in ans_result.scalars().all()
+            }
+            scored = score_pathways(answers_dict)
+            if scored:
+                top = scored[0]
+                match_pct = max(0, min(100, int(round(top.adjusted_score * 100))))
+                if not user.unsubscribe_token:
+                    user.unsubscribe_token = secrets.token_urlsafe(32)
+                user.stage1_email_sent_at = datetime.utcnow()
+                asyncio.create_task(
+                    send_stage1_results_email(
+                        to_email=user.email,
+                        user_name=user.full_name,
+                        top_pathway_name=top.pathway_name,
+                        match_pct=match_pct,
+                        unsubscribe_token=user.unsubscribe_token,
+                    )
+                )
+        except Exception:
+            logger.exception("Failed to queue stage 1 results email for user %s", user.id)
 
     # Determine the current module from the submitted answers
     qid_to_module = {q.question_id: q.module for q in get_question_bank()}
