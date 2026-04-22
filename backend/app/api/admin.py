@@ -1399,3 +1399,76 @@ async def get_email_logs(
         }
         for e in logs
     ]
+
+
+# ── Send Test Email / Trigger Stage 1 Email ──────────────────────────────
+
+@router.post("/send-test-email")
+async def send_test_email(
+    admin: User = Depends(get_admin_user),
+):
+    """Send a simple test email to the admin's own address."""
+    from app.services.email import _send_email, _branded_email
+    body = """\
+        <h2 style="color: #1e293b; font-size: 20px; margin: 0 0 16px;">Test Email</h2>
+        <p>If you're reading this, your email configuration is working correctly.</p>
+        <p style="color: #64748b; font-size: 13px; margin-top: 16px;">Sent from the CrewTransition admin panel.</p>"""
+    html = _branded_email(body)
+    ok = await _send_email(admin.email, "CrewTransition Test Email", html, "test")
+    if not ok:
+        raise HTTPException(status_code=500, detail="Email send failed — check RESEND_API_KEY and logs")
+    return {"detail": f"Test email sent to {admin.email}"}
+
+
+@router.post("/users/{user_id}/send-stage1-email")
+async def send_stage1_email_for_user(
+    user_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
+):
+    """Manually trigger the Stage 1 results email for a user."""
+    import secrets as _secrets
+    from app.services.scoring import score_pathways
+    from app.services.email import send_stage1_results_email
+
+    user = await db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    ans_result = await db.execute(
+        select(Answer).where(Answer.user_id == user.id)
+    )
+    answers = ans_result.scalars().all()
+    if not answers:
+        raise HTTPException(status_code=400, detail="User has no answers")
+
+    answers_dict = {
+        a.question_id: {
+            "value": a.value_json.get("value") if a.value_json else None,
+            "value_json": a.value_json,
+            "confidence": a.confidence,
+            "evidence_refs": a.evidence_refs,
+        }
+        for a in answers
+    }
+    scored = score_pathways(answers_dict)
+    if not scored:
+        raise HTTPException(status_code=400, detail="No scored pathways — user may not have enough answers")
+
+    top = scored[0]
+    match_pct = max(0, min(100, int(round(top.adjusted_score * 100))))
+    if not user.unsubscribe_token:
+        user.unsubscribe_token = _secrets.token_urlsafe(32)
+    user.stage1_email_sent_at = datetime.utcnow()
+    await db.commit()
+
+    ok = await send_stage1_results_email(
+        to_email=user.email,
+        user_name=user.full_name,
+        top_pathway_name=top.pathway_name,
+        match_pct=match_pct,
+        unsubscribe_token=user.unsubscribe_token,
+    )
+    if not ok:
+        raise HTTPException(status_code=500, detail="Email send failed — check RESEND_API_KEY")
+    return {"detail": f"Stage 1 results email sent to {user.email}"}

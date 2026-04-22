@@ -25,6 +25,7 @@ import {
   deleteUserNote,
   adminActivatePlan,
   adminRevokePlan,
+  sendStage1Email,
   DashboardStats,
   AdminUser,
   AdminQuestion,
@@ -779,6 +780,16 @@ export default function AdminPage() {
     }
   }
 
+  async function handleSendStage1Email(userId: string, email: string) {
+    if (!confirm(`Send Stage 1 results email to ${email}?`)) return;
+    try {
+      const result = await sendStage1Email(userId);
+      setActionMsg(result.detail);
+    } catch (err: unknown) {
+      setActionMsg(err instanceof Error ? err.message : "Failed to send email");
+    }
+  }
+
   async function handleImpersonate(userId: string, email: string) {
     if (!confirm(`Log in as ${email}? You'll be viewing the app as this user.`)) return;
     try {
@@ -1069,6 +1080,12 @@ export default function AdminPage() {
                         Activate Pro
                       </button>
                     )}
+                    <button
+                      style={{ ...styles.btnOutline, borderColor: "#8b5cf6", color: "#a78bfa" }}
+                      onClick={() => handleSendStage1Email(selectedUser.id, selectedUser.email)}
+                    >
+                      Send Stage 1 Email
+                    </button>
                     <button
                       style={{ ...styles.btnOutline, borderColor: "#2563eb", color: "#60a5fa" }}
                       onClick={() => handleImpersonate(selectedUser.id, selectedUser.email)}

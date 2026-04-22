@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getEmailLogs, EmailLogEntry } from "@/lib/api";
+import { getEmailLogs, sendTestEmail, EmailLogEntry } from "@/lib/api";
 
 const TYPE_LABELS: Record<string, string> = {
   verification: "Verification",
@@ -25,6 +25,8 @@ export default function AdminEmailLogs() {
   const [filterType, setFilterType] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [days, setDays] = useState(30);
+  const [testMsg, setTestMsg] = useState("");
+  const [sendingTest, setSendingTest] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -60,6 +62,34 @@ export default function AdminEmailLogs() {
         <StatBox label="Sent" value={stats.sent} accent="#22c55e" />
         <StatBox label="Failed" value={stats.failed} accent="#ef4444" />
         <StatBox label="Skipped" value={stats.skipped} accent="#f59e0b" />
+      </div>
+
+      {/* Test email */}
+      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.5rem" }}>
+        <button
+          disabled={sendingTest}
+          onClick={async () => {
+            setSendingTest(true);
+            setTestMsg("");
+            try {
+              const res = await sendTestEmail();
+              setTestMsg(res.detail);
+              load();
+            } catch (e: unknown) {
+              setTestMsg(e instanceof Error ? e.message : "Failed");
+            } finally {
+              setSendingTest(false);
+            }
+          }}
+          style={{
+            background: "#2563eb", color: "#fff", border: "none", borderRadius: "6px",
+            padding: "0.5rem 1rem", fontSize: "0.85rem", fontWeight: 600, cursor: "pointer",
+            opacity: sendingTest ? 0.6 : 1,
+          }}
+        >
+          {sendingTest ? "Sending..." : "Send Test Email"}
+        </button>
+        {testMsg && <span style={{ color: testMsg.includes("fail") || testMsg.includes("error") ? "#ef4444" : "#22c55e", fontSize: "0.85rem" }}>{testMsg}</span>}
       </div>
 
       {/* Filters */}

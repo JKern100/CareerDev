@@ -951,6 +951,14 @@ export async function getEmailLogs(params?: { email_type?: string; status?: stri
   return request<EmailLogEntry[]>(`/admin/email-logs${qs ? `?${qs}` : ""}`);
 }
 
+export async function sendTestEmail() {
+  return request<{ detail: string }>("/admin/send-test-email", { method: "POST" });
+}
+
+export async function sendStage1Email(userId: string) {
+  return request<{ detail: string }>(`/admin/users/${userId}/send-stage1-email`, { method: "POST" });
+}
+
 export async function adminActivatePlan(userId: string, plan: string = "pro") {
   return request<{ detail: string }>(`/admin/users/${userId}/activate-plan`, {
     method: "POST",
