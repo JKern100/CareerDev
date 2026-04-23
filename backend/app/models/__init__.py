@@ -1,4 +1,4 @@
-from app.models.user import User, EmailLog
+from app.models.user import User, EmailLog, EmailTemplate
 from app.models.questionnaire import Question, Answer, Evidence
 from app.models.pathway import Pathway, PathwayScore
 from app.models.report import Report, AnalysisReport
@@ -13,6 +13,7 @@ from app.models.promo import PromoCode, PromoRedemption
 __all__ = [
     "User",
     "EmailLog",
+    "EmailTemplate",
     "Question",
     "Answer",
     "Evidence",

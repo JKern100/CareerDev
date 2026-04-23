@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import {
   getEmailLogs, sendTestEmail, getAdminUsers, sendBulkEmail,
-  EmailLogEntry, AdminUser, BulkEmailResult,
+  getEmailTemplates, updateEmailTemplate, resetEmailTemplate,
+  EmailLogEntry, AdminUser, BulkEmailResult, EmailTemplateData,
 } from "@/lib/api";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -25,7 +26,19 @@ const STATUS_COLORS: Record<string, string> = {
   skipped: "#f59e0b",
 };
 
-type SubTab = "send" | "log";
+type SubTab = "send" | "templates" | "log";
+
+const TEMPLATE_LABELS: Record<string, string> = {
+  coach_invite: "Try the AI Coach",
+  come_back: "We Miss You",
+  complete_questionnaire: "Finish Questionnaire",
+};
+
+const TEMPLATE_VARS: Record<string, string[]> = {
+  coach_invite: ["{{name}}", "{{coach_url}}", "{{dashboard_url}}", "{{unsubscribe_html}}"],
+  come_back: ["{{name}}", "{{away_line}}", "{{dashboard_url}}", "{{unsubscribe_html}}"],
+  complete_questionnaire: ["{{name}}", "{{current_module}}", "{{questionnaire_url}}", "{{unsubscribe_html}}"],
+};
 
 const TEMPLATES = [
   {
@@ -76,7 +89,7 @@ export default function AdminEmailManager() {
     <div>
       {/* Sub-navigation */}
       <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
-        {([["send", "Send Emails"], ["log", "Email Log"]] as [SubTab, string][]).map(([id, label]) => (
+        {([["send", "Send Emails"], ["templates", "Edit Templates"], ["log", "Email Log"]] as [SubTab, string][]).map(([id, label]) => (
           <button
             key={id}
             onClick={() => setSubTab(id)}
@@ -94,6 +107,7 @@ export default function AdminEmailManager() {
       </div>
 
       {subTab === "send" && <SendEmailsView />}
+      {subTab === "templates" && <TemplateEditorView />}
       {subTab === "log" && <EmailLogView />}
     </div>
   );
@@ -343,6 +357,167 @@ function UserRow({ user, selected, onToggle, dimmed }: { user: AdminUser; select
         </span>
       </div>
     </label>
+  );
+}
+
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/*  Template Editor View                                                   */
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+function TemplateEditorView() {
+  const [templates, setTemplates] = useState<EmailTemplateData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [editSubject, setEditSubject] = useState("");
+  const [editBody, setEditBody] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [previewing, setPreviewing] = useState(false);
+
+  async function load() {
+    setLoading(true);
+    try {
+      setTemplates(await getEmailTemplates());
+    } catch {
+      setMsg("Failed to load templates");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { load(); }, []);
+
+  function startEdit(t: EmailTemplateData) {
+    setEditing(t.id);
+    setEditSubject(t.subject);
+    setEditBody(t.body_html);
+    setMsg("");
+    setPreviewing(false);
+  }
+
+  async function handleSave() {
+    if (!editing) return;
+    setSaving(true);
+    setMsg("");
+    try {
+      const res = await updateEmailTemplate(editing, editSubject, editBody);
+      setMsg(res.detail);
+      setEditing(null);
+      load();
+    } catch (e: unknown) {
+      setMsg(e instanceof Error ? e.message : "Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleReset(id: string) {
+    if (!confirm("Reset this template to its default? Your customizations will be lost.")) return;
+    try {
+      const res = await resetEmailTemplate(id);
+      setMsg(res.detail);
+      setEditing(null);
+      load();
+    } catch (e: unknown) {
+      setMsg(e instanceof Error ? e.message : "Failed to reset");
+    }
+  }
+
+  if (loading) return <p style={{ color: "#94a3b8" }}>Loading templates...</p>;
+
+  if (editing) {
+    const vars = TEMPLATE_VARS[editing] || [];
+    return (
+      <div>
+        <button onClick={() => setEditing(null)} style={{ ...smallBtn, marginBottom: "1rem" }}>&larr; Back to list</button>
+        <h4 style={{ color: "#e2e8f0", marginBottom: "1rem" }}>Editing: {TEMPLATE_LABELS[editing] || editing}</h4>
+
+        {vars.length > 0 && (
+          <div style={{ marginBottom: "1rem", padding: "0.75rem", background: "#1e293b", borderRadius: "8px", border: "1px solid #334155" }}>
+            <p style={{ color: "#94a3b8", fontSize: "0.75rem", marginBottom: "0.25rem", fontWeight: 600 }}>Available variables (automatically replaced when sending):</p>
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+              {vars.map((v) => (
+                <code key={v} style={{ background: "#334155", color: "#60a5fa", padding: "2px 6px", borderRadius: "3px", fontSize: "0.75rem" }}>{v}</code>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <label style={{ display: "block", color: "#94a3b8", fontSize: "0.8rem", marginBottom: "0.25rem" }}>Subject</label>
+        <input
+          value={editSubject}
+          onChange={(e) => setEditSubject(e.target.value)}
+          style={{ ...inputStyle, width: "100%", marginBottom: "0.75rem" }}
+        />
+
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.25rem" }}>
+          <label style={{ color: "#94a3b8", fontSize: "0.8rem" }}>Body HTML</label>
+          <button onClick={() => setPreviewing(!previewing)} style={smallBtn}>
+            {previewing ? "Edit" : "Preview"}
+          </button>
+        </div>
+
+        {previewing ? (
+          <div
+            style={{ background: "#fff", color: "#1e293b", padding: "1.5rem", borderRadius: "8px", fontSize: "15px", lineHeight: 1.6, minHeight: "200px" }}
+            dangerouslySetInnerHTML={{ __html: editBody }}
+          />
+        ) : (
+          <textarea
+            value={editBody}
+            onChange={(e) => setEditBody(e.target.value)}
+            rows={18}
+            style={{ ...inputStyle, width: "100%", resize: "vertical", fontFamily: "monospace", fontSize: "0.8rem", lineHeight: 1.5 }}
+          />
+        )}
+
+        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", marginTop: "1rem" }}>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            style={{ background: "#2563eb", color: "#fff", border: "none", borderRadius: "6px", padding: "0.5rem 1.25rem", fontSize: "0.85rem", fontWeight: 600, cursor: "pointer", opacity: saving ? 0.5 : 1 }}
+          >
+            {saving ? "Saving..." : "Save Template"}
+          </button>
+          <button onClick={() => setEditing(null)} style={smallBtn}>Cancel</button>
+          {msg && <span style={{ color: msg.includes("fail") || msg.includes("error") ? "#ef4444" : "#22c55e", fontSize: "0.85rem" }}>{msg}</span>}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {msg && <p style={{ color: "#22c55e", fontSize: "0.85rem", marginBottom: "1rem" }}>{msg}</p>}
+      <div style={{ display: "grid", gap: "0.75rem" }}>
+        {templates.map((t) => (
+          <div key={t.id} style={{ background: "#1e293b", borderRadius: "8px", padding: "1rem", border: "1px solid #334155" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
+              <div>
+                <p style={{ color: "#f1f5f9", fontWeight: 600, fontSize: "0.9rem", margin: "0 0 4px" }}>
+                  {TEMPLATE_LABELS[t.id] || t.id}
+                </p>
+                <p style={{ color: "#94a3b8", fontSize: "0.8rem", margin: 0 }}>Subject: {t.subject}</p>
+              </div>
+              <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                {t.is_customized && (
+                  <>
+                    <span style={{ ...badge, background: "rgba(139,92,246,0.15)", color: "#a78bfa" }}>customized</span>
+                    <button onClick={() => handleReset(t.id)} style={{ ...smallBtn, color: "#f87171" }}>Reset</button>
+                  </>
+                )}
+                <button onClick={() => startEdit(t)} style={{ ...smallBtn, background: "#2563eb", color: "#fff" }}>Edit</button>
+              </div>
+            </div>
+            <div
+              style={{ background: "#0f172a", borderRadius: "6px", padding: "0.75rem", maxHeight: "120px", overflow: "auto", fontSize: "0.75rem", color: "#94a3b8", fontFamily: "monospace", lineHeight: 1.4 }}
+              dangerouslySetInnerHTML={{ __html: t.body_html.slice(0, 500) + (t.body_html.length > 500 ? "..." : "") }}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

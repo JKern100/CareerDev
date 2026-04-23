@@ -17,7 +17,7 @@ from sqlalchemy import select, func, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.models.user import User, UserRole, UserNote, EmailLog
+from app.models.user import User, UserRole, UserNote, EmailLog, EmailTemplate
 from app.models.questionnaire import Answer, Question, Evidence
 from app.models.report import Report, AnalysisReport
 from app.models.pathway import PathwayScore
@@ -1624,3 +1624,78 @@ async def send_bulk_email(
             details.append({"email": user.email, "status": "failed", "error": str(exc)[:200]})
 
     return {"sent": sent, "failed": failed, "details": details}
+
+
+# ── Email Templates ──────────────────────────────────────────────────────
+
+@router.get("/email-templates")
+async def list_email_templates(
+    db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
+):
+    from app.services.email import DEFAULT_TEMPLATES
+    result = await db.execute(select(EmailTemplate))
+    db_templates = {t.id: t for t in result.scalars().all()}
+
+    out = []
+    for tmpl_id, defaults in DEFAULT_TEMPLATES.items():
+        db_t = db_templates.get(tmpl_id)
+        out.append({
+            "id": tmpl_id,
+            "subject": db_t.subject if db_t else defaults["subject"],
+            "body_html": db_t.body_html if db_t else defaults["body_html"],
+            "is_customized": db_t is not None,
+            "updated_at": db_t.updated_at.isoformat() if db_t and db_t.updated_at else None,
+        })
+    return out
+
+
+class EmailTemplateUpdate(BaseModel):
+    subject: str
+    body_html: str
+
+
+@router.put("/email-templates/{template_id}")
+async def update_email_template(
+    template_id: str,
+    data: EmailTemplateUpdate,
+    db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
+):
+    from app.services.email import DEFAULT_TEMPLATES
+    if template_id not in DEFAULT_TEMPLATES:
+        raise HTTPException(status_code=404, detail="Unknown template ID")
+
+    result = await db.execute(
+        select(EmailTemplate).where(EmailTemplate.id == template_id)
+    )
+    tmpl = result.scalar_one_or_none()
+    if tmpl:
+        tmpl.subject = data.subject
+        tmpl.body_html = data.body_html
+        tmpl.updated_at = datetime.utcnow()
+    else:
+        db.add(EmailTemplate(
+            id=template_id,
+            subject=data.subject,
+            body_html=data.body_html,
+        ))
+    await db.commit()
+    return {"detail": f"Template '{template_id}' saved"}
+
+
+@router.delete("/email-templates/{template_id}")
+async def reset_email_template(
+    template_id: str,
+    db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
+):
+    """Reset a template to its default by deleting the DB override."""
+    result = await db.execute(
+        select(EmailTemplate).where(EmailTemplate.id == template_id)
+    )
+    tmpl = result.scalar_one_or_none()
+    if tmpl:
+        await db.delete(tmpl)
+        await db.commit()
+    return {"detail": f"Template '{template_id}' reset to default"}

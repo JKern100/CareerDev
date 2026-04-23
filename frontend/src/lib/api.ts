@@ -958,6 +958,31 @@ export interface BulkEmailResult {
   details: { email: string; status: string; error: string | null }[];
 }
 
+export interface EmailTemplateData {
+  id: string;
+  subject: string;
+  body_html: string;
+  is_customized: boolean;
+  updated_at: string | null;
+}
+
+export async function getEmailTemplates() {
+  return request<EmailTemplateData[]>("/admin/email-templates");
+}
+
+export async function updateEmailTemplate(id: string, subject: string, body_html: string) {
+  return request<{ detail: string }>(`/admin/email-templates/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ subject, body_html }),
+  });
+}
+
+export async function resetEmailTemplate(id: string) {
+  return request<{ detail: string }>(`/admin/email-templates/${id}`, {
+    method: "DELETE",
+  });
+}
+
 export async function sendBulkEmail(
   user_ids: string[],
   template: string,

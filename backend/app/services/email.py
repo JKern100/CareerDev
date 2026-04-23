@@ -13,6 +13,63 @@ logger = logging.getLogger(__name__)
 
 RESEND_API = "https://api.resend.com/emails"
 
+# ── Default template content (used as fallback if DB has no override) ────
+
+DEFAULT_TEMPLATES: dict[str, dict[str, str]] = {}
+
+
+def _register_default(template_id: str, subject: str, body_html: str):
+    DEFAULT_TEMPLATES[template_id] = {"subject": subject, "body_html": body_html}
+
+
+async def _get_template(template_id: str) -> tuple[str, str]:
+    """Load template from DB, falling back to hardcoded default."""
+    try:
+        from app.models.user import EmailTemplate
+        async with async_session() as session:
+            result = await session.execute(
+                select(EmailTemplate).where(EmailTemplate.id == template_id)
+            )
+            tmpl = result.scalar_one_or_none()
+            if tmpl:
+                return tmpl.subject, tmpl.body_html
+    except Exception:
+        pass
+    default = DEFAULT_TEMPLATES.get(template_id)
+    if default:
+        return default["subject"], default["body_html"]
+    return template_id, ""
+
+
+def _apply_vars(text: str, variables: dict[str, str]) -> str:
+    """Replace {{var}} placeholders in template text."""
+    for key, val in variables.items():
+        text = text.replace("{{" + key + "}}", val)
+    return text
+
+
+def _build_vars(user_name: str | None, unsubscribe_token: str | None, **extra: str) -> dict[str, str]:
+    """Build the standard variable dict for template rendering."""
+    name = (user_name or "").split(" ")[0] or "there"
+    unsub_url = (
+        f"{settings.FRONTEND_URL}/unsubscribe?token={unsubscribe_token}"
+        if unsubscribe_token else None
+    )
+    unsub_html = (
+        f'<p style="color: #94a3b8; font-size: 11px; line-height: 1.5; margin: 12px 0 0; text-align: center;">'
+        f'Don\'t want these updates? <a href="{unsub_url}" style="color: #94a3b8; text-decoration: underline;">Unsubscribe</a></p>'
+        if unsub_url else ""
+    )
+    variables = {
+        "name": name,
+        "unsubscribe_html": unsub_html,
+        "dashboard_url": f"{settings.FRONTEND_URL}/dashboard",
+        "coach_url": f"{settings.FRONTEND_URL}/coach",
+        "questionnaire_url": f"{settings.FRONTEND_URL}/questionnaire",
+    }
+    variables.update(extra)
+    return variables
+
 
 async def _log_email(
     to: str,
@@ -247,56 +304,62 @@ async def send_stage1_results_email(
     return await _send_email(to_email, f"Your top career match: {top_pathway_name}", html, "stage1_results")
 
 
+_register_default("coach_invite",
+    "Your personal career coach is waiting",
+    """<h2 style="color: #1e293b; font-size: 20px; margin: 0 0 16px;">Hi {{name}}, your personal career coach is ready</h2>
+<p style="margin: 0 0 16px;">You&rsquo;ve already taken the first step by completing your questionnaire. Now there&rsquo;s someone waiting to help you take the next one.</p>
+<p style="margin: 0 0 12px; font-weight: 600; color: #1e293b;">This isn&rsquo;t generic ChatGPT.</p>
+<p style="margin: 0 0 16px;">Your CrewTransition coach has <em>already read</em> your questionnaire answers. It knows your background, your skills, and your goals &mdash; so every conversation starts from where you are, not from scratch.</p>
+<p style="margin: 0 0 8px; font-weight: 600; color: #1e293b;">What your coach can help with:</p>
+<ul style="margin: 0 0 20px; padding-left: 20px; color: #334155;">
+  <li style="margin-bottom: 6px;"><strong>Interview prep</strong> tailored to your target career</li>
+  <li style="margin-bottom: 6px;"><strong>Resume translation</strong> of your aviation skills into civilian language employers understand</li>
+  <li style="margin-bottom: 6px;"><strong>Salary negotiation</strong> advice based on your experience level</li>
+  <li style="margin-bottom: 6px;"><strong>Step-by-step transition planning</strong> with specialty knowledge about moving from aviation</li>
+</ul>
+<p style="margin: 0 0 24px; color: #64748b; font-size: 14px;">Plus, it remembers your entire conversation history &mdash; so you can pick up right where you left off, every time.</p>
+<table cellpadding="0" cellspacing="0" style="margin: 0 0 24px;">
+  <tr>
+    <td align="center" style="background: #2563eb; border-radius: 8px;">
+      <a href="{{coach_url}}" style="display: inline-block; padding: 14px 32px; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px;">Talk to My Coach</a>
+    </td>
+  </tr>
+</table>
+{{unsubscribe_html}}""")
+
+
 async def send_coach_invite_email(
     to_email: str,
     user_name: str | None,
     unsubscribe_token: str | None,
 ) -> bool:
     """Invite a user to try the AI career coach."""
-    name = (user_name or "").split(" ")[0] or "there"
-    coach_url = f"{settings.FRONTEND_URL}/coach"
-    unsubscribe_url = (
-        f"{settings.FRONTEND_URL}/unsubscribe?token={unsubscribe_token}"
-        if unsubscribe_token
-        else None
-    )
+    subject, body_tmpl = await _get_template("coach_invite")
+    variables = _build_vars(user_name, unsubscribe_token, coach_url=f"{settings.FRONTEND_URL}/coach")
+    body = _apply_vars(body_tmpl, variables)
+    subject = _apply_vars(subject, variables)
+    return await _send_email(to_email, subject, _branded_email(body), "coach_invite")
 
-    unsub_html = (
-        f"""<p style="color: #94a3b8; font-size: 11px; line-height: 1.5; margin: 12px 0 0; text-align: center;">
-            Don't want these updates? <a href="{unsubscribe_url}" style="color: #94a3b8; text-decoration: underline;">Unsubscribe</a>
-          </p>"""
-        if unsubscribe_url
-        else ""
-    )
 
-    body = f"""\
-              <h2 style="color: #1e293b; font-size: 20px; margin: 0 0 16px;">Hi {name}, your personal career coach is ready</h2>
-              <p style="margin: 0 0 16px;">You&rsquo;ve already taken the first step by completing your questionnaire. Now there&rsquo;s someone waiting to help you take the next one.</p>
-              <p style="margin: 0 0 12px; font-weight: 600; color: #1e293b;">This isn&rsquo;t generic ChatGPT.</p>
-              <p style="margin: 0 0 16px;">Your CrewTransition coach has <em>already read</em> your questionnaire answers. It knows your background, your skills, and your goals &mdash; so every conversation starts from where you are, not from scratch.</p>
-              <p style="margin: 0 0 8px; font-weight: 600; color: #1e293b;">What your coach can help with:</p>
-              <ul style="margin: 0 0 20px; padding-left: 20px; color: #334155;">
-                <li style="margin-bottom: 6px;"><strong>Interview prep</strong> tailored to your target career</li>
-                <li style="margin-bottom: 6px;"><strong>Resume translation</strong> of your aviation skills into civilian language employers understand</li>
-                <li style="margin-bottom: 6px;"><strong>Salary negotiation</strong> advice based on your experience level</li>
-                <li style="margin-bottom: 6px;"><strong>Step-by-step transition planning</strong> with specialty knowledge about moving from aviation</li>
-              </ul>
-              <p style="margin: 0 0 24px; color: #64748b; font-size: 14px;">Plus, it remembers your entire conversation history &mdash; so you can pick up right where you left off, every time.</p>
-              <table cellpadding="0" cellspacing="0" style="margin: 0 0 24px;">
-                <tr>
-                  <td align="center" style="background: #2563eb; border-radius: 8px;">
-                    <a href="{coach_url}"
-                       style="display: inline-block; padding: 14px 32px; color: #ffffff;
-                              text-decoration: none; font-weight: 600; font-size: 15px;">
-                      Talk to My Coach
-                    </a>
-                  </td>
-                </tr>
-              </table>
-              {unsub_html}"""
-
-    html = _branded_email(body)
-    return await _send_email(to_email, "Your personal career coach is waiting", html, "coach_invite")
+_register_default("come_back",
+    "We miss you — your career plan is waiting",
+    """<h2 style="color: #1e293b; font-size: 20px; margin: 0 0 16px;">Hi {{name}}, your career plan is still here</h2>
+{{away_line}}
+<p style="margin: 0 0 16px;">Career transitions take time &mdash; there&rsquo;s no rush. But when you&rsquo;re ready, everything is right where you left it:</p>
+<ul style="margin: 0 0 20px; padding-left: 20px; color: #334155;">
+  <li style="margin-bottom: 6px;">Your personalised career results and pathway matches</li>
+  <li style="margin-bottom: 6px;">Your AI career coach, ready to continue the conversation</li>
+  <li style="margin-bottom: 6px;">Your step-by-step action plan</li>
+</ul>
+<p style="margin: 0 0 24px;">Even five minutes can move things forward.</p>
+<table cellpadding="0" cellspacing="0" style="margin: 0 0 24px;">
+  <tr>
+    <td align="center" style="background: #2563eb; border-radius: 8px;">
+      <a href="{{dashboard_url}}" style="display: inline-block; padding: 14px 32px; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px;">Pick up where I left off</a>
+    </td>
+  </tr>
+</table>
+{{unsubscribe_html}}""")
 
 
 async def send_come_back_email(
@@ -306,53 +369,32 @@ async def send_come_back_email(
     unsubscribe_token: str | None,
 ) -> bool:
     """Re-engagement email for users who haven't visited in a while."""
-    name = (user_name or "").split(" ")[0] or "there"
-    dashboard_url = f"{settings.FRONTEND_URL}/dashboard"
-    unsubscribe_url = (
-        f"{settings.FRONTEND_URL}/unsubscribe?token={unsubscribe_token}"
-        if unsubscribe_token
-        else None
-    )
-
-    unsub_html = (
-        f"""<p style="color: #94a3b8; font-size: 11px; line-height: 1.5; margin: 12px 0 0; text-align: center;">
-            Don't want these updates? <a href="{unsubscribe_url}" style="color: #94a3b8; text-decoration: underline;">Unsubscribe</a>
-          </p>"""
-        if unsubscribe_url
-        else ""
-    )
-
     away_line = (
-        f"<p style=\"margin: 0 0 16px;\">It&rsquo;s been {days_away} days since your last visit, and we wanted to check in.</p>"
+        f'<p style="margin: 0 0 16px;">It&rsquo;s been {days_away} days since your last visit, and we wanted to check in.</p>'
         if days_away > 7
-        else "<p style=\"margin: 0 0 16px;\">It&rsquo;s been a little while since your last visit, and we wanted to check in.</p>"
+        else '<p style="margin: 0 0 16px;">It&rsquo;s been a little while since your last visit, and we wanted to check in.</p>'
     )
+    subject, body_tmpl = await _get_template("come_back")
+    variables = _build_vars(user_name, unsubscribe_token, away_line=away_line)
+    body = _apply_vars(body_tmpl, variables)
+    subject = _apply_vars(subject, variables)
+    return await _send_email(to_email, subject, _branded_email(body), "come_back")
 
-    body = f"""\
-              <h2 style="color: #1e293b; font-size: 20px; margin: 0 0 16px;">Hi {name}, your career plan is still here</h2>
-              {away_line}
-              <p style="margin: 0 0 16px;">Career transitions take time &mdash; there&rsquo;s no rush. But when you&rsquo;re ready, everything is right where you left it:</p>
-              <ul style="margin: 0 0 20px; padding-left: 20px; color: #334155;">
-                <li style="margin-bottom: 6px;">Your personalised career results and pathway matches</li>
-                <li style="margin-bottom: 6px;">Your AI career coach, ready to continue the conversation</li>
-                <li style="margin-bottom: 6px;">Your step-by-step action plan</li>
-              </ul>
-              <p style="margin: 0 0 24px;">Even five minutes can move things forward.</p>
-              <table cellpadding="0" cellspacing="0" style="margin: 0 0 24px;">
-                <tr>
-                  <td align="center" style="background: #2563eb; border-radius: 8px;">
-                    <a href="{dashboard_url}"
-                       style="display: inline-block; padding: 14px 32px; color: #ffffff;
-                              text-decoration: none; font-weight: 600; font-size: 15px;">
-                      Pick up where I left off
-                    </a>
-                  </td>
-                </tr>
-              </table>
-              {unsub_html}"""
 
-    html = _branded_email(body)
-    return await _send_email(to_email, "We miss you — your career plan is waiting", html, "come_back")
+_register_default("complete_questionnaire",
+    "You're almost there — finish your career profile",
+    """<h2 style="color: #1e293b; font-size: 20px; margin: 0 0 16px;">You&rsquo;re almost there, {{name}}!</h2>
+<p style="margin: 0 0 16px;">You&rsquo;ve already started your career profile and you&rsquo;re currently on module <strong>{{current_module}}</strong> (out of H). Every answer you give helps us build a more accurate picture of your strengths and match you with the right career paths.</p>
+<p style="margin: 0 0 16px;">The more you share, the better your results will be &mdash; more detailed answers mean more precise career matches, better salary estimates, and a sharper action plan.</p>
+<p style="margin: 0 0 24px;">Pick up right where you stopped &mdash; your progress is saved.</p>
+<table cellpadding="0" cellspacing="0" style="margin: 0 0 24px;">
+  <tr>
+    <td align="center" style="background: #2563eb; border-radius: 8px;">
+      <a href="{{questionnaire_url}}" style="display: inline-block; padding: 14px 32px; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px;">Continue my questionnaire</a>
+    </td>
+  </tr>
+</table>
+{{unsubscribe_html}}""")
 
 
 async def send_complete_questionnaire_email(
@@ -362,44 +404,12 @@ async def send_complete_questionnaire_email(
     unsubscribe_token: str | None,
 ) -> bool:
     """Nudge a user to finish their questionnaire."""
-    name = (user_name or "").split(" ")[0] or "there"
-    questionnaire_url = f"{settings.FRONTEND_URL}/questionnaire"
-    unsubscribe_url = (
-        f"{settings.FRONTEND_URL}/unsubscribe?token={unsubscribe_token}"
-        if unsubscribe_token
-        else None
-    )
-
-    unsub_html = (
-        f"""<p style="color: #94a3b8; font-size: 11px; line-height: 1.5; margin: 12px 0 0; text-align: center;">
-            Don't want these updates? <a href="{unsubscribe_url}" style="color: #94a3b8; text-decoration: underline;">Unsubscribe</a>
-          </p>"""
-        if unsubscribe_url
-        else ""
-    )
-
     module_display = current_module or "the first section"
-
-    body = f"""\
-              <h2 style="color: #1e293b; font-size: 20px; margin: 0 0 16px;">You&rsquo;re almost there, {name}!</h2>
-              <p style="margin: 0 0 16px;">You&rsquo;ve already started your career profile and you&rsquo;re currently on module <strong>{module_display}</strong> (out of H). Every answer you give helps us build a more accurate picture of your strengths and match you with the right career paths.</p>
-              <p style="margin: 0 0 16px;">The more you share, the better your results will be &mdash; more detailed answers mean more precise career matches, better salary estimates, and a sharper action plan.</p>
-              <p style="margin: 0 0 24px;">Pick up right where you stopped &mdash; your progress is saved.</p>
-              <table cellpadding="0" cellspacing="0" style="margin: 0 0 24px;">
-                <tr>
-                  <td align="center" style="background: #2563eb; border-radius: 8px;">
-                    <a href="{questionnaire_url}"
-                       style="display: inline-block; padding: 14px 32px; color: #ffffff;
-                              text-decoration: none; font-weight: 600; font-size: 15px;">
-                      Continue my questionnaire
-                    </a>
-                  </td>
-                </tr>
-              </table>
-              {unsub_html}"""
-
-    html = _branded_email(body)
-    return await _send_email(to_email, "You're almost there — finish your career profile", html, "complete_questionnaire")
+    subject, body_tmpl = await _get_template("complete_questionnaire")
+    variables = _build_vars(user_name, unsubscribe_token, current_module=module_display)
+    body = _apply_vars(body_tmpl, variables)
+    subject = _apply_vars(subject, variables)
+    return await _send_email(to_email, subject, _branded_email(body), "complete_questionnaire")
 
 
 async def send_custom_email(

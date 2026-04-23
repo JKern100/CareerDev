@@ -88,6 +88,15 @@ class User(Base):
     reports: Mapped[list["Report"]] = relationship("Report", back_populates="user", lazy="selectin")
 
 
+class EmailTemplate(Base):
+    __tablename__ = "email_templates"
+
+    id: Mapped[str] = mapped_column(String(50), primary_key=True)
+    subject: Mapped[str] = mapped_column(String(500), nullable=False)
+    body_html: Mapped[str] = mapped_column(Text, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 class EmailLog(Base):
     __tablename__ = "email_logs"
 
