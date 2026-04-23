@@ -1081,12 +1081,6 @@ export default function AdminPage() {
                       </button>
                     )}
                     <button
-                      style={{ ...styles.btnOutline, borderColor: "#8b5cf6", color: "#a78bfa" }}
-                      onClick={() => handleSendStage1Email(selectedUser.id, selectedUser.email)}
-                    >
-                      Send Stage 1 Email
-                    </button>
-                    <button
                       style={{ ...styles.btnOutline, borderColor: "#2563eb", color: "#60a5fa" }}
                       onClick={() => handleImpersonate(selectedUser.id, selectedUser.email)}
                     >
@@ -1100,6 +1094,14 @@ export default function AdminPage() {
                     </button>
                     <button style={styles.btnDanger} onClick={() => handleDeleteUser(selectedUser.id, selectedUser.email)}>
                       Delete User
+                    </button>
+                  </div>
+                  <div style={{ marginBottom: "1rem" }}>
+                    <button
+                      style={{ background: "#7c3aed", color: "#fff", border: "none", borderRadius: "6px", padding: "0.5rem 1rem", fontSize: "0.85rem", fontWeight: 600, cursor: "pointer" }}
+                      onClick={() => handleSendStage1Email(selectedUser.id, selectedUser.email)}
+                    >
+                      Send Stage 1 Results Email
                     </button>
                   </div>
 
