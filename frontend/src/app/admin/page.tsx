@@ -42,9 +42,9 @@ import AdminPromo from "@/components/AdminPromo";
 import AdminCoachUsage from "@/components/AdminCoachUsage";
 import AdminReferrals from "@/components/AdminReferrals";
 import AdminResources from "@/components/AdminResources";
-import AdminEmailLogs from "@/components/AdminEmailLogs";
+import AdminEmailManager from "@/components/AdminEmailManager";
 
-type Tab = "dashboard" | "users" | "questions" | "activity" | "promo" | "coach-usage" | "referrals" | "ai-resources" | "email-logs";
+type Tab = "dashboard" | "users" | "questions" | "activity" | "promo" | "coach-usage" | "referrals" | "ai-resources" | "emails";
 
 function formatTimeAgo(dateStr: string): string {
   const now = Date.now();
@@ -186,12 +186,20 @@ const HELP_CONTENT: Record<Tab, { title: string; sections: { heading: string; bo
       },
     ],
   },
-  "email-logs": {
-    title: "Email Logs Help",
+  emails: {
+    title: "Email Management Help",
     sections: [
       {
-        heading: "Overview",
-        body: "View a log of every email sent by the platform — verification, password reset, Stage 1 results, and Pro welcome emails. Filter by type, status, or time window.",
+        heading: "Send Emails",
+        body: "Choose a template and select recipients. Templates auto-filter to the most relevant users, but you can manually add or remove anyone. Custom emails let you write a subject and body that get wrapped in the branded template.",
+      },
+      {
+        heading: "Templates",
+        body: `- **Try the AI Coach**: For Pro users who haven't used the coach yet.\n- **Finish Questionnaire**: For users who started but didn't finish.\n- **We Miss You**: For users inactive 7+ days.\n- **Stage 1 Results**: Send top career match to completers.\n- **Custom Email**: Write your own subject and body.`,
+      },
+      {
+        heading: "Email Log",
+        body: "View every email sent by the platform. Filter by type, status, or time window. Use 'Send Test Email' to verify your Resend configuration is working.",
       },
       {
         heading: "Statuses",
@@ -910,12 +918,12 @@ export default function AdminPage() {
 
       {/* Tabs */}
       <div style={styles.tabs}>
-        {(["dashboard", "users", "activity", "questions", "ai-resources", "promo", "coach-usage", "referrals", "email-logs"] as Tab[]).map((t) => {
+        {(["dashboard", "users", "activity", "questions", "ai-resources", "promo", "coach-usage", "referrals", "emails"] as Tab[]).map((t) => {
           const labels: Record<Tab, string> = {
             dashboard: "Dashboard", users: "Users", activity: "Activity",
             questions: "Questions", "ai-resources": "AI Resources",
             promo: "Promo Codes", "coach-usage": "Coach Usage", referrals: "Referrals",
-            "email-logs": "Email Logs",
+            emails: "Emails",
           };
           return (
             <button
@@ -1586,9 +1594,9 @@ export default function AdminPage() {
           </div>
         )}
 
-        {tab === "email-logs" && (
+        {tab === "emails" && (
           <div style={{ padding: "1rem" }}>
-            <AdminEmailLogs />
+            <AdminEmailManager />
           </div>
         )}
       </div>

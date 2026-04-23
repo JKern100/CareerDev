@@ -56,6 +56,7 @@ class AdminUserOut(BaseModel):
     is_online: bool
     login_count: int
     created_at: datetime
+    coach_message_count: int
     plan: str
     is_premium: bool
 
@@ -209,6 +210,11 @@ async def list_users(
         .group_by(Report.user_id)
         .subquery()
     )
+    coach_msg_sub = (
+        select(CoachMessage.user_id, func.count(CoachMessage.id).label("cnt"))
+        .group_by(CoachMessage.user_id)
+        .subquery()
+    )
     analysis_sub = (
         select(AnalysisReport.user_id, func.count(AnalysisReport.id).label("cnt"))
         .group_by(AnalysisReport.user_id)
@@ -226,12 +232,14 @@ async def list_users(
             func.coalesce(answers_sub.c.cnt, 0).label("answers_count"),
             func.coalesce(reports_sub.c.cnt, 0).label("reports_count"),
             func.coalesce(analysis_sub.c.cnt, 0).label("analysis_count"),
+            func.coalesce(coach_msg_sub.c.cnt, 0).label("coach_message_count"),
             func.coalesce(sub_plan_sub.c.plan, "free").label("user_plan"),
             func.coalesce(sub_plan_sub.c.is_active, False).label("plan_active"),
         )
         .outerjoin(answers_sub, User.id == answers_sub.c.user_id)
         .outerjoin(reports_sub, User.id == reports_sub.c.user_id)
         .outerjoin(analysis_sub, User.id == analysis_sub.c.user_id)
+        .outerjoin(coach_msg_sub, User.id == coach_msg_sub.c.user_id)
         .outerjoin(sub_plan_sub, User.id == sub_plan_sub.c.user_id)
         .order_by(User.created_at.desc())
     )
@@ -255,6 +263,7 @@ async def list_users(
             answers_count=answers_count,
             reports_count=reports_count,
             has_analysis_report=analysis_count > 0,
+            coach_message_count=coach_message_count,
             last_login_at=u.last_login_at,
             last_active_at=u.last_active_at,
             is_online=u.last_active_at is not None and u.last_active_at >= online_threshold,
@@ -263,7 +272,7 @@ async def list_users(
             plan=user_plan or "free",
             is_premium=bool(plan_active) and user_plan in ("pro", "premium", "monthly"),
         )
-        for u, answers_count, reports_count, analysis_count, user_plan, plan_active in rows
+        for u, answers_count, reports_count, analysis_count, coach_message_count, user_plan, plan_active in rows
     ]
 
 
@@ -287,6 +296,9 @@ async def get_user(
     has_analysis = (await db.execute(
         select(func.count(AnalysisReport.id)).where(AnalysisReport.user_id == u.id)
     )).scalar() or 0
+    coach_msg_count = (await db.execute(
+        select(func.count(CoachMessage.id)).where(CoachMessage.user_id == u.id)
+    )).scalar() or 0
 
     sub_result = await db.execute(select(Subscription).where(Subscription.user_id == u.id))
     sub = sub_result.scalars().first()
@@ -306,6 +318,7 @@ async def get_user(
         answers_count=answers_count,
         reports_count=reports_count,
         has_analysis_report=has_analysis > 0,
+        coach_message_count=coach_msg_count,
         last_login_at=u.last_login_at,
         last_active_at=u.last_active_at,
         is_online=u.last_active_at is not None and u.last_active_at >= online_threshold,
@@ -1472,3 +1485,142 @@ async def send_stage1_email_for_user(
     if not ok:
         raise HTTPException(status_code=500, detail="Email send failed — check RESEND_API_KEY")
     return {"detail": f"Stage 1 results email sent to {user.email}"}
+
+
+# ── Bulk Email ──────────────────────────────────────────────────────────
+
+
+class BulkEmailRequest(BaseModel):
+    user_ids: list[str]
+    template: str  # "coach_invite" | "come_back" | "complete_questionnaire" | "custom"
+    custom_subject: str | None = None
+    custom_body: str | None = None
+
+
+@router.post("/send-bulk-email")
+async def send_bulk_email(
+    data: BulkEmailRequest,
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Send a template email to multiple users."""
+    import secrets as _secrets
+    from app.services.email import (
+        send_coach_invite_email,
+        send_come_back_email,
+        send_complete_questionnaire_email,
+        send_stage1_results_email,
+        send_custom_email,
+    )
+    from app.services.scoring import score_pathways
+
+    valid_templates = ("coach_invite", "come_back", "complete_questionnaire", "stage1_results", "custom")
+    if data.template not in valid_templates:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid template. Must be one of: {', '.join(valid_templates)}",
+        )
+
+    if data.template == "custom":
+        if not data.custom_subject or not data.custom_body:
+            raise HTTPException(
+                status_code=400,
+                detail="custom_subject and custom_body are required for the 'custom' template",
+            )
+
+    sent = 0
+    failed = 0
+    details: list[dict] = []
+
+    for uid_str in data.user_ids:
+        try:
+            uid = uuid.UUID(uid_str)
+        except ValueError:
+            failed += 1
+            details.append({"email": uid_str, "status": "failed", "error": "Invalid user ID"})
+            continue
+
+        result = await db.execute(select(User).where(User.id == uid))
+        user = result.scalar_one_or_none()
+        if not user:
+            failed += 1
+            details.append({"email": uid_str, "status": "failed", "error": "User not found"})
+            continue
+
+        # Ensure unsubscribe token exists
+        if not user.unsubscribe_token:
+            user.unsubscribe_token = _secrets.token_urlsafe(32)
+            await db.commit()
+
+        try:
+            ok = False
+            if data.template == "coach_invite":
+                ok = await send_coach_invite_email(
+                    to_email=user.email,
+                    user_name=user.full_name,
+                    unsubscribe_token=user.unsubscribe_token,
+                )
+            elif data.template == "come_back":
+                now = datetime.utcnow()
+                if user.last_active_at:
+                    days_away = (now - user.last_active_at).days
+                else:
+                    days_away = (now - user.created_at).days
+                ok = await send_come_back_email(
+                    to_email=user.email,
+                    user_name=user.full_name,
+                    days_away=days_away,
+                    unsubscribe_token=user.unsubscribe_token,
+                )
+            elif data.template == "complete_questionnaire":
+                ok = await send_complete_questionnaire_email(
+                    to_email=user.email,
+                    user_name=user.full_name,
+                    current_module=user.current_module,
+                    unsubscribe_token=user.unsubscribe_token,
+                )
+            elif data.template == "stage1_results":
+                ans_result = await db.execute(
+                    select(Answer).where(Answer.user_id == user.id)
+                )
+                answers_dict = {
+                    a.question_id: {
+                        "value": a.value_json.get("value") if a.value_json else None,
+                        "value_json": a.value_json,
+                        "confidence": a.confidence,
+                        "evidence_refs": a.evidence_refs,
+                    }
+                    for a in ans_result.scalars().all()
+                }
+                scored = score_pathways(answers_dict)
+                if scored:
+                    top = scored[0]
+                    match_pct = max(0, min(100, int(round(top.adjusted_score * 100))))
+                    ok = await send_stage1_results_email(
+                        to_email=user.email,
+                        user_name=user.full_name,
+                        top_pathway_name=top.pathway_name,
+                        match_pct=match_pct,
+                        unsubscribe_token=user.unsubscribe_token,
+                    )
+                else:
+                    ok = False
+            elif data.template == "custom":
+                ok = await send_custom_email(
+                    to_email=user.email,
+                    subject=data.custom_subject,
+                    body_text=data.custom_body,
+                    unsubscribe_token=user.unsubscribe_token,
+                )
+
+            if ok:
+                sent += 1
+                details.append({"email": user.email, "status": "sent", "error": None})
+            else:
+                failed += 1
+                details.append({"email": user.email, "status": "failed", "error": "Send returned false"})
+        except Exception as exc:
+            failed += 1
+            details.append({"email": user.email, "status": "failed", "error": str(exc)[:200]})
+
+    return {"sent": sent, "failed": failed, "details": details}

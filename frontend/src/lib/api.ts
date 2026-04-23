@@ -297,6 +297,7 @@ export interface AdminUser {
   is_online: boolean;
   login_count: number;
   created_at: string;
+  coach_message_count: number;
   plan: string;
   is_premium: boolean;
 }
@@ -949,6 +950,24 @@ export async function getEmailLogs(params?: { email_type?: string; status?: stri
   if (params?.days) sp.set("days", String(params.days));
   const qs = sp.toString();
   return request<EmailLogEntry[]>(`/admin/email-logs${qs ? `?${qs}` : ""}`);
+}
+
+export interface BulkEmailResult {
+  sent: number;
+  failed: number;
+  details: { email: string; status: string; error: string | null }[];
+}
+
+export async function sendBulkEmail(
+  user_ids: string[],
+  template: string,
+  custom_subject?: string,
+  custom_body?: string,
+) {
+  return request<BulkEmailResult>("/admin/send-bulk-email", {
+    method: "POST",
+    body: JSON.stringify({ user_ids, template, custom_subject, custom_body }),
+  });
 }
 
 export async function sendTestEmail() {
