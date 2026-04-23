@@ -137,8 +137,8 @@ function SendEmailsView() {
   }, []);
 
   const tmpl = TEMPLATES.find((t) => t.id === selectedTemplate)!;
-  const matchingUsers = users.filter((u) => u.role === "user" && tmpl.filter(u));
-  const nonMatchingUsers = users.filter((u) => u.role === "user" && !tmpl.filter(u));
+  const matchingUsers = users.filter((u) => tmpl.filter(u));
+  const nonMatchingUsers = users.filter((u) => !tmpl.filter(u));
 
   function toggleUser(id: string) {
     setSelectedIds((prev) => {
@@ -198,7 +198,7 @@ function SendEmailsView() {
       <h4 style={{ color: "#e2e8f0", marginBottom: "0.75rem" }}>Choose Template</h4>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.75rem", marginBottom: "1.5rem" }}>
         {TEMPLATES.map((t) => {
-          const count = users.filter((u) => u.role === "user" && t.filter(u)).length;
+          const count = users.filter((u) => t.filter(u)).length;
           return (
             <button
               key={t.id}
