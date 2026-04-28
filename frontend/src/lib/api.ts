@@ -298,6 +298,7 @@ export interface AdminUser {
   login_count: number;
   created_at: string;
   coach_message_count: number;
+  last_emailed_at: string | null;
   plan: string;
   is_premium: boolean;
 }

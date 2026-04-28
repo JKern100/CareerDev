@@ -57,6 +57,7 @@ class AdminUserOut(BaseModel):
     login_count: int
     created_at: datetime
     coach_message_count: int
+    last_emailed_at: datetime | None
     plan: str
     is_premium: bool
 
@@ -221,6 +222,12 @@ async def list_users(
         .subquery()
     )
 
+    email_log_sub = (
+        select(EmailLog.user_id, func.max(EmailLog.created_at).label("last_emailed_at"))
+        .where(EmailLog.status == "sent")
+        .group_by(EmailLog.user_id)
+        .subquery()
+    )
     sub_plan_sub = (
         select(Subscription.user_id, Subscription.plan, Subscription.is_active)
         .subquery()
@@ -233,6 +240,7 @@ async def list_users(
             func.coalesce(reports_sub.c.cnt, 0).label("reports_count"),
             func.coalesce(analysis_sub.c.cnt, 0).label("analysis_count"),
             func.coalesce(coach_msg_sub.c.cnt, 0).label("coach_message_count"),
+            email_log_sub.c.last_emailed_at,
             func.coalesce(sub_plan_sub.c.plan, "free").label("user_plan"),
             func.coalesce(sub_plan_sub.c.is_active, False).label("plan_active"),
         )
@@ -240,6 +248,7 @@ async def list_users(
         .outerjoin(reports_sub, User.id == reports_sub.c.user_id)
         .outerjoin(analysis_sub, User.id == analysis_sub.c.user_id)
         .outerjoin(coach_msg_sub, User.id == coach_msg_sub.c.user_id)
+        .outerjoin(email_log_sub, User.id == email_log_sub.c.user_id)
         .outerjoin(sub_plan_sub, User.id == sub_plan_sub.c.user_id)
         .order_by(User.created_at.desc())
     )
@@ -264,6 +273,7 @@ async def list_users(
             reports_count=reports_count,
             has_analysis_report=analysis_count > 0,
             coach_message_count=coach_message_count,
+            last_emailed_at=last_emailed_at,
             last_login_at=u.last_login_at,
             last_active_at=u.last_active_at,
             is_online=u.last_active_at is not None and u.last_active_at >= online_threshold,
@@ -272,7 +282,7 @@ async def list_users(
             plan=user_plan or "free",
             is_premium=bool(plan_active) and user_plan in ("pro", "premium", "monthly"),
         )
-        for u, answers_count, reports_count, analysis_count, coach_message_count, user_plan, plan_active in rows
+        for u, answers_count, reports_count, analysis_count, coach_message_count, last_emailed_at, user_plan, plan_active in rows
     ]
 
 
@@ -303,6 +313,10 @@ async def get_user(
     sub_result = await db.execute(select(Subscription).where(Subscription.user_id == u.id))
     sub = sub_result.scalars().first()
 
+    last_emailed_at = (await db.execute(
+        select(func.max(EmailLog.created_at)).where(EmailLog.user_id == u.id, EmailLog.status == "sent")
+    )).scalar()
+
     now = datetime.utcnow()
     online_threshold = now - timedelta(minutes=5)
 
@@ -319,6 +333,7 @@ async def get_user(
         reports_count=reports_count,
         has_analysis_report=has_analysis > 0,
         coach_message_count=coach_msg_count,
+        last_emailed_at=last_emailed_at,
         last_login_at=u.last_login_at,
         last_active_at=u.last_active_at,
         is_online=u.last_active_at is not None and u.last_active_at >= online_threshold,

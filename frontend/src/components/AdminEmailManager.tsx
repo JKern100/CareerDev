@@ -118,6 +118,8 @@ export default function AdminEmailManager() {
 /*  Send Emails View                                                       */
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
+type EmailedFilter = "all" | "never" | "7" | "14" | "30";
+
 function SendEmailsView() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -128,6 +130,7 @@ function SendEmailsView() {
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<BulkEmailResult | null>(null);
   const [error, setError] = useState("");
+  const [emailedFilter, setEmailedFilter] = useState<EmailedFilter>("all");
 
   useEffect(() => {
     getAdminUsers()
@@ -137,8 +140,19 @@ function SendEmailsView() {
   }, []);
 
   const tmpl = TEMPLATES.find((t) => t.id === selectedTemplate)!;
-  const matchingUsers = users.filter((u) => tmpl.filter(u));
-  const nonMatchingUsers = users.filter((u) => !tmpl.filter(u));
+
+  function passesEmailedFilter(u: AdminUser): boolean {
+    if (emailedFilter === "all") return true;
+    if (emailedFilter === "never") return !u.last_emailed_at;
+    const days = parseInt(emailedFilter);
+    if (!u.last_emailed_at) return true;
+    const ago = (Date.now() - new Date(u.last_emailed_at).getTime()) / 86400000;
+    return ago >= days;
+  }
+
+  const filteredUsers = users.filter(passesEmailedFilter);
+  const matchingUsers = filteredUsers.filter((u) => tmpl.filter(u));
+  const nonMatchingUsers = filteredUsers.filter((u) => !tmpl.filter(u));
 
   function toggleUser(id: string) {
     setSelectedIds((prev) => {
@@ -156,13 +170,13 @@ function SendEmailsView() {
     setSelectedIds(new Set());
   }
 
-  // When template changes, auto-select matching users
+  // When template or filter changes, auto-select matching users
   useEffect(() => {
     setSelectedIds(new Set(matchingUsers.map((u) => u.id)));
     setResult(null);
     setError("");
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTemplate, users]);
+  }, [selectedTemplate, users, emailedFilter]);
 
   async function handleSend() {
     if (selectedIds.size === 0) return;
@@ -238,6 +252,27 @@ function SendEmailsView() {
           />
         </div>
       )}
+
+      {/* Last emailed filter */}
+      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
+        <label style={{ color: "#94a3b8", fontSize: "0.8rem", fontWeight: 600 }}>Last emailed:</label>
+        <select
+          value={emailedFilter}
+          onChange={(e) => setEmailedFilter(e.target.value as EmailedFilter)}
+          style={{ ...inputStyle, padding: "0.35rem 0.6rem", fontSize: "0.8rem" }}
+        >
+          <option value="all">Show all</option>
+          <option value="never">Never emailed</option>
+          <option value="7">Not emailed in 7+ days</option>
+          <option value="14">Not emailed in 14+ days</option>
+          <option value="30">Not emailed in 30+ days</option>
+        </select>
+        {emailedFilter !== "all" && (
+          <span style={{ color: "#60a5fa", fontSize: "0.75rem" }}>
+            {filteredUsers.length} of {users.length} users shown
+          </span>
+        )}
+      </div>
 
       {/* User selection */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
@@ -319,6 +354,9 @@ function UserRow({ user, selected, onToggle, dimmed }: { user: AdminUser; select
   const daysAgo = user.last_active_at
     ? Math.floor((Date.now() - new Date(user.last_active_at).getTime()) / 86400000)
     : null;
+  const emailedDaysAgo = user.last_emailed_at
+    ? Math.floor((Date.now() - new Date(user.last_emailed_at).getTime()) / 86400000)
+    : null;
 
   return (
     <label
@@ -354,6 +392,9 @@ function UserRow({ user, selected, onToggle, dimmed }: { user: AdminUser; select
         </span>
         <span style={{ ...badge, background: "#334155" }}>
           {daysAgo !== null ? (daysAgo === 0 ? "Today" : `${daysAgo}d ago`) : "Never"}
+        </span>
+        <span style={{ ...badge, background: emailedDaysAgo !== null && emailedDaysAgo < 3 ? "rgba(245,158,11,0.15)" : "#334155", color: emailedDaysAgo !== null && emailedDaysAgo < 3 ? "#fbbf24" : undefined }}>
+          {emailedDaysAgo !== null ? (emailedDaysAgo === 0 ? "Emailed today" : `Emailed ${emailedDaysAgo}d`) : "No email"}
         </span>
       </div>
     </label>
