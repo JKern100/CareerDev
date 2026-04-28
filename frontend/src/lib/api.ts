@@ -299,6 +299,7 @@ export interface AdminUser {
   created_at: string;
   coach_message_count: number;
   last_emailed_at: string | null;
+  last_email_type: string | null;
   plan: string;
   is_premium: boolean;
 }

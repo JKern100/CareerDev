@@ -393,8 +393,17 @@ function UserRow({ user, selected, onToggle, dimmed }: { user: AdminUser; select
         <span style={{ ...badge, background: "#334155" }}>
           {daysAgo !== null ? (daysAgo === 0 ? "Today" : `${daysAgo}d ago`) : "Never"}
         </span>
-        <span style={{ ...badge, background: emailedDaysAgo !== null && emailedDaysAgo < 3 ? "rgba(245,158,11,0.15)" : "#334155", color: emailedDaysAgo !== null && emailedDaysAgo < 3 ? "#fbbf24" : undefined }}>
-          {emailedDaysAgo !== null ? (emailedDaysAgo === 0 ? "Emailed today" : `Emailed ${emailedDaysAgo}d`) : "No email"}
+        <span
+          style={{
+            ...badge,
+            background: emailedDaysAgo !== null && emailedDaysAgo < 3 ? "rgba(245,158,11,0.15)" : "#334155",
+            color: emailedDaysAgo !== null && emailedDaysAgo < 3 ? "#fbbf24" : undefined,
+          }}
+          title={user.last_emailed_at ? `Last emailed: ${new Date(user.last_emailed_at).toLocaleString()}` : "Never emailed"}
+        >
+          {emailedDaysAgo !== null
+            ? `${TYPE_LABELS[user.last_email_type || ""] || user.last_email_type || "Email"} ${emailedDaysAgo === 0 ? "today" : `${emailedDaysAgo}d ago`}`
+            : "No email"}
         </span>
       </div>
     </label>
