@@ -4,6 +4,7 @@ import logging
 import uuid
 
 import httpx
+import markdown as md_lib
 from sqlalchemy import select
 
 from app.config import settings
@@ -506,16 +507,43 @@ def _newsletter_from() -> str:
     return (settings.NEWSLETTER_FROM or settings.EMAIL_FROM).strip()
 
 
-def _md_to_simple_html(md: str) -> str:
-    """Minimal markdown-to-HTML for the email teaser.
+def _md_to_email_html(md: str) -> str:
+    """Render markdown to HTML with inline styles suitable for email clients.
 
-    Email clients are not browsers — we keep it to paragraphs and line breaks.
-    The full issue lives on the web; this is only the teaser block.
+    Supports the standard set: headings, paragraphs, lists, bold/italic, links,
+    blockquotes, horizontal rules, code. Outlook and Gmail strip <style> blocks,
+    so all styling is inlined per-element via post-processing.
+
+    Also enables nl2br so single line breaks render as <br/> — forgiving for
+    pastes where blank lines between paragraphs may have been lost.
     """
-    paras = [p.strip() for p in md.strip().split("\n\n") if p.strip()]
-    return "".join(
-        f'<p style="margin: 0 0 16px;">{p.replace(chr(10), "<br/>")}</p>' for p in paras
+    if not md or not md.strip():
+        return ""
+    html = md_lib.markdown(
+        md.strip(),
+        extensions=["extra", "sane_lists", "nl2br"],
+        output_format="html5",
     )
+    replacements = [
+        ('<h1>', '<h1 style="font-size: 22px; font-weight: 700; color: #0f172a; margin: 24px 0 12px; line-height: 1.3;">'),
+        ('<h2>', '<h2 style="font-size: 19px; font-weight: 700; color: #0f172a; margin: 22px 0 10px; line-height: 1.3;">'),
+        ('<h3>', '<h3 style="font-size: 16px; font-weight: 600; color: #1e293b; margin: 18px 0 8px; line-height: 1.4;">'),
+        ('<h4>', '<h4 style="font-size: 14px; font-weight: 600; color: #1e293b; margin: 16px 0 6px;">'),
+        ('<p>', '<p style="margin: 0 0 14px; line-height: 1.6; color: #1e293b;">'),
+        ('<ul>', '<ul style="margin: 0 0 14px; padding-left: 22px; color: #1e293b;">'),
+        ('<ol>', '<ol style="margin: 0 0 14px; padding-left: 22px; color: #1e293b;">'),
+        ('<li>', '<li style="margin-bottom: 6px; line-height: 1.55;">'),
+        ('<a ', '<a style="color: #2563eb; text-decoration: underline;" '),
+        ('<strong>', '<strong style="color: #0f172a;">'),
+        ('<em>', '<em style="color: #1e293b;">'),
+        ('<hr />', '<hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;"/>'),
+        ('<hr>', '<hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;"/>'),
+        ('<blockquote>', '<blockquote style="border-left: 3px solid #cbd5e1; padding-left: 14px; color: #475569; margin: 0 0 14px; font-style: italic;">'),
+        ('<code>', '<code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 13px; font-family: ui-monospace, Menlo, monospace;">'),
+    ]
+    for old, new in replacements:
+        html = html.replace(old, new)
+    return html
 
 
 def _newsletter_footer(unsub_url: str) -> tuple[str, str]:
@@ -574,7 +602,7 @@ async def send_newsletter_issue(
 ) -> bool:
     """Send one newsletter issue to one subscriber."""
     unsub_url = f"{settings.FRONTEND_URL}/newsletter/unsubscribe?token={unsub_token}"
-    teaser_html = _md_to_simple_html(teaser_md)
+    teaser_html = _md_to_email_html(teaser_md)
     footer_html, footer_text = _newsletter_footer(unsub_url)
 
     ps_block = """\

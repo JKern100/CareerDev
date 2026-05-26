@@ -4,6 +4,7 @@ import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 import { getPublishedIssue, NewsletterIssuePublic } from "@/lib/api";
 
 export default function NewsletterIssuePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -54,7 +55,7 @@ export default function NewsletterIssuePage({ params }: { params: Promise<{ slug
       </header>
 
       <div className="newsletter-body" style={{ color: "#1e293b", fontSize: "1rem", lineHeight: 1.7 }}>
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+        <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
           {issue.body_md || ""}
         </ReactMarkdown>
       </div>
