@@ -6,7 +6,7 @@ import secrets
 from datetime import datetime, timedelta
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -702,20 +702,30 @@ async def admin_stats(_=Depends(get_admin_user), db: AsyncSession = Depends(get_
 
 
 @admin_router.get("/tracking-diagnostic")
-async def admin_tracking_diagnostic(_=Depends(get_admin_user), db: AsyncSession = Depends(get_db)):
+async def admin_tracking_diagnostic(
+    request: Request,
+    _=Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
     """Quick check of the webhook + tracking plumbing.
 
-    Helpful when stats show 0 across the board and you want to know whether
-    the problem is config (secret missing), Resend setup (no events arriving),
-    or just an issue sent before the webhook was configured.
+    Distinguishes 'Resend never hits us' from 'Resend hits us but signature
+    verification fails' from 'everything's fine, just no events for this issue yet'.
     """
+    from app.api.webhooks import get_webhook_hits
+    hits = get_webhook_hits()
+
+    # Derive the real webhook URL from the incoming request, so we never quote
+    # a stale hardcoded host (e.g. railway vs render).
+    scheme = request.headers.get("x-forwarded-proto") or request.url.scheme or "https"
+    host = request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc
+    webhook_url = f"{scheme}://{host}/webhooks/resend"
+
     secret_set = bool(settings.RESEND_WEBHOOK_SECRET.strip())
 
-    # Any events ever received?
     any_event = await db.execute(select(func.count()).select_from(EmailEvent))
     total_events = any_event.scalar() or 0
 
-    # Latest event
     latest = await db.execute(
         select(EmailEvent.event_type, EmailEvent.event_at)
         .order_by(EmailEvent.created_at.desc())
@@ -723,7 +733,6 @@ async def admin_tracking_diagnostic(_=Depends(get_admin_user), db: AsyncSession 
     )
     latest_row = latest.first()
 
-    # How many newsletter sends total (those with a resend_id) vs how many got a delivered event
     sent_q = await db.execute(
         select(func.count(EmailLog.id))
         .where(EmailLog.email_type.like("newsletter_issue:%"))
@@ -740,24 +749,33 @@ async def admin_tracking_diagnostic(_=Depends(get_admin_user), db: AsyncSession 
 
     diagnosis = []
     if not secret_set:
-        diagnosis.append("RESEND_WEBHOOK_SECRET is not set on the server. Set it in Railway env vars (value comes from Resend dashboard > Webhooks > your endpoint > Signing secret).")
-    elif total_events == 0:
+        diagnosis.append("RESEND_WEBHOOK_SECRET is not set on Railway. Get the signing secret from Resend dashboard > Webhooks > your endpoint and add it as an env var.")
+    elif hits["total"] == 0:
         diagnosis.append(
-            "Webhook secret is set but no events have ever been received. Likely causes: (a) the webhook endpoint isn't added in Resend dashboard, (b) it's added but points to the wrong URL, or (c) the email was sent BEFORE the webhook was configured (no backfill). Expected URL: https://careerdev-api-production.up.railway.app/webhooks/resend"
+            f"Resend has never attempted to deliver a webhook to this server (since last restart). Most likely the webhook endpoint isn't added in Resend, points to the wrong URL, or no events have happened yet. Expected URL: {webhook_url}. In Resend dashboard > Webhooks > your endpoint, check 'Recent attempts' — if it's empty there too, the endpoint isn't firing on the Resend side."
+        )
+    elif hits["signature_failed"] > 0 and hits["signature_ok"] == 0:
+        diagnosis.append(
+            f"Resend IS hitting our endpoint ({hits['total']} times) but every request fails signature verification. The RESEND_WEBHOOK_SECRET on Railway doesn't match the signing secret in Resend dashboard. Copy the secret from Resend (it starts with 'whsec_...') and paste it exactly into Railway env vars."
+        )
+    elif total_events == 0 and hits["signature_ok"] == 0:
+        diagnosis.append(
+            "Process was restarted recently (counters reset). Send a fresh test email or wait for the next event to confirm tracking is working."
         )
     elif newsletter_sends > 0 and distinct_delivered == 0:
-        diagnosis.append("Events are arriving for some emails but no newsletter sends have delivered events yet. The webhook might be subscribed only to certain event types in Resend — make sure all email.* events are checked.")
+        diagnosis.append("Events are arriving but no newsletter delivery events. The webhook might be subscribed only to certain event types — in Resend dashboard, make sure all email.* events are checked (delivered, opened, clicked, bounced, complained).")
     else:
         diagnosis.append("Tracking looks healthy. Recent events are flowing in.")
 
     return {
         "webhook_secret_set": secret_set,
-        "expected_webhook_url": "https://careerdev-api-production.up.railway.app/webhooks/resend",
+        "expected_webhook_url": webhook_url,
         "total_events_received": total_events,
         "latest_event_type": latest_row[0] if latest_row else None,
         "latest_event_at": latest_row[1].isoformat() if latest_row else None,
         "newsletter_sends_with_resend_id": newsletter_sends,
         "newsletter_sends_with_delivered_event": distinct_delivered,
+        "webhook_hits": hits,
         "diagnosis": diagnosis,
     }
 
