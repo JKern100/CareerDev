@@ -223,6 +223,10 @@ const HELP_CONTENT: Record<Tab, { title: string; sections: { heading: string; bo
         heading: "Subscribers",
         body: `- **pending**: signed up, waiting on double opt-in click.\n- **active**: confirmed; receives issues.\n- **unsubscribed**: opted out via one-click link or list-unsubscribe header.`,
       },
+      {
+        heading: "Macros",
+        body: `Subject and teaser support **{{first_name}}** (falls back to "there") and **{{full_name}}** (falls back to empty). The full body is the public hosted page and is not personalized.`,
+      },
     ],
   },
   "ai-resources": {

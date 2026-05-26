@@ -1062,8 +1062,17 @@ export interface NewsletterSendResult {
   sent: number;
   failed: number;
   skipped: number;
-  total_subscribers: number;
+  total_eligible: number;
   tag: string;
+}
+
+export interface NewsletterRecipient {
+  email: string;
+  name: string | null;
+  source: "user" | "subscriber";
+  user_id: string | null;
+  subscriber_id: string | null;
+  subscriber_status: string | null;
 }
 
 export async function newsletterSubscribe(email: string) {
@@ -1114,10 +1123,18 @@ export async function publishAdminIssue(id: string) {
   return request<NewsletterIssueAdmin>(`/admin/newsletter/issues/${id}/publish`, { method: "POST" });
 }
 
-export async function sendAdminIssue(id: string, force = false) {
-  return request<NewsletterSendResult>(`/admin/newsletter/issues/${id}/send${force ? "?force=true" : ""}`, {
+export async function sendAdminIssue(id: string, opts?: { emails?: string[]; force?: boolean }) {
+  return request<NewsletterSendResult>(`/admin/newsletter/issues/${id}/send`, {
     method: "POST",
+    body: JSON.stringify({
+      emails: opts?.emails ?? null,
+      force: opts?.force ?? false,
+    }),
   });
+}
+
+export async function getNewsletterRecipients() {
+  return request<NewsletterRecipient[]>("/admin/newsletter/recipients");
 }
 
 export async function getAdminSubscribers(statusFilter?: string) {
