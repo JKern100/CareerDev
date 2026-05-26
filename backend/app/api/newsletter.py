@@ -638,6 +638,67 @@ async def admin_stats(_=Depends(get_admin_user), db: AsyncSession = Depends(get_
     }
 
 
+@admin_router.get("/tracking-diagnostic")
+async def admin_tracking_diagnostic(_=Depends(get_admin_user), db: AsyncSession = Depends(get_db)):
+    """Quick check of the webhook + tracking plumbing.
+
+    Helpful when stats show 0 across the board and you want to know whether
+    the problem is config (secret missing), Resend setup (no events arriving),
+    or just an issue sent before the webhook was configured.
+    """
+    secret_set = bool(settings.RESEND_WEBHOOK_SECRET.strip())
+
+    # Any events ever received?
+    any_event = await db.execute(select(func.count()).select_from(EmailEvent))
+    total_events = any_event.scalar() or 0
+
+    # Latest event
+    latest = await db.execute(
+        select(EmailEvent.event_type, EmailEvent.event_at)
+        .order_by(EmailEvent.created_at.desc())
+        .limit(1)
+    )
+    latest_row = latest.first()
+
+    # How many newsletter sends total (those with a resend_id) vs how many got a delivered event
+    sent_q = await db.execute(
+        select(func.count(EmailLog.id))
+        .where(EmailLog.email_type.like("newsletter_issue:%"))
+        .where(EmailLog.status == "sent")
+        .where(EmailLog.resend_id.isnot(None))
+    )
+    newsletter_sends = sent_q.scalar() or 0
+
+    delivered_q = await db.execute(
+        select(func.count(func.distinct(EmailEvent.resend_id)))
+        .where(EmailEvent.event_type == "email.delivered")
+    )
+    distinct_delivered = delivered_q.scalar() or 0
+
+    diagnosis = []
+    if not secret_set:
+        diagnosis.append("RESEND_WEBHOOK_SECRET is not set on the server. Set it in Railway env vars (value comes from Resend dashboard > Webhooks > your endpoint > Signing secret).")
+    elif total_events == 0:
+        diagnosis.append(
+            "Webhook secret is set but no events have ever been received. Likely causes: (a) the webhook endpoint isn't added in Resend dashboard, (b) it's added but points to the wrong URL, or (c) the email was sent BEFORE the webhook was configured (no backfill). Expected URL: https://careerdev-api-production.up.railway.app/webhooks/resend"
+        )
+    elif newsletter_sends > 0 and distinct_delivered == 0:
+        diagnosis.append("Events are arriving for some emails but no newsletter sends have delivered events yet. The webhook might be subscribed only to certain event types in Resend — make sure all email.* events are checked.")
+    else:
+        diagnosis.append("Tracking looks healthy. Recent events are flowing in.")
+
+    return {
+        "webhook_secret_set": secret_set,
+        "expected_webhook_url": "https://careerdev-api-production.up.railway.app/webhooks/resend",
+        "total_events_received": total_events,
+        "latest_event_type": latest_row[0] if latest_row else None,
+        "latest_event_at": latest_row[1].isoformat() if latest_row else None,
+        "newsletter_sends_with_resend_id": newsletter_sends,
+        "newsletter_sends_with_delivered_event": distinct_delivered,
+        "diagnosis": diagnosis,
+    }
+
+
 # ── Per-issue tracking ──────────────────────────────────────────────────
 
 

@@ -15,12 +15,14 @@ import {
   getNewsletterRecipients,
   getIssueStats,
   getIssueRecipientEvents,
+  getTrackingDiagnostic,
   NewsletterIssueAdmin,
   NewsletterSubscriber,
   NewsletterStats,
   NewsletterRecipient,
   NewsletterIssueStats,
   NewsletterRecipientEvent,
+  TrackingDiagnostic,
 } from "@/lib/api";
 
 type SubTab = "issues" | "subscribers";
@@ -236,13 +238,19 @@ function TrackingModal({
   const [rows, setRows] = useState<NewsletterRecipientEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [diag, setDiag] = useState<TrackingDiagnostic | null>(null);
 
   useEffect(() => {
     getIssueRecipientEvents(issue.id)
       .then(setRows)
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load"))
       .finally(() => setLoading(false));
+    // Always fetch diagnostic — cheap and helps when stats look empty
+    getTrackingDiagnostic().then(setDiag).catch(() => {});
   }, [issue.id]);
+
+  // Show the diagnostic prominently when this issue has no events yet
+  const showDiagnosis = stats && stats.sent > 0 && stats.delivered === 0 && diag;
 
   return (
     <div style={{ background: "#0f172a", border: "1px solid #334155", borderRadius: 8, padding: "1.25rem", margin: "0.5rem 0" }}>
@@ -253,10 +261,19 @@ function TrackingModal({
         <button onClick={onClose} style={smallBtn}>Close</button>
       </div>
 
-      {stats && !stats.tracking_configured && (
-        <p style={{ color: "#f59e0b", fontSize: 12, marginBottom: 12 }}>
-          ⚠ Tracking webhook isn&rsquo;t configured. Set RESEND_WEBHOOK_SECRET and add a webhook in Resend dashboard. Past events won&rsquo;t backfill.
-        </p>
+      {showDiagnosis && diag && (
+        <div style={{ background: "#1e293b", border: "1px solid #f59e0b", borderRadius: 6, padding: "0.75rem 1rem", marginBottom: 12, fontSize: 12 }}>
+          <p style={{ color: "#f59e0b", margin: 0, fontWeight: 600 }}>⚠ No tracking events received for this issue</p>
+          {diag.diagnosis.map((d, i) => (
+            <p key={i} style={{ color: "#cbd5e1", marginTop: 6, marginBottom: 0, lineHeight: 1.5 }}>{d}</p>
+          ))}
+          <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "4px 12px", marginTop: 8, color: "#94a3b8", fontFamily: "monospace", fontSize: 11 }}>
+            <span>Secret set:</span><span>{diag.webhook_secret_set ? "yes" : "no"}</span>
+            <span>Webhook URL:</span><span>{diag.expected_webhook_url}</span>
+            <span>Total events:</span><span>{diag.total_events_received}</span>
+            <span>Latest event:</span><span>{diag.latest_event_type ? `${diag.latest_event_type} @ ${diag.latest_event_at}` : "—"}</span>
+          </div>
+        </div>
       )}
 
       {stats && (
@@ -337,7 +354,8 @@ function SendModal({
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [force, setForce] = useState(false);
+  // For already-sent issues, default to force re-send so clicking Send actually does something.
+  const [force, setForce] = useState(issue.status === "sent");
 
   useEffect(() => {
     getNewsletterRecipients()
@@ -478,18 +496,23 @@ function SendModal({
         </div>
       )}
 
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 16, paddingTop: 12, borderTop: "1px solid #334155" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 16, paddingTop: 12, borderTop: "1px solid #334155", flexWrap: "wrap" }}>
         <label style={{ color: "#94a3b8", fontSize: 12, display: "flex", alignItems: "center", gap: 6 }}>
           <input type="checkbox" checked={force} onChange={(e) => setForce(e.target.checked)} />
           Re-send to recipients already sent this issue
         </label>
+        {issue.status === "sent" && !force && (
+          <span style={{ color: "#f59e0b", fontSize: 12 }}>
+            ⚠ Without this, all recipients will be skipped (already sent).
+          </span>
+        )}
         {error && <span style={{ color: "#ef4444", fontSize: 12 }}>{error}</span>}
         <button
           onClick={send}
           disabled={busy || (mode === "pick" && selectedCount === 0)}
           style={{ ...primaryBtn, marginLeft: "auto", opacity: busy ? 0.6 : 1 }}
         >
-          {busy ? "Sending…" : `Send to ${sendCount} recipient${sendCount === 1 ? "" : "s"}`}
+          {busy ? "Sending…" : `${issue.status === "sent" && force ? "Re-send" : "Send"} to ${sendCount} recipient${sendCount === 1 ? "" : "s"}`}
         </button>
       </div>
     </div>
