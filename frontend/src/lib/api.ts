@@ -1042,13 +1042,15 @@ export interface NewsletterIssueAdmin {
 }
 
 export interface NewsletterSubscriber {
-  id: string;
   email: string;
+  name: string | null;
+  source: string;  // "user" | "signup" | "user+signup"
   status: "pending" | "active" | "unsubscribed";
-  source: string | null;
-  created_at: string;
+  joined_at: string;
   confirmed_at: string | null;
   unsubscribed_at: string | null;
+  user_id: string | null;
+  subscriber_id: string | null;
 }
 
 export interface NewsletterStats {
