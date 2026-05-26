@@ -1179,3 +1179,18 @@ export async function getIssueStats(id: string) {
 export async function getIssueRecipientEvents(id: string) {
   return request<NewsletterRecipientEvent[]>(`/admin/newsletter/issues/${id}/recipient-events`);
 }
+
+export interface TrackingDiagnostic {
+  webhook_secret_set: boolean;
+  expected_webhook_url: string;
+  total_events_received: number;
+  latest_event_type: string | null;
+  latest_event_at: string | null;
+  newsletter_sends_with_resend_id: number;
+  newsletter_sends_with_delivered_event: number;
+  diagnosis: string[];
+}
+
+export async function getTrackingDiagnostic() {
+  return request<TrackingDiagnostic>("/admin/newsletter/tracking-diagnostic");
+}
