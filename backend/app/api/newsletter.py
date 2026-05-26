@@ -362,10 +362,15 @@ async def _merged_subscribers(db: AsyncSession) -> list[SubscriberOut]:
     """Unified subscriber view: every user (with their effective newsletter status)
     plus standalone signups.
 
+    Newsletter is treated as a separate channel from product nudges. The global
+    User.email_nudges_enabled flag governs product nudges (come_back, coach_invite,
+    etc.) and is NOT used here — newsletter opt-out is per-channel via a
+    newsletter_subscribers row with status='unsubscribed'.
+
     A user's status is:
-    - 'unsubscribed' if they hit the global nudges opt-out OR have an unsubscribed newsletter row
+    - 'unsubscribed' only if they have an explicit unsubscribed newsletter row
     - 'pending' only if a standalone signup exists in pending state (rare for a user)
-    - 'active' otherwise
+    - 'active' otherwise — including users with product nudges globally off
     """
     sub_result = await db.execute(select(NewsletterSubscriber))
     subs_by_email: dict[str, NewsletterSubscriber] = {
@@ -382,7 +387,7 @@ async def _merged_subscribers(db: AsyncSession) -> list[SubscriberOut]:
         email_lower = u.email.lower()
         sub = subs_by_email.get(email_lower)
 
-        if (sub and sub.status == "unsubscribed") or not u.email_nudges_enabled:
+        if sub and sub.status == "unsubscribed":
             status = "unsubscribed"
         elif sub and sub.status == "pending":
             status = "pending"
@@ -395,7 +400,6 @@ async def _merged_subscribers(db: AsyncSession) -> list[SubscriberOut]:
             source="user+signup" if sub else "user",
             status=status,
             joined_at=u.created_at,
-            # Users are implicitly confirmed at registration if they have nudges on
             confirmed_at=(sub.confirmed_at if sub and sub.confirmed_at else (u.created_at if status == "active" else None)),
             unsubscribed_at=sub.unsubscribed_at if sub else None,
             user_id=str(u.id),
@@ -423,22 +427,22 @@ async def _merged_subscribers(db: AsyncSession) -> list[SubscriberOut]:
 
 
 async def _eligible_recipients(db: AsyncSession) -> list[RecipientOut]:
-    """Compute the merged recipient pool.
+    """Compute the eligible recipient pool.
 
-    Eligible = (users with email_nudges_enabled=True) ∪ (newsletter_subscribers with status='active'),
-    minus anyone whose newsletter_subscribers row is 'unsubscribed'.
+    Every app user is implicitly eligible for the newsletter — the newsletter is
+    a separate channel from product nudges, so User.email_nudges_enabled is NOT
+    consulted here. The only way to be excluded is an explicit per-channel
+    opt-out (newsletter_subscribers row with status='unsubscribed') or a
+    standalone signup that's still pending confirmation.
+
     Deduped by email, preferring the user record when both exist.
     """
-    # All newsletter_subscribers rows (need them all to know who's unsubscribed)
     sub_result = await db.execute(select(NewsletterSubscriber))
     subs_by_email: dict[str, NewsletterSubscriber] = {
         s.email.lower(): s for s in sub_result.scalars().all()
     }
 
-    # All users who haven't globally disabled nudges
-    user_result = await db.execute(
-        select(User).where(User.email_nudges_enabled == True)  # noqa: E712
-    )
+    user_result = await db.execute(select(User))
     users = user_result.scalars().all()
 
     recipients: list[RecipientOut] = []
