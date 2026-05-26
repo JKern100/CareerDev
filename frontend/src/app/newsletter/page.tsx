@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import PublicHeader from "@/components/PublicHeader";
 import { getPublishedIssues, newsletterSubscribe, NewsletterIssuePublic } from "@/lib/api";
 
 export default function NewsletterLandingPage() {
@@ -35,7 +36,9 @@ export default function NewsletterLandingPage() {
   }
 
   return (
-    <div className="container" style={{ maxWidth: 720, padding: "3rem 1rem" }}>
+    <>
+      <PublicHeader />
+      <div className="container" style={{ maxWidth: 720, padding: "3rem 1rem" }}>
       <header style={{ marginBottom: "2.5rem" }}>
         <p style={{ color: "#3b82f6", fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
           Crew Career Brief
@@ -117,6 +120,7 @@ export default function NewsletterLandingPage() {
           </ul>
         )}
       </section>
-    </div>
+      </div>
+    </>
   );
 }

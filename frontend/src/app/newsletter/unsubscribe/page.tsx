@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import PublicHeader from "@/components/PublicHeader";
 import { newsletterUnsubscribe } from "@/lib/api";
 
 function UnsubContent() {
@@ -70,8 +71,11 @@ function UnsubContent() {
 
 export default function NewsletterUnsubscribePage() {
   return (
-    <Suspense fallback={<div className="container" style={{ padding: "3rem 1rem" }}><h1>Unsubscribing…</h1></div>}>
-      <UnsubContent />
-    </Suspense>
+    <>
+      <PublicHeader />
+      <Suspense fallback={<div className="container" style={{ padding: "3rem 1rem" }}><h1>Unsubscribing…</h1></div>}>
+        <UnsubContent />
+      </Suspense>
+    </>
   );
 }

@@ -617,8 +617,7 @@ async def send_newsletter_issue(
               </table>"""
 
     body = f"""\
-              <p style="color: #64748b; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 8px;">Crew Career Brief</p>
-              <h2 style="color: #1e293b; font-size: 22px; margin: 0 0 20px; line-height: 1.3;">{subject}</h2>
+              <p style="color: #64748b; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 16px;">Crew Career Brief</p>
               {teaser_html}
               <table cellpadding="0" cellspacing="0" style="margin: 8px 0 24px;">
                 <tr>
