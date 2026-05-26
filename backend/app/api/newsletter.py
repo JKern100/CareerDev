@@ -70,13 +70,15 @@ class IssueUpdate(BaseModel):
 
 
 class SubscriberOut(BaseModel):
-    id: str
     email: str
-    status: str
-    source: str | None
-    created_at: datetime
+    name: str | None
+    source: str  # "user" | "signup" | "user+signup"
+    status: str  # active | pending | unsubscribed
+    joined_at: datetime
     confirmed_at: datetime | None
     unsubscribed_at: datetime | None
+    user_id: str | None
+    subscriber_id: str | None
 
 
 class RecipientOut(BaseModel):
@@ -355,6 +357,70 @@ async def admin_publish_issue(
     return _issue_admin(issue)
 
 
+async def _merged_subscribers(db: AsyncSession) -> list[SubscriberOut]:
+    """Unified subscriber view: every user (with their effective newsletter status)
+    plus standalone signups.
+
+    A user's status is:
+    - 'unsubscribed' if they hit the global nudges opt-out OR have an unsubscribed newsletter row
+    - 'pending' only if a standalone signup exists in pending state (rare for a user)
+    - 'active' otherwise
+    """
+    sub_result = await db.execute(select(NewsletterSubscriber))
+    subs_by_email: dict[str, NewsletterSubscriber] = {
+        s.email.lower(): s for s in sub_result.scalars().all()
+    }
+
+    user_result = await db.execute(select(User))
+    users = user_result.scalars().all()
+
+    out: list[SubscriberOut] = []
+    seen: set[str] = set()
+
+    for u in users:
+        email_lower = u.email.lower()
+        sub = subs_by_email.get(email_lower)
+
+        if (sub and sub.status == "unsubscribed") or not u.email_nudges_enabled:
+            status = "unsubscribed"
+        elif sub and sub.status == "pending":
+            status = "pending"
+        else:
+            status = "active"
+
+        out.append(SubscriberOut(
+            email=u.email,
+            name=u.full_name,
+            source="user+signup" if sub else "user",
+            status=status,
+            joined_at=u.created_at,
+            # Users are implicitly confirmed at registration if they have nudges on
+            confirmed_at=(sub.confirmed_at if sub and sub.confirmed_at else (u.created_at if status == "active" else None)),
+            unsubscribed_at=sub.unsubscribed_at if sub else None,
+            user_id=str(u.id),
+            subscriber_id=str(sub.id) if sub else None,
+        ))
+        seen.add(email_lower)
+
+    for email_lower, sub in subs_by_email.items():
+        if email_lower in seen:
+            continue
+        out.append(SubscriberOut(
+            email=sub.email,
+            name=None,
+            source="signup",
+            status=sub.status,
+            joined_at=sub.created_at,
+            confirmed_at=sub.confirmed_at,
+            unsubscribed_at=sub.unsubscribed_at,
+            user_id=None,
+            subscriber_id=str(sub.id),
+        ))
+
+    out.sort(key=lambda s: s.joined_at, reverse=True)
+    return out
+
+
 async def _eligible_recipients(db: AsyncSession) -> list[RecipientOut]:
     """Compute the merged recipient pool.
 
@@ -549,46 +615,19 @@ async def admin_list_subscribers(
     _=Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
-    q = select(NewsletterSubscriber).order_by(NewsletterSubscriber.created_at.desc())
+    """Merged view: every app user (with their effective newsletter status) + standalone signups."""
+    merged = await _merged_subscribers(db)
     if status_filter:
-        q = q.where(NewsletterSubscriber.status == status_filter)
-    result = await db.execute(q)
-    return [
-        SubscriberOut(
-            id=str(s.id),
-            email=s.email,
-            status=s.status,
-            source=s.source,
-            created_at=s.created_at,
-            confirmed_at=s.confirmed_at,
-            unsubscribed_at=s.unsubscribed_at,
-        )
-        for s in result.scalars().all()
-    ]
+        merged = [s for s in merged if s.status == status_filter]
+    return merged
 
 
 @admin_router.get("/stats")
 async def admin_stats(_=Depends(get_admin_user), db: AsyncSession = Depends(get_db)):
-    total = (await db.execute(select(func.count()).select_from(NewsletterSubscriber))).scalar() or 0
-    active = (
-        await db.execute(
-            select(func.count())
-            .select_from(NewsletterSubscriber)
-            .where(NewsletterSubscriber.status == "active")
-        )
-    ).scalar() or 0
-    pending = (
-        await db.execute(
-            select(func.count())
-            .select_from(NewsletterSubscriber)
-            .where(NewsletterSubscriber.status == "pending")
-        )
-    ).scalar() or 0
-    unsubbed = (
-        await db.execute(
-            select(func.count())
-            .select_from(NewsletterSubscriber)
-            .where(NewsletterSubscriber.status == "unsubscribed")
-        )
-    ).scalar() or 0
-    return {"total": total, "active": active, "pending": pending, "unsubscribed": unsubbed}
+    merged = await _merged_subscribers(db)
+    return {
+        "total": len(merged),
+        "active": sum(1 for s in merged if s.status == "active"),
+        "pending": sum(1 for s in merged if s.status == "pending"),
+        "unsubscribed": sum(1 for s in merged if s.status == "unsubscribed"),
+    }

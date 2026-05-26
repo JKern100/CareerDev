@@ -526,21 +526,23 @@ function SubscribersView() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
             <thead>
               <tr>
-                {["Email", "Status", "Source", "Joined", "Confirmed", "Unsubscribed"].map((h) => (
+                {["Email", "Name", "Status", "Source", "Joined", "Unsubscribed"].map((h) => (
                   <th key={h} style={thStyle}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {subs.map((s) => (
-                <tr key={s.id} style={{ borderBottom: "1px solid #1e293b" }}>
+                <tr key={s.email} style={{ borderBottom: "1px solid #1e293b" }}>
                   <td style={tdStyle}>{s.email}</td>
+                  <td style={{ ...tdStyle, color: "#94a3b8" }}>{s.name || "—"}</td>
                   <td style={tdStyle}>
                     <span style={{ ...badge, background: STATUS_COLORS[s.status] || "#64748b", color: "#fff" }}>{s.status}</span>
                   </td>
-                  <td style={tdStyle}>{s.source || "—"}</td>
-                  <td style={tdStyle}>{new Date(s.created_at).toLocaleDateString()}</td>
-                  <td style={tdStyle}>{s.confirmed_at ? new Date(s.confirmed_at).toLocaleDateString() : "—"}</td>
+                  <td style={tdStyle}>
+                    <span style={{ ...badge, background: "#334155", color: "#cbd5e1", fontSize: 10 }}>{s.source}</span>
+                  </td>
+                  <td style={tdStyle}>{new Date(s.joined_at).toLocaleDateString()}</td>
                   <td style={tdStyle}>{s.unsubscribed_at ? new Date(s.unsubscribed_at).toLocaleDateString() : "—"}</td>
                 </tr>
               ))}
