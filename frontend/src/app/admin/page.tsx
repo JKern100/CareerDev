@@ -227,6 +227,10 @@ const HELP_CONTENT: Record<Tab, { title: string; sections: { heading: string; bo
         heading: "Macros",
         body: `Subject and teaser support **{{first_name}}** (falls back to "there") and **{{full_name}}** (falls back to empty). The full body is the public hosted page and is not personalized.`,
       },
+      {
+        heading: "Tracking",
+        body: `After a send, the Engagement column shows opened / clicked counts per issue (lazy-loaded). Click **Tracking** for a per-recipient timeline. Requires Resend webhook setup: enable open + click tracking on the domain, add a webhook pointing to /webhooks/resend, and set RESEND_WEBHOOK_SECRET. Open tracking is unreliable due to Apple Mail Privacy Protection — treat clicks as the real signal.`,
+      },
     ],
   },
   "ai-resources": {

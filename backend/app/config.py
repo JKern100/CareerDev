@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     NEWSLETTER_FROM: str = ""  # falls back to EMAIL_FROM if empty
     NEWSLETTER_SENDER_ADDRESS: str = ""  # CAN-SPAM physical address; logs warning if empty
 
+    # Resend webhooks (for open/click/bounce tracking)
+    RESEND_WEBHOOK_SECRET: str = ""  # Signing secret from Resend dashboard. If empty, webhook returns 503.
+
     # LLM / RAG settings
     LLM_API_KEY: str = ""
     LLM_MODEL: str = "gemini-2.5-flash"

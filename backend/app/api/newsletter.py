@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_admin_user
 from app.config import settings
 from app.database import get_db
+from app.models.email_event import EmailEvent
 from app.models.newsletter import NewsletterIssue, NewsletterSubscriber
 from app.models.user import EmailLog, User
 from app.services.email import (
@@ -631,3 +632,150 @@ async def admin_stats(_=Depends(get_admin_user), db: AsyncSession = Depends(get_
         "pending": sum(1 for s in merged if s.status == "pending"),
         "unsubscribed": sum(1 for s in merged if s.status == "unsubscribed"),
     }
+
+
+# ── Per-issue tracking ──────────────────────────────────────────────────
+
+
+async def _issue_resend_ids(db: AsyncSession, issue: NewsletterIssue) -> list[tuple[str, str]]:
+    """Return [(resend_id, to_email)] for all successful sends of this issue."""
+    issue_email_type = f"newsletter_issue:{issue.slug}"
+    result = await db.execute(
+        select(EmailLog.resend_id, EmailLog.to_email).where(
+            EmailLog.email_type == issue_email_type,
+            EmailLog.status == "sent",
+            EmailLog.resend_id.isnot(None),
+        )
+    )
+    return [(rid, email) for rid, email in result.all() if rid]
+
+
+@admin_router.get("/issues/{issue_id}/stats")
+async def admin_issue_stats(
+    issue_id: UUID,
+    _=Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Aggregate tracking stats for one issue.
+
+    Counts are based on Resend webhook events joined to EmailLog.resend_id.
+    Each metric counts unique recipients (not raw events), so multiple opens
+    by the same person count as one.
+    """
+    issue = await db.get(NewsletterIssue, issue_id)
+    if not issue:
+        raise HTTPException(status_code=404, detail="Issue not found")
+
+    sends = await _issue_resend_ids(db, issue)
+    resend_ids = [rid for rid, _ in sends]
+    total_sent = len(resend_ids)
+
+    if not resend_ids:
+        return {
+            "sent": 0, "delivered": 0, "opened": 0, "clicked": 0,
+            "bounced": 0, "complained": 0,
+            "open_rate": 0.0, "click_rate": 0.0,
+            "tracking_configured": bool(settings.RESEND_WEBHOOK_SECRET.strip()),
+        }
+
+    # One query: load every event for this issue's send ids
+    ev_result = await db.execute(
+        select(EmailEvent.resend_id, EmailEvent.event_type)
+        .where(EmailEvent.resend_id.in_(resend_ids))
+    )
+    by_type: dict[str, set[str]] = {}
+    for rid, etype in ev_result.all():
+        by_type.setdefault(etype, set()).add(rid)
+
+    delivered = len(by_type.get("email.delivered", set()))
+    opened = len(by_type.get("email.opened", set()))
+    clicked = len(by_type.get("email.clicked", set()))
+    bounced = len(by_type.get("email.bounced", set()))
+    complained = len(by_type.get("email.complained", set()))
+
+    denom = delivered or total_sent
+    return {
+        "sent": total_sent,
+        "delivered": delivered,
+        "opened": opened,
+        "clicked": clicked,
+        "bounced": bounced,
+        "complained": complained,
+        "open_rate": round(opened / denom, 4) if denom else 0.0,
+        "click_rate": round(clicked / denom, 4) if denom else 0.0,
+        "tracking_configured": bool(settings.RESEND_WEBHOOK_SECRET.strip()),
+    }
+
+
+@admin_router.get("/issues/{issue_id}/recipient-events")
+async def admin_issue_recipient_events(
+    issue_id: UUID,
+    _=Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Per-recipient tracking timeline for one issue."""
+    issue = await db.get(NewsletterIssue, issue_id)
+    if not issue:
+        raise HTTPException(status_code=404, detail="Issue not found")
+
+    sends = await _issue_resend_ids(db, issue)
+    if not sends:
+        return []
+
+    resend_ids = [rid for rid, _ in sends]
+    email_by_rid = {rid: email for rid, email in sends}
+
+    ev_result = await db.execute(
+        select(EmailEvent.resend_id, EmailEvent.event_type, EmailEvent.event_at, EmailEvent.url)
+        .where(EmailEvent.resend_id.in_(resend_ids))
+        .order_by(EmailEvent.event_at.asc())
+    )
+    events_by_email: dict[str, dict] = {
+        email: {
+            "email": email,
+            "delivered_at": None,
+            "first_opened_at": None,
+            "open_count": 0,
+            "first_clicked_at": None,
+            "click_count": 0,
+            "clicked_urls": [],
+            "bounced_at": None,
+            "complained_at": None,
+        }
+        for _, email in sends
+    }
+
+    for rid, etype, event_at, url in ev_result.all():
+        email = email_by_rid.get(rid)
+        if not email:
+            continue
+        row = events_by_email.setdefault(email, {
+            "email": email, "delivered_at": None, "first_opened_at": None,
+            "open_count": 0, "first_clicked_at": None, "click_count": 0,
+            "clicked_urls": [], "bounced_at": None, "complained_at": None,
+        })
+        if etype == "email.delivered" and not row["delivered_at"]:
+            row["delivered_at"] = event_at
+        elif etype == "email.opened":
+            row["open_count"] += 1
+            if not row["first_opened_at"]:
+                row["first_opened_at"] = event_at
+        elif etype == "email.clicked":
+            row["click_count"] += 1
+            if not row["first_clicked_at"]:
+                row["first_clicked_at"] = event_at
+            if url and url not in row["clicked_urls"]:
+                row["clicked_urls"].append(url)
+        elif etype == "email.bounced" and not row["bounced_at"]:
+            row["bounced_at"] = event_at
+        elif etype == "email.complained" and not row["complained_at"]:
+            row["complained_at"] = event_at
+
+    # Sort: clicked first, then opened, then everyone else
+    def sort_key(r: dict):
+        return (
+            0 if r["first_clicked_at"] else (1 if r["first_opened_at"] else 2),
+            r["email"].lower(),
+        )
+
+    return sorted(events_by_email.values(), key=sort_key)

@@ -1147,3 +1147,35 @@ export async function getAdminSubscribers(statusFilter?: string) {
 export async function getAdminNewsletterStats() {
   return request<NewsletterStats>("/admin/newsletter/stats");
 }
+
+export interface NewsletterIssueStats {
+  sent: number;
+  delivered: number;
+  opened: number;
+  clicked: number;
+  bounced: number;
+  complained: number;
+  open_rate: number;
+  click_rate: number;
+  tracking_configured: boolean;
+}
+
+export interface NewsletterRecipientEvent {
+  email: string;
+  delivered_at: string | null;
+  first_opened_at: string | null;
+  open_count: number;
+  first_clicked_at: string | null;
+  click_count: number;
+  clicked_urls: string[];
+  bounced_at: string | null;
+  complained_at: string | null;
+}
+
+export async function getIssueStats(id: string) {
+  return request<NewsletterIssueStats>(`/admin/newsletter/issues/${id}/stats`);
+}
+
+export async function getIssueRecipientEvents(id: string) {
+  return request<NewsletterRecipientEvent[]>(`/admin/newsletter/issues/${id}/recipient-events`);
+}
