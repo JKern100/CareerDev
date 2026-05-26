@@ -16,3 +16,4 @@ pandas==2.2.3
 email-validator==2.3.0
 google-generativeai==0.8.5
 slowapi==0.1.9
+markdown==3.7

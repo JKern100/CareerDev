@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 import {
   getAdminIssues,
   createAdminIssue,
@@ -452,7 +453,7 @@ function IssueEditor({ issue, onClose }: { issue: NewsletterIssueAdmin | null; o
             maxHeight: 700,
             overflowY: "auto",
           }} className="newsletter-body">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
               {preview === "teaser" ? teaserMd : bodyMd}
             </ReactMarkdown>
           </div>
