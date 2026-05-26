@@ -339,6 +339,69 @@ async def admin_update_issue(
     return _issue_admin(issue)
 
 
+@admin_router.post("/issues/{issue_id}/archive", response_model=IssueAdminOut)
+async def admin_archive_issue(
+    issue_id: UUID,
+    _=Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Hide an issue from the public site without deleting it.
+
+    Archived issues don't appear in /newsletter or /newsletter/{slug},
+    but stay visible in admin (and tracking stats remain queryable).
+    """
+    issue = await db.get(NewsletterIssue, issue_id)
+    if not issue:
+        raise HTTPException(status_code=404, detail="Issue not found")
+    issue.status = "archived"
+    await db.commit()
+    await db.refresh(issue)
+    return _issue_admin(issue)
+
+
+@admin_router.post("/issues/{issue_id}/unarchive", response_model=IssueAdminOut)
+async def admin_unarchive_issue(
+    issue_id: UUID,
+    _=Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Restore an archived issue to its most recent prior state."""
+    issue = await db.get(NewsletterIssue, issue_id)
+    if not issue:
+        raise HTTPException(status_code=404, detail="Issue not found")
+    if issue.status != "archived":
+        return _issue_admin(issue)
+    if issue.sent_at:
+        issue.status = "sent"
+    elif issue.published_at:
+        issue.status = "published"
+    else:
+        issue.status = "draft"
+    await db.commit()
+    await db.refresh(issue)
+    return _issue_admin(issue)
+
+
+@admin_router.delete("/issues/{issue_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def admin_delete_issue(
+    issue_id: UUID,
+    _=Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Permanently delete an issue.
+
+    EmailLog rows are kept as an audit trail. If you recreate an issue with
+    the same slug, the dedup check will still skip recipients who got the
+    deleted version — pick a new slug if you want a fresh send to them.
+    """
+    issue = await db.get(NewsletterIssue, issue_id)
+    if not issue:
+        raise HTTPException(status_code=404, detail="Issue not found")
+    await db.delete(issue)
+    await db.commit()
+    return None
+
+
 @admin_router.post("/issues/{issue_id}/publish", response_model=IssueAdminOut)
 async def admin_publish_issue(
     issue_id: UUID,
