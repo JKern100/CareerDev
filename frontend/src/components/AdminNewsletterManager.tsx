@@ -11,9 +11,11 @@ import {
   sendAdminIssue,
   getAdminSubscribers,
   getAdminNewsletterStats,
+  getNewsletterRecipients,
   NewsletterIssueAdmin,
   NewsletterSubscriber,
   NewsletterStats,
+  NewsletterRecipient,
 } from "@/lib/api";
 
 type SubTab = "issues" | "subscribers";
@@ -128,6 +130,7 @@ function IssuesView() {
 function IssueRow({ issue, onEdit, onChanged }: { issue: NewsletterIssueAdmin; onEdit: () => void; onChanged: () => void }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const [sendModalOpen, setSendModalOpen] = useState(false);
 
   async function publish() {
     setBusy(true); setMsg("");
@@ -136,47 +139,222 @@ function IssueRow({ issue, onEdit, onChanged }: { issue: NewsletterIssueAdmin; o
     finally { setBusy(false); }
   }
 
+  return (
+    <>
+      <tr style={{ borderBottom: "1px solid #1e293b" }}>
+        <td style={tdStyle}>
+          <code style={{ background: "#1e293b", padding: "2px 6px", borderRadius: 4 }}>{issue.slug}</code>
+        </td>
+        <td style={{ ...tdStyle, maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis" }}>{issue.subject}</td>
+        <td style={tdStyle}>
+          <span style={{ ...badge, background: STATUS_COLORS[issue.status] || "#64748b", color: "#fff" }}>{issue.status}</span>
+        </td>
+        <td style={tdStyle}>{issue.published_at ? new Date(issue.published_at).toLocaleDateString() : "—"}</td>
+        <td style={tdStyle}>{issue.sent_at ? new Date(issue.sent_at).toLocaleDateString() : "—"}</td>
+        <td style={tdStyle}>
+          <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+            <button onClick={onEdit} style={smallBtn}>Edit</button>
+            {issue.status === "draft" && (
+              <button onClick={publish} disabled={busy} style={smallBtn}>Publish</button>
+            )}
+            {(issue.status === "published" || issue.status === "sent") && (
+              <button onClick={() => setSendModalOpen(true)} disabled={busy} style={{ ...smallBtn, background: "#2563eb", color: "#fff" }}>
+                {issue.status === "sent" ? "Re-send…" : "Send…"}
+              </button>
+            )}
+            {msg && <span style={{ color: msg.startsWith("Sent") ? "#22c55e" : "#ef4444", fontSize: 12 }}>{msg}</span>}
+          </div>
+        </td>
+      </tr>
+      {sendModalOpen && (
+        <tr>
+          <td colSpan={6} style={{ padding: 0 }}>
+            <SendModal
+              issue={issue}
+              onClose={() => setSendModalOpen(false)}
+              onSent={(summary) => { setMsg(summary); onChanged(); }}
+            />
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
+
+
+function SendModal({
+  issue,
+  onClose,
+  onSent,
+}: {
+  issue: NewsletterIssueAdmin;
+  onClose: () => void;
+  onSent: (summary: string) => void;
+}) {
+  const [recipients, setRecipients] = useState<NewsletterRecipient[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [search, setSearch] = useState("");
+  const [sourceFilter, setSourceFilter] = useState<"all" | "user" | "subscriber">("all");
+  const [mode, setMode] = useState<"all" | "pick">("all");
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [force, setForce] = useState(false);
+
+  useEffect(() => {
+    getNewsletterRecipients()
+      .then((rs) => {
+        setRecipients(rs);
+        setSelected(new Set(rs.map((r) => r.email))); // default: all selected
+      })
+      .catch((e) => setError(e instanceof Error ? e.message : "Failed to load recipients"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = recipients.filter((r) => {
+    if (sourceFilter !== "all" && r.source !== sourceFilter) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      if (!r.email.toLowerCase().includes(q) && !(r.name || "").toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+
+  function toggle(email: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(email)) next.delete(email);
+      else next.add(email);
+      return next;
+    });
+  }
+
+  function selectAll() {
+    setSelected(new Set(filtered.map((r) => r.email)));
+  }
+
+  function selectNone() {
+    setSelected(new Set());
+  }
+
   async function send() {
-    const ok = confirm(`Send "${issue.subject}" to all active subscribers? This cannot be undone.`);
-    if (!ok) return;
-    setBusy(true); setMsg("");
+    setBusy(true); setError("");
     try {
-      const res = await sendAdminIssue(issue.id);
-      setMsg(`Sent: ${res.sent}, failed: ${res.failed}, skipped: ${res.skipped}`);
-      onChanged();
+      const emails = mode === "all" ? undefined : Array.from(selected);
+      if (mode === "pick" && (!emails || emails.length === 0)) {
+        setError("Pick at least one recipient");
+        setBusy(false);
+        return;
+      }
+      const res = await sendAdminIssue(issue.id, { emails, force });
+      onSent(`Sent: ${res.sent}, failed: ${res.failed}, skipped: ${res.skipped} (of ${res.total_eligible} eligible)`);
+      onClose();
     } catch (e: unknown) {
-      setMsg(e instanceof Error ? e.message : "Failed");
+      setError(e instanceof Error ? e.message : "Send failed");
     } finally {
       setBusy(false);
     }
   }
 
+  const allCount = recipients.length;
+  const selectedCount = selected.size;
+  const sendCount = mode === "all" ? allCount : selectedCount;
+
   return (
-    <tr style={{ borderBottom: "1px solid #1e293b" }}>
-      <td style={tdStyle}>
-        <code style={{ background: "#1e293b", padding: "2px 6px", borderRadius: 4 }}>{issue.slug}</code>
-      </td>
-      <td style={{ ...tdStyle, maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis" }}>{issue.subject}</td>
-      <td style={tdStyle}>
-        <span style={{ ...badge, background: STATUS_COLORS[issue.status] || "#64748b", color: "#fff" }}>{issue.status}</span>
-      </td>
-      <td style={tdStyle}>{issue.published_at ? new Date(issue.published_at).toLocaleDateString() : "—"}</td>
-      <td style={tdStyle}>{issue.sent_at ? new Date(issue.sent_at).toLocaleDateString() : "—"}</td>
-      <td style={tdStyle}>
-        <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-          <button onClick={onEdit} style={smallBtn}>Edit</button>
-          {issue.status === "draft" && (
-            <button onClick={publish} disabled={busy} style={smallBtn}>Publish</button>
+    <div style={{ background: "#0f172a", border: "1px solid #334155", borderRadius: 8, padding: "1.25rem", margin: "0.5rem 0" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+        <h4 style={{ margin: 0, fontSize: "0.95rem", color: "#f1f5f9" }}>
+          Send: <span style={{ color: "#94a3b8", fontWeight: 400 }}>{issue.subject}</span>
+        </h4>
+        <button onClick={onClose} style={smallBtn}>Cancel</button>
+      </div>
+
+      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+        <button
+          onClick={() => setMode("all")}
+          style={{ ...smallBtn, background: mode === "all" ? "#2563eb" : "#334155", color: "#fff" }}
+        >
+          Send to all eligible ({allCount})
+        </button>
+        <button
+          onClick={() => setMode("pick")}
+          style={{ ...smallBtn, background: mode === "pick" ? "#2563eb" : "#334155", color: "#fff" }}
+        >
+          Pick recipients
+        </button>
+      </div>
+
+      {mode === "pick" && (
+        <div>
+          <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <input
+              type="text"
+              placeholder="Search email or name…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ ...inputStyle, flex: "1 1 200px" }}
+            />
+            <select value={sourceFilter} onChange={(e) => setSourceFilter(e.target.value as typeof sourceFilter)} style={selectStyle}>
+              <option value="all">All sources</option>
+              <option value="user">App users</option>
+              <option value="subscriber">Standalone signups</option>
+            </select>
+            <button onClick={selectAll} style={smallBtn}>Select shown</button>
+            <button onClick={selectNone} style={smallBtn}>Clear</button>
+            <span style={{ color: "#94a3b8", fontSize: 12, marginLeft: "auto" }}>
+              {selectedCount} selected · {filtered.length} shown
+            </span>
+          </div>
+
+          {loading ? (
+            <p style={{ color: "#94a3b8" }}>Loading recipients…</p>
+          ) : (
+            <div style={{ maxHeight: 280, overflowY: "auto", border: "1px solid #334155", borderRadius: 6 }}>
+              {filtered.length === 0 ? (
+                <p style={{ color: "#64748b", padding: "1rem", textAlign: "center" }}>No matches.</p>
+              ) : (
+                filtered.map((r) => (
+                  <label
+                    key={r.email}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 10,
+                      padding: "6px 12px", borderBottom: "1px solid #1e293b", cursor: "pointer",
+                      background: selected.has(r.email) ? "#1e293b" : "transparent",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selected.has(r.email)}
+                      onChange={() => toggle(r.email)}
+                    />
+                    <span style={{ color: "#e2e8f0", fontSize: 13, flex: 1 }}>{r.email}</span>
+                    {r.name && <span style={{ color: "#94a3b8", fontSize: 12 }}>{r.name}</span>}
+                    <span style={{ ...badge, background: r.source === "user" ? "#334155" : "#475569", color: "#cbd5e1", fontSize: 10 }}>
+                      {r.source === "user" ? "user" : "signup"}
+                    </span>
+                  </label>
+                ))
+              )}
+            </div>
           )}
-          {(issue.status === "published" || issue.status === "sent") && (
-            <button onClick={send} disabled={busy} style={{ ...smallBtn, background: "#2563eb", color: "#fff" }}>
-              {issue.status === "sent" ? "Re-send" : "Send"}
-            </button>
-          )}
-          {msg && <span style={{ color: msg.startsWith("Sent") ? "#22c55e" : "#ef4444", fontSize: 12 }}>{msg}</span>}
         </div>
-      </td>
-    </tr>
+      )}
+
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 16, paddingTop: 12, borderTop: "1px solid #334155" }}>
+        <label style={{ color: "#94a3b8", fontSize: 12, display: "flex", alignItems: "center", gap: 6 }}>
+          <input type="checkbox" checked={force} onChange={(e) => setForce(e.target.checked)} />
+          Re-send to recipients already sent this issue
+        </label>
+        {error && <span style={{ color: "#ef4444", fontSize: 12 }}>{error}</span>}
+        <button
+          onClick={send}
+          disabled={busy || (mode === "pick" && selectedCount === 0)}
+          style={{ ...primaryBtn, marginLeft: "auto", opacity: busy ? 0.6 : 1 }}
+        >
+          {busy ? "Sending…" : `Send to ${sendCount} recipient${sendCount === 1 ? "" : "s"}`}
+        </button>
+      </div>
+    </div>
   );
 }
 

@@ -15,7 +15,7 @@ from app.api.deps import get_admin_user
 from app.config import settings
 from app.database import get_db
 from app.models.newsletter import NewsletterIssue, NewsletterSubscriber
-from app.models.user import EmailLog
+from app.models.user import EmailLog, User
 from app.services.email import (
     send_newsletter_confirmation,
     send_newsletter_issue,
@@ -76,6 +76,21 @@ class SubscriberOut(BaseModel):
     created_at: datetime
     confirmed_at: datetime | None
     unsubscribed_at: datetime | None
+
+
+class RecipientOut(BaseModel):
+    email: str
+    name: str | None
+    source: str  # "user" or "subscriber"
+    user_id: str | None
+    subscriber_id: str | None
+    subscriber_status: str | None  # active/pending/unsubscribed/None
+
+
+class SendIssueIn(BaseModel):
+    # Optional explicit recipient list (emails). If omitted, send to all eligible recipients.
+    emails: list[str] | None = None
+    force: bool = False
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────
@@ -339,42 +354,146 @@ async def admin_publish_issue(
     return _issue_admin(issue)
 
 
+async def _eligible_recipients(db: AsyncSession) -> list[RecipientOut]:
+    """Compute the merged recipient pool.
+
+    Eligible = (users with email_nudges_enabled=True) ∪ (newsletter_subscribers with status='active'),
+    minus anyone whose newsletter_subscribers row is 'unsubscribed'.
+    Deduped by email, preferring the user record when both exist.
+    """
+    # All newsletter_subscribers rows (need them all to know who's unsubscribed)
+    sub_result = await db.execute(select(NewsletterSubscriber))
+    subs_by_email: dict[str, NewsletterSubscriber] = {
+        s.email.lower(): s for s in sub_result.scalars().all()
+    }
+
+    # All users who haven't globally disabled nudges
+    user_result = await db.execute(
+        select(User).where(User.email_nudges_enabled == True)  # noqa: E712
+    )
+    users = user_result.scalars().all()
+
+    recipients: list[RecipientOut] = []
+    seen: set[str] = set()
+
+    for u in users:
+        email_lower = u.email.lower()
+        sub = subs_by_email.get(email_lower)
+        if sub and sub.status == "unsubscribed":
+            continue  # explicit per-channel opt-out wins
+        recipients.append(RecipientOut(
+            email=u.email,
+            name=u.full_name,
+            source="user",
+            user_id=str(u.id),
+            subscriber_id=str(sub.id) if sub else None,
+            subscriber_status=sub.status if sub else None,
+        ))
+        seen.add(email_lower)
+
+    for email_lower, sub in subs_by_email.items():
+        if email_lower in seen:
+            continue
+        if sub.status != "active":
+            continue  # pending or unsubscribed standalone signups are not eligible
+        recipients.append(RecipientOut(
+            email=sub.email,
+            name=None,
+            source="subscriber",
+            user_id=None,
+            subscriber_id=str(sub.id),
+            subscriber_status=sub.status,
+        ))
+
+    recipients.sort(key=lambda r: (r.source != "user", r.email.lower()))
+    return recipients
+
+
+async def _ensure_subscriber(db: AsyncSession, email: str, source: str = "user_auto") -> NewsletterSubscriber:
+    """Get-or-create the newsletter_subscribers row for an email.
+
+    Used at send time so every recipient has a per-channel unsub token.
+    Returns the row; caller is responsible for the commit cadence.
+    """
+    email = email.strip()
+    email_lower = email.lower()
+    result = await db.execute(
+        select(NewsletterSubscriber).where(func.lower(NewsletterSubscriber.email) == email_lower)
+    )
+    sub = result.scalar_one_or_none()
+    if sub:
+        return sub
+    sub = NewsletterSubscriber(
+        email=email,
+        status="active",
+        source=source,
+        confirmed_at=datetime.utcnow(),
+    )
+    db.add(sub)
+    try:
+        await db.flush()
+    except Exception:
+        # Race condition: another concurrent send created the row first. Re-select.
+        await db.rollback()
+        result = await db.execute(
+            select(NewsletterSubscriber).where(func.lower(NewsletterSubscriber.email) == email_lower)
+        )
+        sub = result.scalar_one()
+    return sub
+
+
+@admin_router.get("/recipients", response_model=list[RecipientOut])
+async def admin_list_recipients(_=Depends(get_admin_user), db: AsyncSession = Depends(get_db)):
+    """Merged list of all eligible newsletter recipients (users + standalone subscribers)."""
+    return await _eligible_recipients(db)
+
+
 @admin_router.post("/issues/{issue_id}/send")
 async def admin_send_issue(
     issue_id: UUID,
-    force: bool = Query(False, description="Re-send to subscribers who already received this issue"),
+    payload: SendIssueIn | None = None,
+    force: bool = Query(False, description="Legacy: re-send to recipients already logged for this issue"),
     _=Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Send the issue to all active subscribers. Idempotent: skips recipients already logged."""
+    """Send the issue.
+
+    - With no payload: sends to all eligible recipients (every user with nudges on,
+      plus standalone active subscribers).
+    - With payload.emails: sends only to that explicit list.
+    - Idempotent: skips recipients already sent this issue unless force=True.
+    """
     issue = await db.get(NewsletterIssue, issue_id)
     if not issue:
         raise HTTPException(status_code=404, detail="Issue not found")
     if issue.status == "draft":
         raise HTTPException(status_code=400, detail="Publish the issue before sending")
 
+    force_send = (payload.force if payload else False) or force
+    explicit_emails: set[str] | None = None
+    if payload and payload.emails is not None:
+        explicit_emails = {e.strip().lower() for e in payload.emails if e and e.strip()}
+        if not explicit_emails:
+            raise HTTPException(status_code=400, detail="Empty recipient list")
+
     # Build the public issue URL
     issue_url = f"{settings.FRONTEND_URL}/newsletter/{issue.slug}"
 
-    # Find active subscribers
-    result = await db.execute(
-        select(NewsletterSubscriber).where(NewsletterSubscriber.status == "active")
-    )
-    subscribers = result.scalars().all()
+    eligible = await _eligible_recipients(db)
+    if explicit_emails is not None:
+        eligible = [r for r in eligible if r.email.lower() in explicit_emails]
 
     sent = 0
     failed = 0
     skipped = 0
-    issue_type_tag = f"newsletter:{issue.slug}"
 
-    for sub in subscribers:
-        if not force:
-            # Skip recipients already sent this specific issue (subject is per-issue, so use subject as marker)
+    for r in eligible:
+        if not force_send:
             already = await db.execute(
                 select(func.count())
                 .select_from(EmailLog)
                 .where(
-                    EmailLog.to_email == sub.email,
+                    EmailLog.to_email == r.email,
                     EmailLog.email_type == "newsletter_issue",
                     EmailLog.subject == issue.subject,
                     EmailLog.status == "sent",
@@ -384,8 +503,12 @@ async def admin_send_issue(
                 skipped += 1
                 continue
 
+        # Ensure a newsletter_subscribers row exists so the recipient has a per-channel unsub token
+        sub = await _ensure_subscriber(db, r.email, source="user_auto" if r.source == "user" else "web_form")
+        await db.commit()
+
         ok = await send_newsletter_issue(
-            to_email=sub.email,
+            to_email=r.email,
             subject=issue.subject,
             teaser_md=issue.teaser_md,
             issue_url=issue_url,
@@ -406,8 +529,8 @@ async def admin_send_issue(
         "sent": sent,
         "failed": failed,
         "skipped": skipped,
-        "total_subscribers": len(subscribers),
-        "tag": issue_type_tag,
+        "total_eligible": len(eligible),
+        "tag": f"newsletter:{issue.slug}",
     }
 
 
