@@ -13,10 +13,14 @@ import {
   getAdminSubscribers,
   getAdminNewsletterStats,
   getNewsletterRecipients,
+  getIssueStats,
+  getIssueRecipientEvents,
   NewsletterIssueAdmin,
   NewsletterSubscriber,
   NewsletterStats,
   NewsletterRecipient,
+  NewsletterIssueStats,
+  NewsletterRecipientEvent,
 } from "@/lib/api";
 
 type SubTab = "issues" | "subscribers";
@@ -110,7 +114,7 @@ function IssuesView() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
             <thead>
               <tr>
-                {["Slug", "Subject", "Status", "Published", "Sent", "Actions"].map((h) => (
+                {["Slug", "Subject", "Status", "Engagement", "Sent", "Actions"].map((h) => (
                   <th key={h} style={thStyle}>{h}</th>
                 ))}
               </tr>
@@ -132,6 +136,8 @@ function IssueRow({ issue, onEdit, onChanged }: { issue: NewsletterIssueAdmin; o
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [sendModalOpen, setSendModalOpen] = useState(false);
+  const [trackingOpen, setTrackingOpen] = useState(false);
+  const [stats, setStats] = useState<NewsletterIssueStats | null>(null);
 
   async function publish() {
     setBusy(true); setMsg("");
@@ -139,6 +145,16 @@ function IssueRow({ issue, onEdit, onChanged }: { issue: NewsletterIssueAdmin; o
     catch (e: unknown) { setMsg(e instanceof Error ? e.message : "Failed"); }
     finally { setBusy(false); }
   }
+
+  // Lazy-load stats only for sent issues (no point fetching for drafts)
+  useEffect(() => {
+    if (issue.status !== "sent") return;
+    let cancelled = false;
+    getIssueStats(issue.id)
+      .then((s) => { if (!cancelled) setStats(s); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [issue.id, issue.status, issue.sent_at]);
 
   return (
     <>
@@ -150,7 +166,22 @@ function IssueRow({ issue, onEdit, onChanged }: { issue: NewsletterIssueAdmin; o
         <td style={tdStyle}>
           <span style={{ ...badge, background: STATUS_COLORS[issue.status] || "#64748b", color: "#fff" }}>{issue.status}</span>
         </td>
-        <td style={tdStyle}>{issue.published_at ? new Date(issue.published_at).toLocaleDateString() : "—"}</td>
+        <td style={tdStyle}>
+          {stats && stats.sent > 0 ? (
+            <div style={{ display: "flex", gap: 10, fontSize: 12, color: "#cbd5e1", whiteSpace: "nowrap" }}>
+              <span title="Sent">📧 {stats.sent}</span>
+              <span title="Opened (unique recipients)" style={{ color: "#3b82f6" }}>
+                👁 {stats.opened}{stats.delivered ? ` · ${Math.round(stats.open_rate * 100)}%` : ""}
+              </span>
+              <span title="Clicked (unique recipients)" style={{ color: "#22c55e" }}>
+                🔗 {stats.clicked}{stats.delivered ? ` · ${Math.round(stats.click_rate * 100)}%` : ""}
+              </span>
+              {stats.bounced > 0 && <span style={{ color: "#ef4444" }} title="Bounced">⚠ {stats.bounced}</span>}
+            </div>
+          ) : (
+            <span style={{ color: "#475569", fontSize: 12 }}>—</span>
+          )}
+        </td>
         <td style={tdStyle}>{issue.sent_at ? new Date(issue.sent_at).toLocaleDateString() : "—"}</td>
         <td style={tdStyle}>
           <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
@@ -162,6 +193,9 @@ function IssueRow({ issue, onEdit, onChanged }: { issue: NewsletterIssueAdmin; o
               <button onClick={() => setSendModalOpen(true)} disabled={busy} style={{ ...smallBtn, background: "#2563eb", color: "#fff" }}>
                 {issue.status === "sent" ? "Re-send…" : "Send…"}
               </button>
+            )}
+            {issue.status === "sent" && (
+              <button onClick={() => setTrackingOpen(true)} style={smallBtn}>Tracking</button>
             )}
             {msg && <span style={{ color: msg.startsWith("Sent") ? "#22c55e" : "#ef4444", fontSize: 12 }}>{msg}</span>}
           </div>
@@ -178,7 +212,110 @@ function IssueRow({ issue, onEdit, onChanged }: { issue: NewsletterIssueAdmin; o
           </td>
         </tr>
       )}
+      {trackingOpen && (
+        <tr>
+          <td colSpan={6} style={{ padding: 0 }}>
+            <TrackingModal issue={issue} stats={stats} onClose={() => setTrackingOpen(false)} />
+          </td>
+        </tr>
+      )}
     </>
+  );
+}
+
+
+function TrackingModal({
+  issue,
+  stats,
+  onClose,
+}: {
+  issue: NewsletterIssueAdmin;
+  stats: NewsletterIssueStats | null;
+  onClose: () => void;
+}) {
+  const [rows, setRows] = useState<NewsletterRecipientEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    getIssueRecipientEvents(issue.id)
+      .then(setRows)
+      .catch((e) => setError(e instanceof Error ? e.message : "Failed to load"))
+      .finally(() => setLoading(false));
+  }, [issue.id]);
+
+  return (
+    <div style={{ background: "#0f172a", border: "1px solid #334155", borderRadius: 8, padding: "1.25rem", margin: "0.5rem 0" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+        <h4 style={{ margin: 0, fontSize: "0.95rem", color: "#f1f5f9" }}>
+          Tracking: <span style={{ color: "#94a3b8", fontWeight: 400 }}>{issue.subject}</span>
+        </h4>
+        <button onClick={onClose} style={smallBtn}>Close</button>
+      </div>
+
+      {stats && !stats.tracking_configured && (
+        <p style={{ color: "#f59e0b", fontSize: 12, marginBottom: 12 }}>
+          ⚠ Tracking webhook isn&rsquo;t configured. Set RESEND_WEBHOOK_SECRET and add a webhook in Resend dashboard. Past events won&rsquo;t backfill.
+        </p>
+      )}
+
+      {stats && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: "0.75rem", marginBottom: "1rem" }}>
+          <StatBox label="Sent" value={stats.sent} />
+          <StatBox label="Delivered" value={stats.delivered} accent="#cbd5e1" />
+          <StatBox label="Opened" value={stats.opened} accent="#3b82f6" />
+          <StatBox label="Open rate" value={`${Math.round(stats.open_rate * 100)}%`} accent="#3b82f6" />
+          <StatBox label="Clicked" value={stats.clicked} accent="#22c55e" />
+          <StatBox label="Click rate" value={`${Math.round(stats.click_rate * 100)}%`} accent="#22c55e" />
+          {stats.bounced > 0 && <StatBox label="Bounced" value={stats.bounced} accent="#ef4444" />}
+          {stats.complained > 0 && <StatBox label="Complaints" value={stats.complained} accent="#ef4444" />}
+        </div>
+      )}
+
+      <p style={{ color: "#94a3b8", fontSize: 11, marginBottom: 8, lineHeight: 1.5 }}>
+        Open tracking is unreliable: Apple Mail Privacy Protection auto-opens emails to fetch the tracking pixel,
+        and Gmail&rsquo;s image proxy can prefetch. Treat clicks as the real engagement signal.
+      </p>
+
+      {loading && <p style={{ color: "#94a3b8" }}>Loading…</p>}
+      {error && <p style={{ color: "#ef4444" }}>{error}</p>}
+      {!loading && rows.length === 0 && !error && (
+        <p style={{ color: "#64748b", padding: "1rem 0", textAlign: "center" }}>No recipient events yet.</p>
+      )}
+      {!loading && rows.length > 0 && (
+        <div style={{ overflowX: "auto", maxHeight: 400, overflowY: "auto", border: "1px solid #334155", borderRadius: 6 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" }}>
+            <thead style={{ position: "sticky", top: 0, background: "#0f172a" }}>
+              <tr>
+                {["Recipient", "Delivered", "Opened", "Opens", "Clicked", "Clicks", "Links", "Issues"].map((h) => (
+                  <th key={h} style={thStyle}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.email} style={{ borderBottom: "1px solid #1e293b" }}>
+                  <td style={tdStyle}>{r.email}</td>
+                  <td style={tdStyle}>{r.delivered_at ? "✓" : "—"}</td>
+                  <td style={tdStyle}>{r.first_opened_at ? new Date(r.first_opened_at).toLocaleString() : "—"}</td>
+                  <td style={tdStyle}>{r.open_count || "—"}</td>
+                  <td style={tdStyle}>{r.first_clicked_at ? new Date(r.first_clicked_at).toLocaleString() : "—"}</td>
+                  <td style={tdStyle}>{r.click_count || "—"}</td>
+                  <td style={{ ...tdStyle, maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {r.clicked_urls.length > 0 ? r.clicked_urls.join(", ") : "—"}
+                  </td>
+                  <td style={tdStyle}>
+                    {r.bounced_at && <span style={{ color: "#ef4444" }}>bounced </span>}
+                    {r.complained_at && <span style={{ color: "#ef4444" }}>complaint</span>}
+                    {!r.bounced_at && !r.complained_at && "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -556,7 +693,7 @@ function SubscribersView() {
 }
 
 
-function StatBox({ label, value, accent }: { label: string; value: number; accent?: string }) {
+function StatBox({ label, value, accent }: { label: string; value: number | string; accent?: string }) {
   return (
     <div style={{ background: "#1e293b", borderRadius: 8, padding: "1rem", textAlign: "center" }}>
       <p style={{ fontSize: "0.75rem", color: "#94a3b8", marginBottom: "0.25rem" }}>{label}</p>

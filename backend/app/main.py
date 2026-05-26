@@ -282,6 +282,7 @@ async def lifespan(app: FastAPI):
     import app.models.payment  # noqa: F401
     import app.models.promo  # noqa: F401
     import app.models.newsletter  # noqa: F401
+    import app.models.email_event  # noqa: F401
 
     try:
         print("[startup] Connecting to database...", flush=True)
@@ -311,7 +312,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-from app.api import auth, questionnaire, analysis, privacy, admin, scheduling, results, coach, action_plan, payment, promo, referral, newsletter
+from app.api import auth, questionnaire, analysis, privacy, admin, scheduling, results, coach, action_plan, payment, promo, referral, newsletter, webhooks
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -363,6 +364,7 @@ app.include_router(promo.router)
 app.include_router(referral.router)
 app.include_router(newsletter.router)
 app.include_router(newsletter.admin_router)
+app.include_router(webhooks.router)
 
 
 @app.get("/health")
