@@ -570,6 +570,7 @@ async def send_newsletter_issue(
     teaser_md: str,
     issue_url: str,
     unsub_token: str,
+    email_type: str = "newsletter_issue",
 ) -> bool:
     """Send one newsletter issue to one subscriber."""
     unsub_url = f"{settings.FRONTEND_URL}/newsletter/unsubscribe?token={unsub_token}"
@@ -624,8 +625,18 @@ async def send_newsletter_issue(
         to_email,
         subject,
         html,
-        "newsletter_issue",
+        email_type,
         from_addr=_newsletter_from(),
         headers=headers,
         text=text_body,
     )
+
+
+def apply_newsletter_macros(text: str, recipient_name: str | None) -> str:
+    """Substitute {{first_name}} and {{full_name}} in newsletter subject/teaser text.
+
+    Fallbacks: first_name -> "there"; full_name -> "" if missing.
+    """
+    name = (recipient_name or "").strip()
+    first = name.split(" ")[0] if name else "there"
+    return text.replace("{{first_name}}", first).replace("{{full_name}}", name)

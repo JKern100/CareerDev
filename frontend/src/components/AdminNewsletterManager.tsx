@@ -406,6 +406,11 @@ function IssueEditor({ issue, onClose }: { issue: NewsletterIssueAdmin | null; o
           <label style={labelStyle}>Subject (email subject)</label>
           <input value={subject} onChange={(e) => setSubject(e.target.value)} style={inputStyle} placeholder="[Week of 25 May] ..." />
 
+          <p style={{ color: "#94a3b8", fontSize: 11, marginTop: 8, lineHeight: 1.5 }}>
+            Macros (subject + teaser only): <code>{"{{first_name}}"}</code> falls back to &quot;there&quot;.{" "}
+            <code>{"{{full_name}}"}</code> falls back to empty. The body is the public page and is not personalized.
+          </p>
+
           <div style={{ display: "flex", gap: 8, marginBottom: 4, marginTop: 12 }}>
             <button onClick={() => setPreview("teaser")} style={{ ...smallBtn, background: preview === "teaser" ? "#2563eb" : "#334155", color: "#fff" }}>Teaser</button>
             <button onClick={() => setPreview("body")} style={{ ...smallBtn, background: preview === "body" ? "#2563eb" : "#334155", color: "#fff" }}>Body</button>

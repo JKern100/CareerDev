@@ -17,6 +17,7 @@ from app.database import get_db
 from app.models.newsletter import NewsletterIssue, NewsletterSubscriber
 from app.models.user import EmailLog, User
 from app.services.email import (
+    apply_newsletter_macros,
     send_newsletter_confirmation,
     send_newsletter_issue,
 )
@@ -483,6 +484,9 @@ async def admin_send_issue(
     if explicit_emails is not None:
         eligible = [r for r in eligible if r.email.lower() in explicit_emails]
 
+    # Slug-tagged email_type so dedup stays stable even when subject is personalized per-recipient.
+    issue_email_type = f"newsletter_issue:{issue.slug}"
+
     sent = 0
     failed = 0
     skipped = 0
@@ -494,8 +498,7 @@ async def admin_send_issue(
                 .select_from(EmailLog)
                 .where(
                     EmailLog.to_email == r.email,
-                    EmailLog.email_type == "newsletter_issue",
-                    EmailLog.subject == issue.subject,
+                    EmailLog.email_type == issue_email_type,
                     EmailLog.status == "sent",
                 )
             )
@@ -507,12 +510,18 @@ async def admin_send_issue(
         sub = await _ensure_subscriber(db, r.email, source="user_auto" if r.source == "user" else "web_form")
         await db.commit()
 
+        # Personalize subject + teaser with the recipient's name; body_md stays static
+        # since the hosted page at /newsletter/<slug> is public.
+        personalized_subject = apply_newsletter_macros(issue.subject, r.name)
+        personalized_teaser = apply_newsletter_macros(issue.teaser_md, r.name)
+
         ok = await send_newsletter_issue(
             to_email=r.email,
-            subject=issue.subject,
-            teaser_md=issue.teaser_md,
+            subject=personalized_subject,
+            teaser_md=personalized_teaser,
             issue_url=issue_url,
             unsub_token=sub.unsub_token,
+            email_type=issue_email_type,
         )
         if ok:
             sent += 1
