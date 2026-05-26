@@ -9,6 +9,9 @@ import {
   createAdminIssue,
   updateAdminIssue,
   publishAdminIssue,
+  archiveAdminIssue,
+  unarchiveAdminIssue,
+  deleteAdminIssue,
   sendAdminIssue,
   getAdminSubscribers,
   getAdminNewsletterStats,
@@ -31,6 +34,7 @@ const STATUS_COLORS: Record<string, string> = {
   draft: "#64748b",
   published: "#3b82f6",
   sent: "#22c55e",
+  archived: "#475569",
   pending: "#f59e0b",
   active: "#22c55e",
   unsubscribed: "#ef4444",
@@ -148,6 +152,35 @@ function IssueRow({ issue, onEdit, onChanged }: { issue: NewsletterIssueAdmin; o
     finally { setBusy(false); }
   }
 
+  async function toggleArchive() {
+    setBusy(true); setMsg("");
+    try {
+      if (issue.status === "archived") {
+        await unarchiveAdminIssue(issue.id);
+      } else {
+        await archiveAdminIssue(issue.id);
+      }
+      onChanged();
+    } catch (e: unknown) {
+      setMsg(e instanceof Error ? e.message : "Failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function deleteIssue() {
+    const ok = confirm(`Delete "${issue.subject}" permanently? This cannot be undone.\n\nTracking history stays in the email log.`);
+    if (!ok) return;
+    setBusy(true); setMsg("");
+    try {
+      await deleteAdminIssue(issue.id);
+      onChanged();
+    } catch (e: unknown) {
+      setMsg(e instanceof Error ? e.message : "Failed");
+      setBusy(false);
+    }
+  }
+
   // Lazy-load stats only for sent issues (no point fetching for drafts)
   useEffect(() => {
     if (issue.status !== "sent") return;
@@ -199,6 +232,12 @@ function IssueRow({ issue, onEdit, onChanged }: { issue: NewsletterIssueAdmin; o
             {issue.status === "sent" && (
               <button onClick={() => setTrackingOpen(true)} style={smallBtn}>Tracking</button>
             )}
+            <button onClick={toggleArchive} disabled={busy} style={smallBtn}>
+              {issue.status === "archived" ? "Unhide" : "Hide"}
+            </button>
+            <button onClick={deleteIssue} disabled={busy} style={{ ...smallBtn, background: "#7f1d1d", color: "#fecaca" }}>
+              Delete
+            </button>
             {msg && <span style={{ color: msg.startsWith("Sent") ? "#22c55e" : "#ef4444", fontSize: 12 }}>{msg}</span>}
           </div>
         </td>

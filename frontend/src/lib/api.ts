@@ -1034,7 +1034,7 @@ export interface NewsletterIssueAdmin {
   subject: string;
   teaser_md: string;
   body_md: string;
-  status: "draft" | "published" | "sent";
+  status: "draft" | "published" | "sent" | "archived";
   published_at: string | null;
   sent_at: string | null;
   created_at: string;
@@ -1123,6 +1123,27 @@ export async function updateAdminIssue(
 
 export async function publishAdminIssue(id: string) {
   return request<NewsletterIssueAdmin>(`/admin/newsletter/issues/${id}/publish`, { method: "POST" });
+}
+
+export async function archiveAdminIssue(id: string) {
+  return request<NewsletterIssueAdmin>(`/admin/newsletter/issues/${id}/archive`, { method: "POST" });
+}
+
+export async function unarchiveAdminIssue(id: string) {
+  return request<NewsletterIssueAdmin>(`/admin/newsletter/issues/${id}/unarchive`, { method: "POST" });
+}
+
+export async function deleteAdminIssue(id: string) {
+  // 204 No Content — fetch will return empty body; use raw fetch to avoid JSON parse error.
+  const token = (typeof window !== "undefined" && localStorage.getItem("token")) || "";
+  const res = await fetch(`/api/admin/newsletter/issues/${id}`, {
+    method: "DELETE",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail || `Delete failed: ${res.status}`);
+  }
 }
 
 export async function sendAdminIssue(id: string, opts?: { emails?: string[]; force?: boolean }) {

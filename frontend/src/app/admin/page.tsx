@@ -217,7 +217,11 @@ const HELP_CONTENT: Record<Tab, { title: string; sections: { heading: string; bo
       },
       {
         heading: "Status flow",
-        body: `- **draft**: visible only here, not on the site.\n- **published**: live on the public page, no emails sent yet.\n- **sent**: blasted to subscribers at least once. Sends are idempotent — recipients already logged for this issue are skipped unless you force re-send.`,
+        body: `- **draft**: visible only here, not on the site.\n- **published**: live on the public page, no emails sent yet.\n- **sent**: blasted to subscribers at least once. Sends are idempotent — recipients already logged for this issue are skipped unless you force re-send.\n- **archived**: hidden from the public site and archive list, still visible here. Use Hide / Unhide to toggle.`,
+      },
+      {
+        heading: "Hide vs Delete",
+        body: `**Hide** flips status to archived — the issue disappears from the public archive and the /newsletter/<slug> page returns 404. You can unhide anytime. Use this for issues that turned out to be junk or you no longer want public.\n\n**Delete** permanently removes the issue. Tracking history in the email log stays as an audit trail. If you recreate an issue with the same slug, dedup will still skip recipients who got the deleted version — pick a new slug if you need a fresh send.`,
       },
       {
         heading: "Subscribers",

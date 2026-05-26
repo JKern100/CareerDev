@@ -16,7 +16,10 @@ export default function NewsletterIssuePage({ params }: { params: Promise<{ slug
 
   useEffect(() => {
     getPublishedIssue(slug)
-      .then(setIssue)
+      .then((i) => {
+        setIssue(i);
+        document.title = `${i.subject} — CrewTransition`;
+      })
       .catch((err) => setError(err instanceof Error ? err.message : "Issue not found"))
       .finally(() => setLoading(false));
   }, [slug]);
@@ -49,18 +52,15 @@ export default function NewsletterIssuePage({ params }: { params: Promise<{ slug
     <>
     <PublicHeader />
     <article className="container" style={{ maxWidth: 720, padding: "3rem 1rem" }}>
-      <header style={{ marginBottom: "2rem" }}>
+      <header style={{ marginBottom: "1.5rem" }}>
         <Link href="/newsletter" style={{ color: "#64748b", fontSize: 13, textDecoration: "none" }}>
           ← Crew Career Brief
         </Link>
         {issue.published_at && (
-          <p style={{ color: "#94a3b8", fontSize: 13, marginTop: 16, marginBottom: 4 }}>
+          <p style={{ color: "#94a3b8", fontSize: 13, marginTop: 16, marginBottom: 0 }}>
             {new Date(issue.published_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}
           </p>
         )}
-        <h1 style={{ fontSize: "1.85rem", fontWeight: 700, lineHeight: 1.25, marginTop: 8 }}>
-          {issue.subject}
-        </h1>
       </header>
 
       <div className="newsletter-body" style={{ color: "#1e293b", fontSize: "1rem", lineHeight: 1.7 }}>
