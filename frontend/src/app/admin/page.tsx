@@ -43,8 +43,9 @@ import AdminCoachUsage from "@/components/AdminCoachUsage";
 import AdminReferrals from "@/components/AdminReferrals";
 import AdminResources from "@/components/AdminResources";
 import AdminEmailManager from "@/components/AdminEmailManager";
+import AdminNewsletterManager from "@/components/AdminNewsletterManager";
 
-type Tab = "dashboard" | "users" | "questions" | "activity" | "promo" | "coach-usage" | "referrals" | "ai-resources" | "emails";
+type Tab = "dashboard" | "users" | "questions" | "activity" | "promo" | "coach-usage" | "referrals" | "ai-resources" | "emails" | "newsletter";
 
 function formatTimeAgo(dateStr: string): string {
   const now = Date.now();
@@ -204,6 +205,23 @@ const HELP_CONTENT: Record<Tab, { title: string; sections: { heading: string; bo
       {
         heading: "Statuses",
         body: `- **sent**: Successfully delivered to Resend API.\n- **failed**: Resend API returned an error.\n- **error**: Network or other exception before reaching Resend.\n- **skipped**: RESEND_API_KEY was not configured.`,
+      },
+    ],
+  },
+  newsletter: {
+    title: "Newsletter Help",
+    sections: [
+      {
+        heading: "Issues",
+        body: "Create draft issues with a slug (e.g. 2026-05-25), subject line, teaser markdown (the ~150-word email body) and full body markdown (the hosted page). Publish first to make it live on /newsletter/<slug>, then Send to email it to active subscribers.",
+      },
+      {
+        heading: "Status flow",
+        body: `- **draft**: visible only here, not on the site.\n- **published**: live on the public page, no emails sent yet.\n- **sent**: blasted to subscribers at least once. Sends are idempotent — recipients already logged for this issue are skipped unless you force re-send.`,
+      },
+      {
+        heading: "Subscribers",
+        body: `- **pending**: signed up, waiting on double opt-in click.\n- **active**: confirmed; receives issues.\n- **unsubscribed**: opted out via one-click link or list-unsubscribe header.`,
       },
     ],
   },
@@ -918,12 +936,12 @@ export default function AdminPage() {
 
       {/* Tabs */}
       <div style={styles.tabs}>
-        {(["dashboard", "users", "activity", "questions", "ai-resources", "promo", "coach-usage", "referrals", "emails"] as Tab[]).map((t) => {
+        {(["dashboard", "users", "activity", "questions", "ai-resources", "promo", "coach-usage", "referrals", "emails", "newsletter"] as Tab[]).map((t) => {
           const labels: Record<Tab, string> = {
             dashboard: "Dashboard", users: "Users", activity: "Activity",
             questions: "Questions", "ai-resources": "AI Resources",
             promo: "Promo Codes", "coach-usage": "Coach Usage", referrals: "Referrals",
-            emails: "Emails",
+            emails: "Emails", newsletter: "Newsletter",
           };
           return (
             <button
@@ -1597,6 +1615,12 @@ export default function AdminPage() {
         {tab === "emails" && (
           <div style={{ padding: "1rem" }}>
             <AdminEmailManager />
+          </div>
+        )}
+
+        {tab === "newsletter" && (
+          <div style={{ padding: "1rem" }}>
+            <AdminNewsletterManager />
           </div>
         )}
       </div>

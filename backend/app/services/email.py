@@ -139,7 +139,16 @@ def _branded_email(body_content: str) -> str:
 </html>"""
 
 
-async def _send_email(to: str, subject: str, html: str, email_type: str = "unknown") -> bool:
+async def _send_email(
+    to: str,
+    subject: str,
+    html: str,
+    email_type: str = "unknown",
+    *,
+    from_addr: str | None = None,
+    headers: dict[str, str] | None = None,
+    text: str | None = None,
+) -> bool:
     """Send an email via Resend API. Returns True on success."""
     api_key = settings.RESEND_API_KEY.strip()
     if not api_key:
@@ -147,7 +156,19 @@ async def _send_email(to: str, subject: str, html: str, email_type: str = "unkno
         await _log_email(to, subject, email_type, "skipped", error_detail="RESEND_API_KEY not configured")
         return False
 
-    logger.info("Sending email to %s, subject=%r, from=%s", to, subject, settings.EMAIL_FROM)
+    sender = from_addr or settings.EMAIL_FROM
+    logger.info("Sending email to %s, subject=%r, from=%s", to, subject, sender)
+
+    payload: dict = {
+        "from": sender,
+        "to": [to],
+        "subject": subject,
+        "html": html,
+    }
+    if text:
+        payload["text"] = text
+    if headers:
+        payload["headers"] = headers
 
     try:
         async with httpx.AsyncClient() as client:
@@ -157,12 +178,7 @@ async def _send_email(to: str, subject: str, html: str, email_type: str = "unkno
                     "Authorization": f"Bearer {api_key}",
                     "Content-Type": "application/json",
                 },
-                json={
-                    "from": settings.EMAIL_FROM,
-                    "to": [to],
-                    "subject": subject,
-                    "html": html,
-                },
+                json=payload,
                 timeout=10,
             )
             if resp.status_code >= 400:
@@ -482,3 +498,117 @@ async def send_pro_welcome_email(to_email: str, user_name: str | None = None) ->
 
     html = _branded_email(body)
     return await _send_email(to_email, "You're now a CrewTransition Pro!", html, "pro_welcome")
+
+
+# ── Newsletter ───────────────────────────────────────────────────────────
+
+def _newsletter_from() -> str:
+    return (settings.NEWSLETTER_FROM or settings.EMAIL_FROM).strip()
+
+
+def _md_to_simple_html(md: str) -> str:
+    """Minimal markdown-to-HTML for the email teaser.
+
+    Email clients are not browsers — we keep it to paragraphs and line breaks.
+    The full issue lives on the web; this is only the teaser block.
+    """
+    paras = [p.strip() for p in md.strip().split("\n\n") if p.strip()]
+    return "".join(
+        f'<p style="margin: 0 0 16px;">{p.replace(chr(10), "<br/>")}</p>' for p in paras
+    )
+
+
+def _newsletter_footer(unsub_url: str) -> tuple[str, str]:
+    """Return (html, text) footer with CAN-SPAM-compliant content."""
+    addr = settings.NEWSLETTER_SENDER_ADDRESS.strip()
+    if not addr:
+        logger.warning("NEWSLETTER_SENDER_ADDRESS not configured — required by CAN-SPAM")
+    addr_html = f'<br/>{addr}' if addr else ''
+    html = f"""<hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0 16px;"/>
+<p style="color: #94a3b8; font-size: 11px; line-height: 1.5; margin: 0; text-align: center;">
+You're receiving this because you subscribed at CrewTransition.{addr_html}<br/>
+<a href="{unsub_url}" style="color: #94a3b8; text-decoration: underline;">Unsubscribe</a>
+</p>"""
+    text = f"\n\n---\nYou're receiving this because you subscribed at CrewTransition.\n{addr}\nUnsubscribe: {unsub_url}"
+    return html, text
+
+
+async def send_newsletter_confirmation(to_email: str, confirm_token: str) -> bool:
+    """Double opt-in confirmation email."""
+    confirm_url = f"{settings.FRONTEND_URL}/newsletter/confirm?token={confirm_token}"
+    body = f"""\
+              <h2 style="color: #1e293b; font-size: 20px; margin: 0 0 16px;">Confirm your subscription</h2>
+              <p style="margin: 0 0 16px;">Thanks for subscribing to the CrewTransition weekly newsletter for UAE-based aviation crew.</p>
+              <p style="margin: 0 0 24px;">Click below to confirm — this link expires in 7 days.</p>
+              <table cellpadding="0" cellspacing="0" style="margin: 0 0 24px;">
+                <tr>
+                  <td align="center" style="background: #2563eb; border-radius: 8px;">
+                    <a href="{confirm_url}"
+                       style="display: inline-block; padding: 14px 32px; color: #ffffff;
+                              text-decoration: none; font-weight: 600; font-size: 15px;">
+                      Confirm my subscription
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="color: #64748b; font-size: 13px; margin: 0;">
+                If you didn&rsquo;t request this, you can safely ignore this email.
+              </p>"""
+    html = _branded_email(body)
+    return await _send_email(
+        to_email,
+        "Confirm your CrewTransition newsletter subscription",
+        html,
+        "newsletter_confirm",
+        from_addr=_newsletter_from(),
+    )
+
+
+async def send_newsletter_issue(
+    to_email: str,
+    subject: str,
+    teaser_md: str,
+    issue_url: str,
+    unsub_token: str,
+) -> bool:
+    """Send one newsletter issue to one subscriber."""
+    unsub_url = f"{settings.FRONTEND_URL}/newsletter/unsubscribe?token={unsub_token}"
+    teaser_html = _md_to_simple_html(teaser_md)
+    footer_html, footer_text = _newsletter_footer(unsub_url)
+
+    body = f"""\
+              <p style="color: #64748b; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 8px;">Crew Career Brief</p>
+              <h2 style="color: #1e293b; font-size: 22px; margin: 0 0 20px; line-height: 1.3;">{subject}</h2>
+              {teaser_html}
+              <table cellpadding="0" cellspacing="0" style="margin: 8px 0 24px;">
+                <tr>
+                  <td align="center" style="background: #2563eb; border-radius: 8px;">
+                    <a href="{issue_url}"
+                       style="display: inline-block; padding: 14px 32px; color: #ffffff;
+                              text-decoration: none; font-weight: 600; font-size: 15px;">
+                      Read the full issue
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              {footer_html}"""
+
+    html = _branded_email(body)
+    # Plaintext alternative: stripped teaser + link + footer
+    text_body = teaser_md.strip() + f"\n\nRead the full issue: {issue_url}" + footer_text
+
+    # One-click unsubscribe per RFC 8058 (required by Gmail/Yahoo bulk sender rules)
+    headers = {
+        "List-Unsubscribe": f"<{unsub_url}>",
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    }
+
+    return await _send_email(
+        to_email,
+        subject,
+        html,
+        "newsletter_issue",
+        from_addr=_newsletter_from(),
+        headers=headers,
+        text=text_body,
+    )
