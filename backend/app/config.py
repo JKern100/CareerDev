@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     EMAIL_FROM: str = "noreply@crewtransition.com"
     FRONTEND_URL: str = "http://localhost:3000"
 
+    # Newsletter
+    NEWSLETTER_FROM: str = ""  # falls back to EMAIL_FROM if empty
+    NEWSLETTER_SENDER_ADDRESS: str = ""  # CAN-SPAM physical address; logs warning if empty
+
     # LLM / RAG settings
     LLM_API_KEY: str = ""
     LLM_MODEL: str = "gemini-2.5-flash"

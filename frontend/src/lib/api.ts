@@ -1017,3 +1017,114 @@ export async function adminRevokePlan(userId: string) {
     method: "POST",
   });
 }
+
+/* ── Newsletter ─────────────────────────────────────────────────────── */
+
+export interface NewsletterIssuePublic {
+  slug: string;
+  subject: string;
+  teaser_md: string;
+  body_md?: string | null;
+  published_at: string | null;
+}
+
+export interface NewsletterIssueAdmin {
+  id: string;
+  slug: string;
+  subject: string;
+  teaser_md: string;
+  body_md: string;
+  status: "draft" | "published" | "sent";
+  published_at: string | null;
+  sent_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NewsletterSubscriber {
+  id: string;
+  email: string;
+  status: "pending" | "active" | "unsubscribed";
+  source: string | null;
+  created_at: string;
+  confirmed_at: string | null;
+  unsubscribed_at: string | null;
+}
+
+export interface NewsletterStats {
+  total: number;
+  active: number;
+  pending: number;
+  unsubscribed: number;
+}
+
+export interface NewsletterSendResult {
+  sent: number;
+  failed: number;
+  skipped: number;
+  total_subscribers: number;
+  tag: string;
+}
+
+export async function newsletterSubscribe(email: string) {
+  return request<{ detail: string }>("/newsletter/subscribe", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function newsletterConfirm(token: string) {
+  return request<{ detail: string; email: string }>(`/newsletter/confirm?token=${encodeURIComponent(token)}`);
+}
+
+export async function newsletterUnsubscribe(token: string) {
+  return request<{ detail: string; email: string }>(`/newsletter/unsubscribe?token=${encodeURIComponent(token)}`);
+}
+
+export async function getPublishedIssues() {
+  return request<NewsletterIssuePublic[]>("/newsletter/issues");
+}
+
+export async function getPublishedIssue(slug: string) {
+  return request<NewsletterIssuePublic>(`/newsletter/issues/${encodeURIComponent(slug)}`);
+}
+
+export async function getAdminIssues() {
+  return request<NewsletterIssueAdmin[]>("/admin/newsletter/issues");
+}
+
+export async function createAdminIssue(data: { slug: string; subject: string; teaser_md?: string; body_md?: string }) {
+  return request<NewsletterIssueAdmin>("/admin/newsletter/issues", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateAdminIssue(
+  id: string,
+  data: { slug?: string; subject?: string; teaser_md?: string; body_md?: string },
+) {
+  return request<NewsletterIssueAdmin>(`/admin/newsletter/issues/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function publishAdminIssue(id: string) {
+  return request<NewsletterIssueAdmin>(`/admin/newsletter/issues/${id}/publish`, { method: "POST" });
+}
+
+export async function sendAdminIssue(id: string, force = false) {
+  return request<NewsletterSendResult>(`/admin/newsletter/issues/${id}/send${force ? "?force=true" : ""}`, {
+    method: "POST",
+  });
+}
+
+export async function getAdminSubscribers(statusFilter?: string) {
+  const qs = statusFilter ? `?status=${encodeURIComponent(statusFilter)}` : "";
+  return request<NewsletterSubscriber[]>(`/admin/newsletter/subscribers${qs}`);
+}
+
+export async function getAdminNewsletterStats() {
+  return request<NewsletterStats>("/admin/newsletter/stats");
+}
