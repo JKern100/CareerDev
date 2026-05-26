@@ -576,6 +576,17 @@ async def send_newsletter_issue(
     teaser_html = _md_to_simple_html(teaser_md)
     footer_html, footer_text = _newsletter_footer(unsub_url)
 
+    ps_block = """\
+              <table width="100%" cellpadding="0" cellspacing="0" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin: 8px 0 24px;">
+                <tr>
+                  <td style="padding: 16px 18px; color: #475569; font-size: 13px; line-height: 1.6;">
+                    <strong style="color: #1e293b;">P.S.</strong> We&rsquo;re early days with this newsletter and figuring out what&rsquo;s useful.
+                    Hit reply with anything you&rsquo;d want more (or less) of &mdash; raw feedback welcome.
+                    And if you know crew who&rsquo;d find this useful, please forward it on.
+                  </td>
+                </tr>
+              </table>"""
+
     body = f"""\
               <p style="color: #64748b; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 8px;">Crew Career Brief</p>
               <h2 style="color: #1e293b; font-size: 22px; margin: 0 0 20px; line-height: 1.3;">{subject}</h2>
@@ -591,11 +602,17 @@ async def send_newsletter_issue(
                   </td>
                 </tr>
               </table>
+              {ps_block}
               {footer_html}"""
 
     html = _branded_email(body)
-    # Plaintext alternative: stripped teaser + link + footer
-    text_body = teaser_md.strip() + f"\n\nRead the full issue: {issue_url}" + footer_text
+    # Plaintext alternative: stripped teaser + link + ps + footer
+    ps_text = (
+        "\n\nP.S. We're early days with this newsletter and figuring out what's useful. "
+        "Hit reply with anything you'd want more (or less) of — raw feedback welcome. "
+        "And if you know crew who'd find this useful, please forward it on."
+    )
+    text_body = teaser_md.strip() + f"\n\nRead the full issue: {issue_url}" + ps_text + footer_text
 
     # One-click unsubscribe per RFC 8058 (required by Gmail/Yahoo bulk sender rules)
     headers = {
