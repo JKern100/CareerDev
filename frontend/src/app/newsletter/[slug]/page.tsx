@@ -5,6 +5,7 @@ import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
+import PublicHeader from "@/components/PublicHeader";
 import { getPublishedIssue, NewsletterIssuePublic } from "@/lib/api";
 
 export default function NewsletterIssuePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -22,23 +23,31 @@ export default function NewsletterIssuePage({ params }: { params: Promise<{ slug
 
   if (loading) {
     return (
-      <div className="container" style={{ maxWidth: 720, padding: "3rem 1rem" }}>
-        <p style={{ color: "#94a3b8" }}>Loading…</p>
-      </div>
+      <>
+        <PublicHeader />
+        <div className="container" style={{ maxWidth: 720, padding: "3rem 1rem" }}>
+          <p style={{ color: "#94a3b8" }}>Loading…</p>
+        </div>
+      </>
     );
   }
 
   if (error || !issue) {
     return (
-      <div className="container" style={{ maxWidth: 720, padding: "3rem 1rem" }}>
-        <h1 style={{ fontSize: "1.5rem", marginBottom: 12 }}>Issue not found</h1>
-        <p style={{ color: "#64748b", marginBottom: 24 }}>{error}</p>
-        <Link href="/newsletter" style={{ color: "#2563eb" }}>← Back to newsletter</Link>
-      </div>
+      <>
+        <PublicHeader />
+        <div className="container" style={{ maxWidth: 720, padding: "3rem 1rem" }}>
+          <h1 style={{ fontSize: "1.5rem", marginBottom: 12 }}>Issue not found</h1>
+          <p style={{ color: "#64748b", marginBottom: 24 }}>{error}</p>
+          <Link href="/newsletter" style={{ color: "#2563eb" }}>← Back to newsletter</Link>
+        </div>
+      </>
     );
   }
 
   return (
+    <>
+    <PublicHeader />
     <article className="container" style={{ maxWidth: 720, padding: "3rem 1rem" }}>
       <header style={{ marginBottom: "2rem" }}>
         <Link href="/newsletter" style={{ color: "#64748b", fontSize: 13, textDecoration: "none" }}>
@@ -80,5 +89,6 @@ export default function NewsletterIssuePage({ params }: { params: Promise<{ slug
         .newsletter-body code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
       `}</style>
     </article>
+    </>
   );
 }

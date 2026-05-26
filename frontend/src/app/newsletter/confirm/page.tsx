@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import PublicHeader from "@/components/PublicHeader";
 import { newsletterConfirm } from "@/lib/api";
 
 function ConfirmContent() {
@@ -72,8 +73,11 @@ function ConfirmContent() {
 
 export default function NewsletterConfirmPage() {
   return (
-    <Suspense fallback={<div className="container" style={{ padding: "3rem 1rem" }}><h1>Confirming…</h1></div>}>
-      <ConfirmContent />
-    </Suspense>
+    <>
+      <PublicHeader />
+      <Suspense fallback={<div className="container" style={{ padding: "3rem 1rem" }}><h1>Confirming…</h1></div>}>
+        <ConfirmContent />
+      </Suspense>
+    </>
   );
 }
