@@ -494,7 +494,7 @@ async def send_pro_welcome_email(to_email: str, user_name: str | None = None) ->
               </table>
               <p style="color: #64748b; font-size: 13px; margin: 0;">
                 You can manage your subscription anytime from the Pricing page.
-                Questions? Reply to this email or contact support@crewtransition.com.
+                Questions? Contact support@crewtransition.com.
               </p>"""
 
     html = _branded_email(body)
@@ -610,7 +610,7 @@ async def send_newsletter_issue(
                 <tr>
                   <td style="padding: 16px 18px; color: #475569; font-size: 13px; line-height: 1.6;">
                     <strong style="color: #1e293b;">P.S.</strong> We&rsquo;re early days with this newsletter and figuring out what&rsquo;s useful.
-                    Hit reply with anything you&rsquo;d want more (or less) of &mdash; raw feedback welcome.
+                    Email us at <a href="mailto:crewtransition.app@gmail.com" style="color: #2563eb; text-decoration: underline;">crewtransition.app@gmail.com</a> with anything you&rsquo;d want more (or less) of &mdash; raw feedback welcome.
                     And if you know crew who&rsquo;d find this useful, please forward it on.
                   </td>
                 </tr>
@@ -637,7 +637,7 @@ async def send_newsletter_issue(
     # Plaintext alternative: stripped teaser + link + ps + footer
     ps_text = (
         "\n\nP.S. We're early days with this newsletter and figuring out what's useful. "
-        "Hit reply with anything you'd want more (or less) of — raw feedback welcome. "
+        "Email us at crewtransition.app@gmail.com with anything you'd want more (or less) of — raw feedback welcome. "
         "And if you know crew who'd find this useful, please forward it on."
     )
     text_body = teaser_md.strip() + f"\n\nRead the full issue: {issue_url}" + ps_text + footer_text
