@@ -1,0 +1,8 @@
+# Local secrets
+.env
+
+# Generated daily output
+digests/
+
+# SQLite state (which posts have been surfaced)
+agent_state.db
