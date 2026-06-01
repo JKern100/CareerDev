@@ -65,8 +65,8 @@ export default function RefundPage() {
           <h2>5. How to Request a Refund</h2>
           <p>
             To request a refund, contact us at{" "}
-            <a href="mailto:support@crewtransition.com" style={{ color: "var(--primary)" }}>
-              support@crewtransition.com
+            <a href="mailto:crewtransition.app@gmail.com" style={{ color: "var(--primary)" }}>
+              crewtransition.app@gmail.com
             </a>{" "}
             with:
           </p>
@@ -103,8 +103,8 @@ export default function RefundPage() {
           <h2>9. Contact</h2>
           <p>
             For refund requests or questions about this policy, contact us at{" "}
-            <a href="mailto:support@crewtransition.com" style={{ color: "var(--primary)" }}>
-              support@crewtransition.com
+            <a href="mailto:crewtransition.app@gmail.com" style={{ color: "var(--primary)" }}>
+              crewtransition.app@gmail.com
             </a>.
           </p>
         </div>

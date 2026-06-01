@@ -494,7 +494,7 @@ async def send_pro_welcome_email(to_email: str, user_name: str | None = None) ->
               </table>
               <p style="color: #64748b; font-size: 13px; margin: 0;">
                 You can manage your subscription anytime from the Pricing page.
-                Questions? Contact support@crewtransition.com.
+                Questions? Contact crewtransition.app@gmail.com.
               </p>"""
 
     html = _branded_email(body)
