@@ -101,8 +101,8 @@ export default function PrivacyPage() {
           </ul>
           <p>
             To exercise any of these rights, contact us at{" "}
-            <a href="mailto:support@crewtransition.com" style={{ color: "var(--primary)" }}>
-              support@crewtransition.com
+            <a href="mailto:crewtransition.app@gmail.com" style={{ color: "var(--primary)" }}>
+              crewtransition.app@gmail.com
             </a>.
           </p>
 
@@ -136,8 +136,8 @@ export default function PrivacyPage() {
           <h2>13. Contact</h2>
           <p>
             For questions about this Privacy Policy or to exercise your data rights, contact us at{" "}
-            <a href="mailto:support@crewtransition.com" style={{ color: "var(--primary)" }}>
-              support@crewtransition.com
+            <a href="mailto:crewtransition.app@gmail.com" style={{ color: "var(--primary)" }}>
+              crewtransition.app@gmail.com
             </a>.
           </p>
         </div>

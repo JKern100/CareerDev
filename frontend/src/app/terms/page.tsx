@@ -114,8 +114,8 @@ export default function TermsPage() {
           <h2>14. Contact</h2>
           <p>
             For questions about these Terms of Service, contact us at{" "}
-            <a href="mailto:support@crewtransition.com" style={{ color: "var(--primary)" }}>
-              support@crewtransition.com
+            <a href="mailto:crewtransition.app@gmail.com" style={{ color: "var(--primary)" }}>
+              crewtransition.app@gmail.com
             </a>.
           </p>
         </div>

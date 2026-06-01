@@ -65,7 +65,7 @@ function UnsubscribeContent() {
             {message}
           </p>
           <p className="text-sm text-muted mt-3">
-            If this keeps happening, please email support@crewtransition.com and we&rsquo;ll remove you manually.
+            If this keeps happening, please email crewtransition.app@gmail.com and we&rsquo;ll remove you manually.
           </p>
         </>
       )}
