@@ -258,6 +258,199 @@ h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.25rem; }
 .markdown-report strong { font-weight: 600; }
 .markdown-report a { color: var(--primary); text-decoration: underline; }
 
+/* ── Blog (dark navy reading surface, matches homepage palette) ─────── */
+.blog-page {
+  background: #0a0e1a;
+  color: #e2e8f0;
+  min-height: 100vh;
+}
+
+.blog-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.blog-nav a { text-decoration: none; }
+
+.blog-container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 2.5rem 1rem 4rem;
+}
+
+.blog-eyebrow {
+  color: #60a5fa;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.blog-title {
+  font-size: clamp(1.6rem, 4.5vw, 2.4rem);
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 0.75rem;
+  color: #f1f5f9;
+}
+
+.blog-meta {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-bottom: 2rem;
+}
+
+/* Long-form body */
+.blog-body { font-size: 1.05rem; line-height: 1.75; color: #cbd5e1; }
+.blog-body > *:first-child { margin-top: 0; }
+.blog-body h2 { font-size: 1.5rem; font-weight: 700; margin: 2.5rem 0 0.75rem; color: #f1f5f9; }
+.blog-body h3 { font-size: 1.2rem; font-weight: 600; margin: 1.75rem 0 0.5rem; color: #e2e8f0; }
+.blog-body p { margin: 0 0 1.15rem; }
+.blog-body ul, .blog-body ol { margin: 0 0 1.15rem; padding-left: 1.4rem; }
+.blog-body li { margin-bottom: 0.5rem; }
+.blog-body a { color: #60a5fa; text-decoration: underline; }
+.blog-body strong { color: #f1f5f9; font-weight: 600; }
+.blog-body em { color: #e2e8f0; }
+.blog-body hr { border: none; border-top: 1px solid #1e293b; margin: 2.5rem 0; }
+.blog-body blockquote {
+  border-left: 3px solid #2563eb;
+  background: rgba(37, 99, 235, 0.08);
+  padding: 0.75rem 1rem;
+  margin: 0 0 1.15rem;
+  color: #cbd5e1;
+  border-radius: 0 6px 6px 0;
+}
+.blog-body blockquote p { margin: 0; }
+.blog-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.92rem;
+  display: block;
+  overflow-x: auto;
+}
+.blog-body th {
+  background: rgba(255, 255, 255, 0.05);
+  color: #f1f5f9;
+  text-align: left;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid #1e293b;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.blog-body td {
+  padding: 0.6rem 0.85rem;
+  border: 1px solid #1e293b;
+}
+.blog-body tr:nth-child(even) td { background: rgba(255, 255, 255, 0.02); }
+.blog-body code {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+/* Disclaimer / scope callout */
+.blog-callout {
+  background: rgba(37, 99, 235, 0.1);
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  border-left: 4px solid #2563eb;
+  border-radius: 8px;
+  padding: 1.1rem 1.25rem;
+  margin: 1.75rem 0;
+  color: #cbd5e1;
+}
+.blog-callout .blog-callout-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0 0 0.5rem;
+}
+.blog-callout .blog-callout-title::before {
+  content: "ℹ";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #2563eb;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.blog-callout p:last-child { margin-bottom: 0; }
+
+/* Footnote markers */
+.blog-body sup { line-height: 0; font-size: 0.72em; }
+.blog-body a.footnote-ref {
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0 1px;
+}
+.blog-body a.footnote-ref:hover { text-decoration: underline; }
+
+/* References and notes list */
+.blog-body ol.footnotes {
+  font-size: 0.92rem;
+  color: #94a3b8;
+  padding-left: 1.4rem;
+  margin: 0 0 1.15rem;
+}
+.blog-body ol.footnotes li {
+  margin-bottom: 0.85rem;
+  line-height: 1.6;
+  /* Offset the in-page jump so the entry isn't hidden under the sticky-free header */
+  scroll-margin-top: 80px;
+}
+.blog-body a.footnote-back {
+  text-decoration: none;
+  color: #60a5fa;
+  margin-left: 0.25rem;
+  white-space: nowrap;
+}
+/* Offset jump target for citation markers too */
+.blog-body a.footnote-ref { scroll-margin-top: 80px; }
+
+.blog-footer-cta {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #1e293b;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+.blog-footer-cta a { color: #60a5fa; }
+
+/* Blog index list */
+.blog-index-item {
+  display: block;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid #1e293b;
+  text-decoration: none;
+  color: inherit;
+}
+.blog-index-item:first-of-type { border-top: 1px solid #1e293b; }
+.blog-index-date { color: #94a3b8; font-size: 0.8rem; margin-bottom: 0.4rem; }
+.blog-index-title { font-size: 1.25rem; font-weight: 700; color: #f1f5f9; margin-bottom: 0.5rem; }
+.blog-index-excerpt { color: #94a3b8; font-size: 0.95rem; line-height: 1.6; }
+
+@media (max-width: 640px) {
+  .blog-container { padding: 1.75rem 0.9rem 3rem; }
+  .blog-body { font-size: 1rem; }
+  .blog-body h2 { font-size: 1.3rem; }
+  .blog-body h3 { font-size: 1.1rem; }
+  .blog-body table { font-size: 0.82rem; }
+  .blog-body th, .blog-body td { padding: 0.45rem 0.55rem; }
+}
+
 /* ── Analysis Loader ────────────────────────────────────── */
 .analysis-loader {
   max-width: 520px;

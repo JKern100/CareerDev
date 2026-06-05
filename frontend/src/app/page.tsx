@@ -62,6 +62,13 @@ export default function Home() {
             Methodology
           </a>
           <a
+            href="/blog"
+            className="nav-link-desktop"
+            style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.9rem" }}
+          >
+            Blog
+          </a>
+          <a
             href="/pricing"
             className="nav-link-desktop"
             style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.9rem" }}
