@@ -250,6 +250,11 @@ function SendEmailsView() {
             rows={5}
             style={{ ...inputStyle, width: "100%", resize: "vertical" }}
           />
+          <p style={{ color: "#94a3b8", fontSize: "0.75rem", marginTop: "0.5rem" }}>
+            Tip: use{" "}
+            <code style={{ background: "#334155", color: "#60a5fa", padding: "2px 6px", borderRadius: "3px" }}>{"{{name}}"}</code>{" "}
+            in the subject or body to insert the recipient&apos;s first name (falls back to &ldquo;there&rdquo; if unknown).
+          </p>
         </div>
       )}
 
