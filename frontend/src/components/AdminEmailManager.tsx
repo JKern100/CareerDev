@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import {
   getEmailLogs, sendTestEmail, getAdminUsers, sendBulkEmail,
   getEmailTemplates, updateEmailTemplate, resetEmailTemplate,
+  getCustomEmailEngagement,
   EmailLogEntry, AdminUser, BulkEmailResult, EmailTemplateData,
+  CustomEmailEngagement, CustomEmailCampaign, CustomEmailRecipient,
 } from "@/lib/api";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -26,7 +28,7 @@ const STATUS_COLORS: Record<string, string> = {
   skipped: "#f59e0b",
 };
 
-type SubTab = "send" | "templates" | "log";
+type SubTab = "send" | "templates" | "log" | "engagement";
 
 const TEMPLATE_LABELS: Record<string, string> = {
   coach_invite: "Try the AI Coach",
@@ -89,7 +91,7 @@ export default function AdminEmailManager() {
     <div>
       {/* Sub-navigation */}
       <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
-        {([["send", "Send Emails"], ["templates", "Edit Templates"], ["log", "Email Log"]] as [SubTab, string][]).map(([id, label]) => (
+        {([["send", "Send Emails"], ["templates", "Edit Templates"], ["log", "Email Log"], ["engagement", "Engagement"]] as [SubTab, string][]).map(([id, label]) => (
           <button
             key={id}
             onClick={() => setSubTab(id)}
@@ -109,6 +111,7 @@ export default function AdminEmailManager() {
       {subTab === "send" && <SendEmailsView />}
       {subTab === "templates" && <TemplateEditorView />}
       {subTab === "log" && <EmailLogView />}
+      {subTab === "engagement" && <EngagementView />}
     </div>
   );
 }
@@ -695,6 +698,146 @@ function EmailLogView() {
           </table>
         </div>
       )}
+    </div>
+  );
+}
+
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/*  Engagement View — open/click tracking for custom broadcast emails       */
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+function EngagementView() {
+  const [data, setData] = useState<CustomEmailEngagement | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  async function load() {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await getCustomEmailEngagement(90);
+      setData(res);
+      // Auto-open the most recent campaign for convenience.
+      if (res.campaigns.length > 0) setExpanded(res.campaigns[0].subject);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to load");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { load(); }, []);
+
+  if (loading) return <p style={{ color: "#94a3b8" }}>Loading engagement…</p>;
+  if (error) return <p style={{ color: "#ef4444" }}>{error}</p>;
+  if (!data) return null;
+
+  return (
+    <div>
+      {!data.tracking_configured && (
+        <div style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.4)", borderRadius: "8px", padding: "0.75rem 1rem", marginBottom: "1rem" }}>
+          <p style={{ color: "#fbbf24", fontSize: "0.8rem", margin: 0 }}>
+            Open/click tracking isn&apos;t fully configured (no <code>RESEND_WEBHOOK_SECRET</code>). Counts will stay at zero until the Resend webhook is wired up — check the Newsletter → Tracking Diagnostic.
+          </p>
+        </div>
+      )}
+
+      <p style={{ color: "#94a3b8", fontSize: "0.8rem", marginBottom: "1rem" }}>
+        Custom broadcast emails from the last 90 days, grouped by subject. Opens can be under-reported (Apple Mail Privacy, image blocking) — clicks are the reliable signal.
+      </p>
+
+      {data.campaigns.length === 0 ? (
+        <p style={{ color: "#64748b", textAlign: "center", padding: "2rem 0" }}>No custom emails sent in the last 90 days.</p>
+      ) : (
+        <div style={{ display: "grid", gap: "0.75rem" }}>
+          {data.campaigns.map((c) => (
+            <CampaignCard
+              key={c.subject}
+              campaign={c}
+              open={expanded === c.subject}
+              onToggle={() => setExpanded(expanded === c.subject ? null : c.subject)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CampaignCard({ campaign: c, open, onToggle }: { campaign: CustomEmailCampaign; open: boolean; onToggle: () => void }) {
+  const pct = (n: number) => `${Math.round(n * 100)}%`;
+  return (
+    <div style={{ background: "#1e293b", borderRadius: "8px", border: "1px solid #334155", overflow: "hidden" }}>
+      <button
+        onClick={onToggle}
+        style={{ width: "100%", background: "transparent", border: "none", padding: "1rem", textAlign: "left", cursor: "pointer" }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem", flexWrap: "wrap" }}>
+          <div style={{ minWidth: 0 }}>
+            <p style={{ color: "#f1f5f9", fontWeight: 600, fontSize: "0.9rem", margin: "0 0 4px" }}>{c.subject}</p>
+            <p style={{ color: "#64748b", fontSize: "0.75rem", margin: 0 }}>
+              {c.last_sent_at ? new Date(c.last_sent_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : ""}
+              {" · "}{open ? "Hide recipients ▲" : "Show recipients ▼"}
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: "1.25rem", flexShrink: 0 }}>
+            <Metric label="Sent" value={String(c.sent)} />
+            <Metric label="Delivered" value={String(c.delivered)} accent="#22c55e" />
+            <Metric label="Opened" value={`${c.opened} (${pct(c.open_rate)})`} accent="#60a5fa" />
+            <Metric label="Clicked" value={`${c.clicked} (${pct(c.click_rate)})`} accent="#a78bfa" />
+            {c.bounced > 0 && <Metric label="Bounced" value={String(c.bounced)} accent="#ef4444" />}
+          </div>
+        </div>
+      </button>
+
+      {open && (
+        <div style={{ borderTop: "1px solid #334155", padding: "0.5rem 0" }}>
+          {c.recipients.length === 0 ? (
+            <p style={{ color: "#64748b", fontSize: "0.8rem", padding: "0.75rem 1rem" }}>No recipients.</p>
+          ) : (
+            c.recipients.map((r) => <RecipientRow key={r.email} r={r} />)
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RecipientRow({ r }: { r: CustomEmailRecipient }) {
+  const clicked = !!r.first_clicked_at;
+  const opened = !!r.first_opened_at;
+  const status = clicked ? "Clicked" : opened ? "Opened" : r.bounced_at ? "Bounced" : r.delivered_at ? "Delivered" : "Sent";
+  const statusColor = clicked ? "#a78bfa" : opened ? "#60a5fa" : r.bounced_at ? "#ef4444" : r.delivered_at ? "#22c55e" : "#64748b";
+
+  return (
+    <div style={{ padding: "0.5rem 1rem", borderBottom: "1px solid #1e293b", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
+      <div style={{ minWidth: 0 }}>
+        <span style={{ color: "#e2e8f0", fontSize: "0.85rem" }}>{r.email}</span>
+        {clicked && r.clicked_urls.length > 0 && (
+          <div style={{ color: "#64748b", fontSize: "0.72rem", marginTop: 2, wordBreak: "break-all" }}>
+            ↳ {r.clicked_urls.join(", ")}
+          </div>
+        )}
+      </div>
+      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexShrink: 0 }}>
+        {r.first_clicked_at && (
+          <span style={{ color: "#64748b", fontSize: "0.72rem" }}>
+            {new Date(r.first_clicked_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+          </span>
+        )}
+        <span style={{ ...badge, background: statusColor, color: "#fff" }}>{status}</span>
+      </div>
+    </div>
+  );
+}
+
+function Metric({ label, value, accent }: { label: string; value: string; accent?: string }) {
+  return (
+    <div style={{ textAlign: "center" }}>
+      <p style={{ fontSize: "0.95rem", fontWeight: 700, color: accent || "#f1f5f9", margin: 0 }}>{value}</p>
+      <p style={{ fontSize: "0.68rem", color: "#94a3b8", margin: 0, textTransform: "uppercase", letterSpacing: "0.03em" }}>{label}</p>
     </div>
   );
 }

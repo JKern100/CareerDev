@@ -1215,3 +1215,38 @@ export interface TrackingDiagnostic {
 export async function getTrackingDiagnostic() {
   return request<TrackingDiagnostic>("/admin/newsletter/tracking-diagnostic");
 }
+
+export interface CustomEmailRecipient {
+  email: string;
+  delivered_at: string | null;
+  first_opened_at: string | null;
+  open_count: number;
+  first_clicked_at: string | null;
+  click_count: number;
+  clicked_urls: string[];
+  bounced_at: string | null;
+  complained_at: string | null;
+}
+
+export interface CustomEmailCampaign {
+  subject: string;
+  first_sent_at: string | null;
+  last_sent_at: string | null;
+  sent: number;
+  delivered: number;
+  opened: number;
+  clicked: number;
+  bounced: number;
+  open_rate: number;
+  click_rate: number;
+  recipients: CustomEmailRecipient[];
+}
+
+export interface CustomEmailEngagement {
+  tracking_configured: boolean;
+  campaigns: CustomEmailCampaign[];
+}
+
+export async function getCustomEmailEngagement(days = 90) {
+  return request<CustomEmailEngagement>(`/admin/custom-email-engagement?days=${days}`);
+}
