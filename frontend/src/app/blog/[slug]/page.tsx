@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 import BlogNav from "@/components/BlogNav";
 import { getAllPosts, getPostBySlug, SITE_URL } from "@/lib/blog";
 
@@ -102,7 +103,9 @@ export default async function BlogPostPage({
         </header>
 
         <div className="blog-body">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.body}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+            {post.body}
+          </ReactMarkdown>
         </div>
 
         <footer className="blog-footer-cta">

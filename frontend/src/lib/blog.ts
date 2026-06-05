@@ -38,6 +38,11 @@ This guide walks through how UAE end-of-service gratuity actually works for cabi
 
 A note on scope: this is general guidance based on the federal labour framework. Specific airline contracts can have nuances — particularly around what counts toward "basic" salary and how leave balance is treated. Use this as the baseline understanding; verify the specifics against your contract and your written HR estimate before you make any decisions.
 
+<aside class="blog-callout" role="note">
+<p class="blog-callout-title">Scope and limitations</p>
+<p>This article reflects general guidance on UAE labour law as of June 2026 and is not legal or financial advice. Specific airline employment contracts may differ in material ways, particularly around what counts toward "basic" salary, notice periods, and leave encashment. The figures cited for Emirates compensation are based on publicly available reporting and may not match your specific contract. Before making any financial or career decisions, verify your situation against your contract, request a written gratuity estimate from your HR department, and consult a qualified UAE labour law professional.</p>
+</aside>
+
 ## What end-of-service gratuity actually is
 
 End-of-service gratuity (sometimes called "end-of-service benefit" or just "gratuity") is a legally mandated lump-sum payment that UAE private-sector employees receive when they leave their employer, provided they've completed at least one year of continuous service. It's separate from your final salary, leave balance encashment, or any contractual bonuses — it's a statutory entitlement.
@@ -52,13 +57,13 @@ The formula has four moving parts. Most crew get tripped up on the first one —
 
 ### Step 1: Identify your basic salary
 
-Your *basic* salary is the figure in your contract under that specific heading. It is **not** your total monthly cash. For an Emirates Grade II cabin crew member in 2026, basic salary is approximately **AED 4,260 per month**. Total monthly cash for that same crew member typically lands between AED 10,000 and AED 12,000 — the difference being flying pay (around AED 60-70 per flying hour over 80-90 flying hours per month) and layover allowances. Gratuity is calculated only on the AED 4,260, not the AED 10-12k.
+Your *basic* salary is the figure in your contract under that specific heading. It is **not** your total monthly cash. For an Emirates Grade II cabin crew member in 2026, basic salary is approximately **AED 4,260 per month**.<a id="cite-1" href="#ref-1" class="footnote-ref" aria-label="Footnote 1"><sup>1</sup></a> Total monthly cash for that same crew member typically lands between AED 10,000 and AED 12,000 — the difference being flying pay (around AED 60-70 per flying hour over 80-90 flying hours per month)<a id="cite-2" href="#ref-2" class="footnote-ref" aria-label="Footnote 2"><sup>2</sup></a> and layover allowances. Gratuity is calculated only on the AED 4,260, not the AED 10-12k.
 
 This distinction is the single biggest source of gratuity miscalculation. If you remember nothing else from this guide, remember: gratuity is on basic.
 
 ### Step 2: Calculate your daily rate
 
-Divide your monthly basic by 30. For Emirates Grade II at AED 4,260: daily rate is **AED 142**.
+Divide your monthly basic by 30. For Emirates Grade II at AED 4,260: daily rate is **AED 142**.<a id="cite-3" href="#ref-3" class="footnote-ref" aria-label="Footnote 3"><sup>3</sup></a>
 
 ### Step 3: Calculate days of gratuity owed
 
@@ -107,7 +112,7 @@ The examples below use Emirates Grade II basic salary (AED 4,260/month) as the r
 - Daily rate: AED 142
 - **Total gratuity: AED 44,730**
 
-Senior crew at higher grades (with higher basic salaries) receive proportionally more. A Senior Flight Steward or Cabin Supervisor with 15+ years at a basic of AED 6,000-7,000 can see gratuity figures in the AED 70,000-90,000 range.
+Senior crew at higher grades (with higher basic salaries) receive proportionally more. A Senior Flight Steward or Cabin Supervisor with 15+ years at a basic of AED 6,000-7,000 can see gratuity figures in the AED 70,000-90,000 range.<a id="cite-4" href="#ref-4" class="footnote-ref" aria-label="Footnote 4"><sup>4</sup></a>
 
 ## The 5-year cliff
 
@@ -178,13 +183,13 @@ Knowing your gratuity number is the first step in any serious transition financi
 ## Frequently asked questions
 
 **Q: Does gratuity apply if I'm terminated for misconduct?**
-The 2021 law specifies a narrow set of misconduct grounds (Article 44) under which gratuity can be forfeited. These are serious — assault, theft, gross negligence, disclosure of trade secrets — and don't apply to ordinary performance issues or contract disagreements.
+The 2021 law specifies a narrow set of misconduct grounds (Article 44)<a id="cite-5" href="#ref-5" class="footnote-ref" aria-label="Footnote 5"><sup>5</sup></a> under which gratuity can be forfeited. These are serious — assault, theft, gross negligence, disclosure of trade secrets — and don't apply to ordinary performance issues or contract disagreements.
 
 **Q: Do allowances count toward basic salary?**
 No. Housing allowance, transport allowance, flying pay, layover allowances — none count toward "basic" for gratuity purposes. Only the basic salary line item in your contract.
 
 **Q: How is gratuity paid out?**
-As a lump sum, typically along with your final salary and any leave encashment, within 14 days of your last working day. The currency is dirhams, and there are no UAE income taxes on it (or on any other UAE salary income).
+As a lump sum, typically along with your final salary and any leave encashment, within 14 days of your last working day.<a id="cite-6" href="#ref-6" class="footnote-ref" aria-label="Footnote 6"><sup>6</sup></a> The currency is dirhams, and there are no UAE income taxes on it (or on any other UAE salary income).
 
 **Q: What if I transfer to a new employer in the UAE — do I lose my gratuity?**
 You receive your gratuity from the original employer at the end of your employment with them. Your tenure resets at the new employer. There's no "portable" gratuity that moves with you between airlines.
@@ -204,6 +209,19 @@ The math is straightforward, but the strategic implications aren't. Three things
 3. **Since February 2022, resignation and termination are treated equally** for gratuity purposes. The old reduction-for-resignation rule was abolished.
 
 Before any transition decision, get a written gratuity estimate from HR. That number is the foundation everything else is built on.
+
+---
+
+## References and notes
+
+<ol class="footnotes">
+<li id="ref-1">The AED 4,260 basic salary figure for Emirates Grade II cabin crew in 2026 is derived from publicly reported aviation compensation analyses (including Aviation A2Z, Wings Institute, and similar industry sources). Actual basic salary may vary by hire date, contract revision, grade progression, and specific role. Verify your figure against your most recent pay statement. <a href="#cite-1" class="footnote-back" aria-label="Back to reference 1 in text">↩</a></li>
+<li id="ref-2">Flying pay rates and typical monthly flying hours are reported industry averages and vary by aircraft type, route mix, and contract version. Confirm your specific rate and average hours from your payslip records. <a href="#cite-2" class="footnote-back" aria-label="Back to reference 2 in text">↩</a></li>
+<li id="ref-3">Daily rate is calculated as basic monthly salary divided by 30, per UAE Labour Law convention. If your basic salary differs from the AED 4,260 figure used as the example, your daily rate will scale proportionally. <a href="#cite-3" class="footnote-back" aria-label="Back to reference 3 in text">↩</a></li>
+<li id="ref-4">Senior crew gratuity figures in the AED 70,000-90,000 range are illustrative estimates based on a Senior Flight Steward or Cabin Supervisor at 15+ years of service with a basic salary in the AED 6,000-7,000 range. Specific outcomes will depend on your actual basic salary, tenure, and any applicable contract provisions. <a href="#cite-4" class="footnote-back" aria-label="Back to reference 4 in text">↩</a></li>
+<li id="ref-5">Article 44 of Federal Decree-Law No. 33 of 2021 lists the specific grounds for summary termination without end-of-service benefits. The article enumerates serious misconduct categories; refer to the official Arabic and English texts of the Federal Decree-Law for the authoritative list. <a href="#cite-5" class="footnote-back" aria-label="Back to reference 5 in text">↩</a></li>
+<li id="ref-6">The 14-day final payment timeframe is the standard UAE Labour Law provision under Federal Decree-Law No. 33 of 2021. Employer practice may vary in narrow cases; the law sets this as the maximum permissible delay for final payments. <a href="#cite-6" class="footnote-back" aria-label="Back to reference 6 in text">↩</a></li>
+</ol>
 
 ---
 
