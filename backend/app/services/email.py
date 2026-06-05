@@ -1,6 +1,7 @@
 """Email sending service using Resend."""
 
 import logging
+import re
 import uuid
 
 import httpx
@@ -429,6 +430,30 @@ async def send_complete_questionnaire_email(
     return await _send_email(to_email, subject, _branded_email(body), "complete_questionnaire")
 
 
+def _linkify(text: str) -> str:
+    """Wrap bare http(s) URLs in <a> tags.
+
+    Resend's click tracking only rewrites anchor links, so a bare URL in a
+    plain-text body is never tracked (the recipient's client auto-links it
+    straight to the destination). Turning URLs into real anchors lets Resend
+    wrap them and record click events. Trailing punctuation is kept outside
+    the link.
+    """
+    def repl(m: "re.Match[str]") -> str:
+        url = m.group(0)
+        trailing = ""
+        while url and url[-1] in ".,!?;:)]}\"'":
+            trailing = url[-1] + trailing
+            url = url[:-1]
+        return (
+            f'<a href="{url}" style="color: #2563eb; text-decoration: underline;">{url}</a>'
+            f"{trailing}"
+        )
+
+    # Negative lookbehind avoids re-linking URLs already inside an href/anchor.
+    return re.sub(r'(?<![">=])https?://[^\s<]+', repl, text)
+
+
 async def send_custom_email(
     to_email: str,
     subject: str,
@@ -462,7 +487,7 @@ async def send_custom_email(
     # Convert plain text paragraphs to HTML
     paragraphs = body_text.strip().split("\n\n")
     paragraphs_html = "".join(
-        f'<p style="margin: 0 0 16px;">{p.strip().replace(chr(10), "<br/>")}</p>'
+        f'<p style="margin: 0 0 16px;">{_linkify(p.strip()).replace(chr(10), "<br/>")}</p>'
         for p in paragraphs
         if p.strip()
     )
