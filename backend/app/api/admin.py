@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.user import User, UserRole, UserNote, EmailLog, EmailTemplate
+from app.models.email_event import EmailEvent
 from app.models.questionnaire import Answer, Question, Evidence
 from app.models.report import Report, AnalysisReport
 from app.models.pathway import PathwayScore
@@ -1444,6 +1445,137 @@ async def get_email_logs(
         }
         for e in logs
     ]
+
+
+# ── Custom Email Engagement (open/click tracking) ────────────────────────
+
+@router.get("/custom-email-engagement")
+async def get_custom_email_engagement(
+    days: int = 90,
+    db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
+):
+    """Open/click engagement for custom broadcast emails.
+
+    Groups custom EmailLog rows by subject into "campaigns", then joins the
+    Resend webhook events (email_events) by resend_id — the same tracking
+    pipeline that powers the newsletter engagement view. Counts are per unique
+    recipient, so multiple opens by one person count once.
+    """
+    cutoff = datetime.utcnow() - timedelta(days=days)
+    q = (
+        select(EmailLog)
+        .where(
+            EmailLog.email_type == "custom",
+            EmailLog.status == "sent",
+            EmailLog.resend_id.isnot(None),
+            EmailLog.created_at >= cutoff,
+        )
+        .order_by(EmailLog.created_at.asc())
+    )
+    logs = (await db.execute(q)).scalars().all()
+
+    tracking_configured = bool(settings.RESEND_WEBHOOK_SECRET.strip())
+    if not logs:
+        return {"tracking_configured": tracking_configured, "campaigns": []}
+
+    # resend_id -> (subject, email) for applying events back to recipients.
+    rid_info: dict[str, tuple[str, str]] = {
+        log.resend_id: (log.subject, log.to_email) for log in logs
+    }
+    resend_ids = list(rid_info.keys())
+
+    def _blank(email: str) -> dict:
+        return {
+            "email": email, "delivered_at": None, "first_opened_at": None,
+            "open_count": 0, "first_clicked_at": None, "click_count": 0,
+            "clicked_urls": [], "bounced_at": None, "complained_at": None,
+        }
+
+    # Build campaigns (grouped by subject) and seed every recipient.
+    campaigns: dict[str, dict] = {}
+    for log in logs:
+        camp = campaigns.setdefault(log.subject, {
+            "subject": log.subject,
+            "first_sent_at": log.created_at,
+            "last_sent_at": log.created_at,
+            "recipients": {},
+        })
+        if log.created_at and log.created_at < camp["first_sent_at"]:
+            camp["first_sent_at"] = log.created_at
+        if log.created_at and log.created_at > camp["last_sent_at"]:
+            camp["last_sent_at"] = log.created_at
+        camp["recipients"].setdefault(log.to_email, _blank(log.to_email))
+
+    # One event query for every send id, applied to the right recipient row.
+    ev_result = await db.execute(
+        select(EmailEvent.resend_id, EmailEvent.event_type, EmailEvent.event_at, EmailEvent.url)
+        .where(EmailEvent.resend_id.in_(resend_ids))
+        .order_by(EmailEvent.event_at.asc())
+    )
+    for rid, etype, event_at, url in ev_result.all():
+        info = rid_info.get(rid)
+        if not info:
+            continue
+        subject, email = info
+        camp = campaigns.get(subject)
+        if not camp:
+            continue
+        row = camp["recipients"].setdefault(email, _blank(email))
+        if etype == "email.delivered" and not row["delivered_at"]:
+            row["delivered_at"] = event_at
+        elif etype == "email.opened":
+            row["open_count"] += 1
+            if not row["first_opened_at"]:
+                row["first_opened_at"] = event_at
+        elif etype == "email.clicked":
+            row["click_count"] += 1
+            if not row["first_clicked_at"]:
+                row["first_clicked_at"] = event_at
+            if url and url not in row["clicked_urls"]:
+                row["clicked_urls"].append(url)
+        elif etype == "email.bounced" and not row["bounced_at"]:
+            row["bounced_at"] = event_at
+        elif etype == "email.complained" and not row["complained_at"]:
+            row["complained_at"] = event_at
+
+    def _iso(dt):
+        return dt.isoformat() if dt else None
+
+    def _sort_key(r: dict):
+        return (
+            0 if r["first_clicked_at"] else (1 if r["first_opened_at"] else 2),
+            r["email"].lower(),
+        )
+
+    out = []
+    for camp in campaigns.values():
+        recipients = sorted(camp["recipients"].values(), key=_sort_key)
+        sent = len(recipients)
+        delivered = sum(1 for r in recipients if r["delivered_at"])
+        opened = sum(1 for r in recipients if r["first_opened_at"])
+        clicked = sum(1 for r in recipients if r["first_clicked_at"])
+        bounced = sum(1 for r in recipients if r["bounced_at"])
+        denom = delivered or sent
+        for r in recipients:
+            for k in ("delivered_at", "first_opened_at", "first_clicked_at", "bounced_at", "complained_at"):
+                r[k] = _iso(r[k])
+        out.append({
+            "subject": camp["subject"],
+            "first_sent_at": _iso(camp["first_sent_at"]),
+            "last_sent_at": _iso(camp["last_sent_at"]),
+            "sent": sent,
+            "delivered": delivered,
+            "opened": opened,
+            "clicked": clicked,
+            "bounced": bounced,
+            "open_rate": round(opened / denom, 4) if denom else 0.0,
+            "click_rate": round(clicked / denom, 4) if denom else 0.0,
+            "recipients": recipients,
+        })
+
+    out.sort(key=lambda c: c["last_sent_at"] or "", reverse=True)
+    return {"tracking_configured": tracking_configured, "campaigns": out}
 
 
 # ── Send Test Email / Trigger Stage 1 Email ──────────────────────────────
