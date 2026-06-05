@@ -434,8 +434,17 @@ async def send_custom_email(
     subject: str,
     body_text: str,
     unsubscribe_token: str | None = None,
+    user_name: str | None = None,
 ) -> bool:
-    """Send an admin-composed custom email wrapped in the branded template."""
+    """Send an admin-composed custom email wrapped in the branded template.
+
+    Supports the {{name}} macro (first name, falling back to "there") in both
+    the subject and body, matching the convention used by the other templates.
+    """
+    name = (user_name or "").split(" ")[0] or "there"
+    subject = subject.replace("{{name}}", name)
+    body_text = body_text.replace("{{name}}", name)
+
     unsubscribe_url = (
         f"{settings.FRONTEND_URL}/unsubscribe?token={unsubscribe_token}"
         if unsubscribe_token

@@ -1643,6 +1643,7 @@ async def send_bulk_email(
                     subject=data.custom_subject,
                     body_text=data.custom_body,
                     unsubscribe_token=user.unsubscribe_token,
+                    user_name=user.full_name,
                 )
 
             if ok:
