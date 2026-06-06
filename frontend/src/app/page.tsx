@@ -199,22 +199,7 @@ export default function Home() {
             than you realize.
           </h1>
 
-          {/* People image — flight attendant to businesswoman */}
-          <div className="hero-people-img" style={{ marginBottom: "1.25rem" }}>
-            <img
-              src="/hero-people.png"
-              alt="From flight attendant to business professional"
-              style={{
-                maxWidth: "min(520px, 90vw)",
-                height: "auto",
-                display: "block",
-                margin: "0 auto",
-                borderRadius: "16px",
-                border: "none",
-                boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
-              }}
-            />
-          </div>
+          {/* People image removed per design direction */}
 
           <p
             className="hero-subtitle"

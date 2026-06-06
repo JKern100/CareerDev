@@ -191,10 +191,6 @@ h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.25rem; }
     font-size: 1.5rem !important;
     margin-bottom: 0.5rem !important;
   }
-  .hero-people-img {
-    max-width: min(360px, 85vw) !important;
-    margin-bottom: 0.75rem !important;
-  }
   .hero-subtitle {
     font-size: 0.95rem !important;
     margin-bottom: 1rem !important;
