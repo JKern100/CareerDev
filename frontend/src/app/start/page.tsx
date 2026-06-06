@@ -442,7 +442,7 @@ function Teaser({ result, onUnlock }: { result: TeaserResult; onUnlock: () => vo
       >
         <h3 style={{ fontSize: "1.15rem", fontWeight: 700, marginBottom: "0.6rem" }}>Want the full picture?</h3>
         <p style={{ color: "#cbd5e1", fontSize: "0.95rem", lineHeight: 1.6, marginBottom: "1.25rem" }}>
-          All 14 pathways scored to you, a step-by-step plan for whenever you&apos;re ready, credential
+          All 17 pathways scored to you, a step-by-step plan for whenever you&apos;re ready, credential
           recommendations, and full salary detail. Create a free account to unlock it.
         </p>
         <button

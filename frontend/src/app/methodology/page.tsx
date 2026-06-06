@@ -241,7 +241,7 @@ export default function MethodologyPage() {
           {[
             { stat: "3,000+", label: "Lines of domain knowledge" },
             { stat: "3", label: "Progressive assessment stages" },
-            { stat: "14", label: "Scored career pathways" },
+            { stat: "17", label: "Scored career pathways" },
             { stat: "6", label: "Independent scoring dimensions" },
             { stat: "8", label: "Assessment modules" },
           ].map((item) => (
