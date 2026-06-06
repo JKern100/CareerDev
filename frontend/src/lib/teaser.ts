@@ -27,6 +27,14 @@ interface PathwayPreview {
   priorityAffinity: Partial<Record<Priority, number>>; // 0–3
 }
 
+// The salary bands in pathways.json are UAE/Gulf market data (AED). Currency-
+// converting them to other markets would NOT reflect real local salaries
+// (US/UK markets differ from the UAE by far more than the exchange rate), so
+// we only show a figure for the Gulf, where the data actually holds. The full
+// post-signup analysis localizes salary properly for every market.
+const SALARY_DATA_REGION = "gulf";
+const SALARY_FALLBACK = "Ranges vary by market — your full analysis localizes this.";
+
 // Representative previews. Salary bands mirror backend/app/data/pathways.json
 // (monthly AED). Ordering/emphasis follows the brief's "lead with" list.
 const PATHWAYS: PathwayPreview[] = [
@@ -147,40 +155,29 @@ const STRENGTHS: Record<Archetype, { title: string; body: string }> = {
 export interface RegionDef {
   key: string;
   label: string;
-  symbol: string;
-  factor: number; // approximate AED -> local currency conversion
-  round: number;  // rounding granularity for display
 }
 
-// Approximate currency conversion for a directional teaser only. Clearly
-// labelled "approximate" in the UI; precise, market-calibrated figures are
-// part of the full post-signup analysis.
+// Region is used to localize the teaser's framing (and, after signup, the full
+// salary detail). We only carry a salary figure for the Gulf — see note above.
 export const REGIONS: RegionDef[] = [
-  { key: "gulf", label: "UAE / Gulf (GCC)", symbol: "AED ", factor: 1, round: 1000 },
-  { key: "uk", label: "United Kingdom", symbol: "£", factor: 0.21, round: 100 },
-  { key: "usa", label: "United States", symbol: "$", factor: 0.27, round: 100 },
-  { key: "canada", label: "Canada", symbol: "C$", factor: 0.37, round: 100 },
-  { key: "australia", label: "Australia", symbol: "A$", factor: 0.41, round: 100 },
-  { key: "europe", label: "Europe (EUR)", symbol: "€", factor: 0.25, round: 100 },
-  { key: "india", label: "India", symbol: "₹", factor: 23, round: 1000 },
-  { key: "sea", label: "Southeast Asia", symbol: "$", factor: 0.27, round: 100 },
-  { key: "other", label: "Somewhere else / global", symbol: "$", factor: 0.27, round: 100 },
+  { key: "gulf", label: "UAE / Gulf (GCC)" },
+  { key: "uk", label: "United Kingdom" },
+  { key: "usa", label: "United States" },
+  { key: "canada", label: "Canada" },
+  { key: "australia", label: "Australia" },
+  { key: "europe", label: "Europe" },
+  { key: "india", label: "India" },
+  { key: "sea", label: "Southeast Asia" },
+  { key: "other", label: "Somewhere else / global" },
 ];
 
 export interface TeaserResult {
   top: { id: string; name: string; why: string }[];
-  salaryLabel: string;       // e.g. "AED 18,000–35,000"
+  salaryShown: boolean;      // true only where the AED data is valid (Gulf)
+  salaryLabel: string;       // a figure ("AED 18,000–35,000") OR the fallback line
   salaryRegionLabel: string; // e.g. "UAE / Gulf (GCC)"
   topPathwayName: string;
   strength: { title: string; body: string };
-}
-
-function roundTo(value: number, granularity: number): number {
-  return Math.round(value / granularity) * granularity;
-}
-
-function formatMoney(value: number, symbol: string): string {
-  return `${symbol}${value.toLocaleString("en-US")}`;
 }
 
 function getRegion(key?: string): RegionDef {
@@ -211,15 +208,21 @@ export function computeTeaser(answers: TeaserAnswers): TeaserResult {
 
   const region = getRegion(answers.region);
   const topPathway = scored[0].p;
-  const [minAed, maxAed] = topPathway.salaryBandAed;
-  const min = roundTo(minAed * region.factor, region.round);
-  const max = roundTo(maxAed * region.factor, region.round);
-  const salaryLabel = `${formatMoney(min, region.symbol)}–${formatMoney(max, region.symbol).replace(region.symbol, "")}`;
+
+  const salaryShown = region.key === SALARY_DATA_REGION;
+  let salaryLabel: string;
+  if (salaryShown) {
+    const [minAed, maxAed] = topPathway.salaryBandAed;
+    salaryLabel = `AED ${minAed.toLocaleString("en-US")}–${maxAed.toLocaleString("en-US")}`;
+  } else {
+    salaryLabel = SALARY_FALLBACK;
+  }
 
   const strength = answers.archetype ? STRENGTHS[answers.archetype] : STRENGTHS.organizer;
 
   return {
     top,
+    salaryShown,
     salaryLabel,
     salaryRegionLabel: region.label,
     topPathwayName: topPathway.name,

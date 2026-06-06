@@ -182,12 +182,11 @@ export default function Home() {
               fontWeight: 700,
               lineHeight: 1.15,
               marginBottom: "1rem",
-              letterSpacing: "0.02em",
-              textTransform: "uppercase",
+              letterSpacing: "0.01em",
               textShadow: "0 2px 12px rgba(0,0,0,0.5)",
             }}
           >
-            Plan your{" "}
+            You&apos;ve built{" "}
             <span
               style={{
                 background: "linear-gradient(135deg, #38bdf8, #2563eb)",
@@ -195,9 +194,9 @@ export default function Home() {
                 WebkitTextFillColor: "transparent",
               }}
             >
-              career
+              more skill in the air
             </span>{" "}
-            takeoff.
+            than you realize.
           </h1>
 
           {/* People image — flight attendant to businesswoman */}
@@ -220,16 +219,18 @@ export default function Home() {
           <p
             className="hero-subtitle"
             style={{
-              fontSize: "1.15rem",
+              fontSize: "1.1rem",
               color: "#cbd5e1",
-              maxWidth: "550px",
+              maxWidth: "620px",
               margin: "0 auto 1.5rem",
               lineHeight: 1.7,
               textShadow: "0 1px 8px rgba(0,0,0,0.4)",
             }}
           >
-            AI-powered guidance, real career pathways,
-            and clear next steps — for life beyond the cabin.
+            A free, AI-powered assessment that translates your cabin-crew skills into their
+            real value across other industries — with matching pathways, salary ranges, and the
+            steps to get there. Built only for flight attendants. No commitment, no judgment —
+            just see what you&apos;re worth.
           </p>
 
           {/* Feature pills */}
@@ -244,9 +245,9 @@ export default function Home() {
             }}
           >
             {[
-              { icon: "\u2728", label: "AI-powered guidance" },
-              { icon: "\uD83D\uDE80", label: "New career pathways" },
-              { icon: "\uD83D\uDCCA", label: "Compare salaries" },
+              { icon: "\uD83D\uDC8E", label: "What you're worth elsewhere" },
+              { icon: "\uD83D\uDCCA", label: "Real salary ranges" },
+              { icon: "\uD83E\uDDED", label: "A plan, if you ever want it" },
             ].map((item) => (
               <div
                 key={item.label}
@@ -340,7 +341,7 @@ export default function Home() {
           </div>
 
           <p style={{ color: "#94a3b8", fontSize: "0.85rem", marginTop: "1.5rem" }}>
-            Free to start. 14 career pathways. Results in minutes.
+            Free. No account needed. Completely private.
           </p>
         </div>
       </section>

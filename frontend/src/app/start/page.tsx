@@ -392,20 +392,28 @@ function Teaser({ result, onUnlock }: { result: TeaserResult; onUnlock: () => vo
         <div style={{ color: "#94a3b8", fontSize: "0.82rem", marginBottom: "0.35rem" }}>
           Typical range for {result.topPathwayName} · {result.salaryRegionLabel}
         </div>
-        <div
-          style={{
-            fontSize: "1.6rem",
-            fontWeight: 700,
-            background: "linear-gradient(135deg, #38bdf8, #2563eb)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-          }}
-        >
-          {result.salaryLabel} <span style={{ fontSize: "0.9rem", fontWeight: 500 }}>/ month</span>
-        </div>
-        <div style={{ color: "#64748b", fontSize: "0.78rem", marginTop: "0.4rem" }}>
-          Approximate regional estimate. Your full analysis includes precise, role-by-role salary detail.
-        </div>
+        {result.salaryShown ? (
+          <>
+            <div
+              style={{
+                fontSize: "1.6rem",
+                fontWeight: 700,
+                background: "linear-gradient(135deg, #38bdf8, #2563eb)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+              }}
+            >
+              {result.salaryLabel} <span style={{ fontSize: "0.9rem", fontWeight: 500 }}>/ month</span>
+            </div>
+            <div style={{ color: "#64748b", fontSize: "0.78rem", marginTop: "0.4rem" }}>
+              Approximate range. Your full analysis includes precise, role-by-role salary detail.
+            </div>
+          </>
+        ) : (
+          <div style={{ color: "#cbd5e1", fontSize: "1.05rem", fontWeight: 500, lineHeight: 1.5 }}>
+            {result.salaryLabel}
+          </div>
+        )}
       </div>
 
       {/* Underrated strength */}
