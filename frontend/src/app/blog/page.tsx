@@ -15,14 +15,14 @@ export const metadata: Metadata = {
     url: `${SITE_URL}/blog`,
     siteName: "CrewTransition",
     type: "website",
-    images: [{ url: `${SITE_URL}/hero-logo.png`, alt: "CrewTransition" }],
+    images: [{ url: `${SITE_URL}/og-image.png`, alt: "CrewTransition — See what your skills are worth" }],
   },
   twitter: {
     card: "summary",
     title: "Blog — CrewTransition",
     description:
       "Practical guidance for UAE cabin crew planning what's next: gratuity and end-of-service, visas, pay, and career pathways on the ground.",
-    images: [`${SITE_URL}/hero-logo.png`],
+    images: [`${SITE_URL}/og-image.png`],
   },
 };
 

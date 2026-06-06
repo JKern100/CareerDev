@@ -21,7 +21,7 @@ export async function generateMetadata({
   if (!post) return { title: "Post not found — CrewTransition" };
 
   const url = `${SITE_URL}/blog/${post.slug}`;
-  const ogImage = `${SITE_URL}/hero-logo.png`;
+  const ogImage = `${SITE_URL}/og-image.png`;
 
   return {
     title: post.title,
@@ -83,7 +83,7 @@ export default async function BlogPostPage({
       name: "CrewTransition",
       logo: { "@type": "ImageObject", url: `${SITE_URL}/hero-logo.png` },
     },
-    image: `${SITE_URL}/hero-logo.png`,
+    image: `${SITE_URL}/og-image.png`,
     mainEntityOfPage: { "@type": "WebPage", "@id": url },
     articleSection: post.category,
     keywords: post.tags.join(", "),

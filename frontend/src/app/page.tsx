@@ -115,7 +115,7 @@ export default function Home() {
           }}
         >
           <img
-            src="/hero-plane.png"
+            src="/hero-background.png"
             alt=""
             role="presentation"
             style={{
@@ -162,7 +162,7 @@ export default function Home() {
           <div className="hero-logo-img" style={{ marginBottom: "1.25rem" }}>
             <img
               src="/hero-logo.png"
-              alt="CrewTransition.com"
+              alt="CrewTransition"
               className="hero-logo-img"
               style={{
                 maxWidth: "min(480px, 85vw)",
