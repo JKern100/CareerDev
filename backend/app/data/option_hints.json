@@ -248,14 +248,15 @@
     "Unsure": "You haven't decided yet — that's fine, we'll explore both paths in your results"
   },
   "Q109": {
-    "Career growth ceiling": "You've hit the top of what's available in your current role and want more",
-    "Burnout/wellbeing": "The lifestyle, schedule, or emotional demands are taking a toll on your health",
-    "Medical/health": "A health condition means flying is no longer viable or safe for you",
-    "Redundancy or contract ending": "Your airline is restructuring, or your contract won't be renewed",
-    "Financial": "The pay isn't enough for your needs, or the career doesn't offer the growth you want",
-    "Family/lifestyle": "You need stability, predictable hours, or to be home for family",
-    "Curiosity": "You're not unhappy — just wondering what else is out there",
-    "Other": "A different reason for considering a career change"
+    "Just curious what's out there": "You're not unhappy — just wondering what else is out there.",
+    "More room to grow": "You're ready for more than your current role can offer.",
+    "More earning potential": "You'd like work that pays better or grows your income over time.",
+    "More time for family & life": "You'd value steadier hours and more time for the people and life you care about.",
+    "Protecting my wellbeing": "The schedule or demands are wearing on you, and your wellbeing comes first.",
+    "Health reasons": "A health consideration makes flying harder to sustain right now.",
+    "My role or contract is ending": "Your role is being cut, or your contract won't be renewed.",
+    "Industry instability / geopolitical risk": "Uncertainty in the industry or region has you thinking ahead.",
+    "Other": "A different reason — tell us in your own words."
   },
   "Q057": {
     "Work-life balance": "Predictable hours, no constant on-call, ability to plan your personal life",
