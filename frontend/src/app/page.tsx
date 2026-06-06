@@ -302,7 +302,7 @@ export default function Home() {
             ) : (
               <>
                 <button
-                  onClick={() => router.push("/register")}
+                  onClick={() => router.push("/start")}
                   style={{
                     background: "#2563eb",
                     color: "white",
@@ -317,7 +317,7 @@ export default function Home() {
                   onMouseOver={(e) => (e.currentTarget.style.background = "#1d4ed8")}
                   onMouseOut={(e) => (e.currentTarget.style.background = "#2563eb")}
                 >
-                  Start your assessment
+                  See what your skills are worth — 60 sec, no signup
                 </button>
                 <button
                   onClick={() => router.push("/login")}
@@ -832,7 +832,7 @@ export default function Home() {
           Create a free account and start your career assessment today.
         </p>
         <button
-          onClick={() => router.push(isLoggedIn ? dashboardPath : "/register")}
+          onClick={() => router.push(isLoggedIn ? dashboardPath : "/start")}
           style={{
             background: "#2563eb",
             color: "white",
