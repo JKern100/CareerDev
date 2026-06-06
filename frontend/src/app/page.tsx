@@ -41,11 +41,11 @@ export default function Home() {
         </div>
         <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
           <a
-            href="#how-it-works"
+            href="#what-you-get"
             className="nav-link-desktop"
             style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.9rem" }}
           >
-            How it works
+            What you get
           </a>
           <a
             href="#pathways"
@@ -55,7 +55,7 @@ export default function Home() {
             Pathways
           </a>
           <a
-            href="#methodology"
+            href="/methodology"
             className="nav-link-desktop"
             style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.9rem" }}
           >
@@ -182,12 +182,11 @@ export default function Home() {
               fontWeight: 700,
               lineHeight: 1.15,
               marginBottom: "1rem",
-              letterSpacing: "0.02em",
-              textTransform: "uppercase",
+              letterSpacing: "0.01em",
               textShadow: "0 2px 12px rgba(0,0,0,0.5)",
             }}
           >
-            Plan your{" "}
+            You&apos;ve built{" "}
             <span
               style={{
                 background: "linear-gradient(135deg, #38bdf8, #2563eb)",
@@ -195,9 +194,9 @@ export default function Home() {
                 WebkitTextFillColor: "transparent",
               }}
             >
-              career
+              more skill in the air
             </span>{" "}
-            takeoff.
+            than you realize.
           </h1>
 
           {/* People image — flight attendant to businesswoman */}
@@ -220,16 +219,18 @@ export default function Home() {
           <p
             className="hero-subtitle"
             style={{
-              fontSize: "1.15rem",
+              fontSize: "1.1rem",
               color: "#cbd5e1",
-              maxWidth: "550px",
+              maxWidth: "620px",
               margin: "0 auto 1.5rem",
               lineHeight: 1.7,
               textShadow: "0 1px 8px rgba(0,0,0,0.4)",
             }}
           >
-            AI-powered guidance, real career pathways,
-            and clear next steps — for life beyond the cabin.
+            A free, AI-powered assessment that translates your cabin-crew skills into their
+            real value across other industries — with matching pathways, salary ranges, and the
+            steps to get there. Built only for flight attendants. No commitment, no judgment —
+            just see what you&apos;re worth.
           </p>
 
           {/* Feature pills */}
@@ -244,9 +245,9 @@ export default function Home() {
             }}
           >
             {[
-              { icon: "\u2728", label: "AI-powered guidance" },
-              { icon: "\uD83D\uDE80", label: "New career pathways" },
-              { icon: "\uD83D\uDCCA", label: "Compare salaries" },
+              { icon: "\uD83D\uDC8E", label: "What you're worth elsewhere" },
+              { icon: "\uD83D\uDCCA", label: "Real salary ranges" },
+              { icon: "\uD83E\uDDED", label: "A plan, if you ever want it" },
             ].map((item) => (
               <div
                 key={item.label}
@@ -302,7 +303,7 @@ export default function Home() {
             ) : (
               <>
                 <button
-                  onClick={() => router.push("/register")}
+                  onClick={() => router.push("/start")}
                   style={{
                     background: "#2563eb",
                     color: "white",
@@ -317,7 +318,7 @@ export default function Home() {
                   onMouseOver={(e) => (e.currentTarget.style.background = "#1d4ed8")}
                   onMouseOut={(e) => (e.currentTarget.style.background = "#2563eb")}
                 >
-                  Start your assessment
+                  See what your skills are worth — 60 sec, no signup
                 </button>
                 <button
                   onClick={() => router.push("/login")}
@@ -340,14 +341,59 @@ export default function Home() {
           </div>
 
           <p style={{ color: "#94a3b8", fontSize: "0.85rem", marginTop: "1.5rem" }}>
-            Free to start. 14 career pathways. Results in minutes.
+            Free. No account needed. Completely private.
           </p>
         </div>
       </section>
 
-      {/* How it works */}
+      {/* 60-second hook */}
       <section
-        id="how-it-works"
+        style={{
+          padding: "2.5rem 1rem",
+          maxWidth: "880px",
+          margin: "0 auto",
+        }}
+      >
+        <div
+          style={{
+            background: "linear-gradient(135deg, rgba(37,99,235,0.10), rgba(56,189,248,0.04))",
+            border: "1px solid rgba(37,99,235,0.3)",
+            borderRadius: "16px",
+            padding: "2rem 1.75rem",
+            textAlign: "center",
+          }}
+        >
+          <p style={{ color: "#60a5fa", fontSize: "0.8rem", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "0.6rem" }}>
+            60 seconds · no signup
+          </p>
+          <h2 style={{ fontSize: "clamp(1.4rem, 3.5vw, 1.9rem)", fontWeight: 700, marginBottom: "0.75rem" }}>
+            Get a first read on what you&apos;re worth
+          </h2>
+          <p style={{ color: "#cbd5e1", maxWidth: "560px", margin: "0 auto 1.5rem", fontSize: "0.98rem", lineHeight: 1.6 }}>
+            Five quick taps and you&apos;ll see your three strongest pathways, a salary range, and one
+            strength you&apos;re underrating — before you decide whether to go further.
+          </p>
+          <button
+            onClick={() => router.push("/start")}
+            style={{
+              background: "#2563eb",
+              color: "white",
+              border: "none",
+              padding: "0.85rem 2rem",
+              borderRadius: "10px",
+              fontSize: "1rem",
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            See what my skills are worth
+          </button>
+        </div>
+      </section>
+
+      {/* What you get */}
+      <section
+        id="what-you-get"
         style={{
           padding: "3rem 1rem",
           maxWidth: "1000px",
@@ -362,7 +408,7 @@ export default function Home() {
             marginBottom: "3rem",
           }}
         >
-          How it works
+          What you get
         </h2>
         <div
           style={{
@@ -374,18 +420,18 @@ export default function Home() {
           {[
             {
               step: "01",
-              title: "Complete the questionnaire",
-              desc: "A progressive 3-stage assessment: 21 quick-match questions for initial results, ~22 more to sharpen your scores, and an optional deep-dive for maximum personalisation.",
+              title: "What you're worth elsewhere",
+              desc: "A specific, AI-powered read on what your cabin-crew skills are actually worth on the ground — translated into real value across other industries.",
             },
             {
               step: "02",
-              title: "Get your personal summary",
-              desc: "A narrative playback of your profile — who you are, what you bring, and what matters to you. Written in your preferred style.",
+              title: "Pathways matched to you",
+              desc: "Career pathways scored against your own profile, each with salary ranges and the credentials that open the door — so you can see where you'd fit and what it pays.",
             },
             {
               step: "03",
-              title: "Receive career analysis",
-              desc: "Scored and ranked career pathways with salary data, credential recommendations, and a realistic transition timeline.",
+              title: "A plan, if you ever want it",
+              desc: "A step-by-step transition plan you can act on now or simply keep for later. No pressure, no timeline — it's there whenever you're ready.",
             },
           ].map((item) => (
             <div
@@ -405,7 +451,7 @@ export default function Home() {
                   marginBottom: "0.75rem",
                 }}
               >
-                STEP {item.step}
+                {item.step}
               </div>
               <h3 style={{ fontSize: "1.1rem", fontWeight: 600, marginBottom: "0.5rem" }}>
                 {item.title}
@@ -428,35 +474,36 @@ export default function Home() {
             Your skills open doors
           </p>
           <h2 style={{ fontSize: "1.75rem", fontWeight: 700, marginBottom: "0.75rem" }}>
-            15 career pathways, scored to you
+            Career pathways, scored to you
           </h2>
           <p style={{ color: "#94a3b8", maxWidth: "520px", margin: "0 auto", fontSize: "0.95rem", lineHeight: 1.6 }}>
             Interest fit, skill match, feasibility, compensation, and more &mdash; each pathway ranked against your unique profile.
           </p>
         </div>
 
-        {/* Row 1 - scrolls left */}
-        <div style={{ display: "flex", gap: "0.75rem", animation: "marqueeLeft 35s linear infinite", width: "max-content", marginBottom: "0.75rem" }}>
+        {/* Lead pathways - scrolling marquee */}
+        <div style={{ display: "flex", gap: "0.75rem", animation: "marqueeLeft 35s linear infinite", width: "max-content", marginBottom: "1.75rem" }}>
           {[
-            { name: "Aviation Training", icon: "\u2708\uFE0F" },
             { name: "Corporate L&D", icon: "\uD83C\uDFAF" },
             { name: "HR & Talent", icon: "\uD83E\uDD1D" },
             { name: "Customer Experience", icon: "\u2B50" },
-            { name: "Operations", icon: "\u2699\uFE0F" },
+            { name: "Hospitality & Luxury", icon: "\uD83C\uDFE8" },
             { name: "Safety & Compliance", icon: "\uD83D\uDEE1\uFE0F" },
+            { name: "Private Aviation", icon: "\uD83D\uDEE9\uFE0F" },
+            { name: "Operations", icon: "\u2699\uFE0F" },
             { name: "Project Management", icon: "\uD83D\uDCCA" },
-            { name: "Business Analysis", icon: "\uD83D\uDD0D" },
-            { name: "Aviation Training", icon: "\u2708\uFE0F" },
+            // duplicated for a seamless infinite scroll
             { name: "Corporate L&D", icon: "\uD83C\uDFAF" },
             { name: "HR & Talent", icon: "\uD83E\uDD1D" },
             { name: "Customer Experience", icon: "\u2B50" },
-            { name: "Operations", icon: "\u2699\uFE0F" },
+            { name: "Hospitality & Luxury", icon: "\uD83C\uDFE8" },
             { name: "Safety & Compliance", icon: "\uD83D\uDEE1\uFE0F" },
+            { name: "Private Aviation", icon: "\uD83D\uDEE9\uFE0F" },
+            { name: "Operations", icon: "\u2699\uFE0F" },
             { name: "Project Management", icon: "\uD83D\uDCCA" },
-            { name: "Business Analysis", icon: "\uD83D\uDD0D" },
           ].map((pw, i) => (
             <div
-              key={`r1-${i}`}
+              key={`lead-${i}`}
               style={{
                 display: "flex", alignItems: "center", gap: "0.6rem",
                 background: "rgba(255,255,255,0.04)", border: "1px solid #1e293b",
@@ -470,41 +517,37 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Row 2 - scrolls right */}
-        <div style={{ display: "flex", gap: "0.75rem", animation: "marqueeRight 40s linear infinite", width: "max-content" }}>
-          {[
-            { name: "UX/UI Design", icon: "\uD83C\uDFA8" },
-            { name: "Hospitality & Luxury", icon: "\uD83C\uDFE8" },
-            { name: "Private Aviation", icon: "\uD83D\uDEE9\uFE0F" },
-            { name: "Healthcare", icon: "\uD83E\uDE7A" },
-            { name: "Sales & Biz Dev", icon: "\uD83D\uDCB0" },
-            { name: "Entrepreneurship", icon: "\uD83D\uDE80" },
-            { name: "Education & Coaching", icon: "\uD83C\uDF93" },
-            { name: "UX/UI Design", icon: "\uD83C\uDFA8" },
-            { name: "Hospitality & Luxury", icon: "\uD83C\uDFE8" },
-            { name: "Private Aviation", icon: "\uD83D\uDEE9\uFE0F" },
-            { name: "Healthcare", icon: "\uD83E\uDE7A" },
-            { name: "Sales & Biz Dev", icon: "\uD83D\uDCB0" },
-            { name: "Entrepreneurship", icon: "\uD83D\uDE80" },
-            { name: "Education & Coaching", icon: "\uD83C\uDF93" },
-          ].map((pw, i) => (
-            <div
-              key={`r2-${i}`}
-              style={{
-                display: "flex", alignItems: "center", gap: "0.6rem",
-                background: "rgba(255,255,255,0.04)", border: "1px solid #1e293b",
-                borderRadius: "50px", padding: "0.5rem 1.1rem 0.5rem 0.6rem",
-                whiteSpace: "nowrap", flexShrink: 0,
-              }}
-            >
-              <span style={{ fontSize: "1.25rem", lineHeight: 1 }}>{pw.icon}</span>
-              <span style={{ fontWeight: 500, fontSize: "0.88rem", color: "#e2e8f0" }}>{pw.name}</span>
-            </div>
-          ))}
+        {/* More pathways - quieter, static */}
+        <div style={{ textAlign: "center", padding: "0 1rem" }}>
+          <p style={{ color: "#64748b", fontSize: "0.78rem", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "0.85rem" }}>
+            More pathways
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", justifyContent: "center", maxWidth: "640px", margin: "0 auto" }}>
+            {[
+              "Business Analysis",
+              "Sales & Biz Dev",
+              "Education & Coaching",
+              "Entrepreneurship",
+              "Aviation Training",
+              "Healthcare",
+              "UX/UI Design",
+            ].map((name) => (
+              <span
+                key={name}
+                style={{
+                  background: "rgba(255,255,255,0.02)", border: "1px solid #1e293b",
+                  borderRadius: "50px", padding: "0.4rem 0.9rem",
+                  fontSize: "0.82rem", color: "#94a3b8", whiteSpace: "nowrap",
+                }}
+              >
+                {name}
+              </span>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Features */}
+      {/* Why it's built for crew */}
       <section
         style={{
           padding: "3rem 1rem",
@@ -512,6 +555,16 @@ export default function Home() {
           margin: "0 auto",
         }}
       >
+        <h2
+          style={{
+            textAlign: "center",
+            fontSize: "1.75rem",
+            fontWeight: 700,
+            marginBottom: "3rem",
+          }}
+        >
+          Why it&apos;s built for crew
+        </h2>
         <div
           style={{
             display: "grid",
@@ -570,250 +623,71 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Methodology */}
+      {/* Social proof — PLACEHOLDER: replace with real cabin-crew testimonials when available.
+          Intentionally no fabricated quotes; this is an honest, neutral band holding the slot. */}
+      <section
+        style={{
+          padding: "2.5rem 1rem",
+          maxWidth: "1000px",
+          margin: "0 auto",
+          textAlign: "center",
+        }}
+      >
+        <p style={{ color: "#64748b", fontSize: "0.8rem", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+          Built with and for working cabin crew
+        </p>
+        {/* TODO: testimonial cards / logos go here once collected */}
+      </section>
+
+      {/* Methodology (demoted — full detail lives on /methodology) */}
       <section
         id="methodology"
         style={{
           padding: "3rem 1rem",
-          maxWidth: "1000px",
+          maxWidth: "720px",
           margin: "0 auto",
+          textAlign: "center",
         }}
       >
-        <div style={{ textAlign: "center", marginBottom: "3.5rem" }}>
-          <div
-            style={{
-              display: "inline-block",
-              background: "rgba(37, 99, 235, 0.15)",
-              color: "#60a5fa",
-              padding: "0.4rem 1rem",
-              borderRadius: "20px",
-              fontSize: "0.8rem",
-              fontWeight: 600,
-              letterSpacing: "0.05em",
-              marginBottom: "1.25rem",
-              border: "1px solid rgba(37, 99, 235, 0.3)",
-              textTransform: "uppercase",
-            }}
-          >
-            Under the Hood
-          </div>
-          <h2
-            style={{
-              fontSize: "1.75rem",
-              fontWeight: 700,
-              marginBottom: "1rem",
-            }}
-          >
-            A research-grade advisory framework,{" "}
-            <span
-              style={{
-                background: "linear-gradient(135deg, #38bdf8, #2563eb)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
-            >
-              not a chatbot
-            </span>
-          </h2>
-          <p
-            style={{
-              color: "#94a3b8",
-              maxWidth: "680px",
-              margin: "0 auto",
-              lineHeight: 1.7,
-              fontSize: "1.05rem",
-            }}
-          >
-            CrewTransition doesn't send your answers to an AI and hope for the best. Every
-            recommendation passes through a multi-layered analysis pipeline backed by
-            structured knowledge documents, deterministic scoring, and domain-specific
-            intelligence built exclusively for aviation professionals.
-          </p>
-        </div>
-
-        {/* Architecture Overview */}
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: "1.5rem",
-            marginBottom: "3rem",
+            display: "inline-block",
+            background: "rgba(37, 99, 235, 0.15)",
+            color: "#60a5fa",
+            padding: "0.4rem 1rem",
+            borderRadius: "20px",
+            fontSize: "0.8rem",
+            fontWeight: 600,
+            letterSpacing: "0.05em",
+            marginBottom: "1.25rem",
+            border: "1px solid rgba(37, 99, 235, 0.3)",
+            textTransform: "uppercase",
           }}
         >
-          {[
-            {
-              num: "01",
-              title: "Structured Knowledge Base",
-              desc: "13 proprietary resource documents totaling 3,000+ lines of domain expertise — from aviation skills translation matrices to global labour market context, credential mapping, and archetype recognition patterns.",
-            },
-            {
-              num: "02",
-              title: "Six-Component Scoring Model",
-              desc: "Every pathway is evaluated across Interest Fit, Skill Match, Environment Preference, Feasibility, Compensation Alignment, and Risk Tolerance — each independently weighted and evidence-backed.",
-            },
-            {
-              num: "03",
-              title: "Deterministic Scoring Engine",
-              desc: "A rule-based engine runs independently of any AI model, applying gate flags for hard constraints (visa, financial, timeline) and producing auditable, reproducible scores for each pathway.",
-            },
-          ].map((item) => (
-            <div
-              key={item.num}
-              style={{
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid #1e293b",
-                borderRadius: "12px",
-                padding: "2rem",
-              }}
-            >
-              <div
-                style={{
-                  color: "#2563eb",
-                  fontWeight: 700,
-                  fontSize: "0.8rem",
-                  letterSpacing: "0.05em",
-                  marginBottom: "0.75rem",
-                }}
-              >
-                LAYER {item.num}
-              </div>
-              <h3
-                style={{
-                  fontSize: "1.1rem",
-                  fontWeight: 600,
-                  marginBottom: "0.75rem",
-                }}
-              >
-                {item.title}
-              </h3>
-              <p style={{ color: "#94a3b8", fontSize: "0.9rem", lineHeight: 1.7 }}>
-                {item.desc}
-              </p>
-            </div>
-          ))}
+          How it works under the hood
         </div>
-
-        {/* Deep-dive details */}
-        <div
+        <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1rem" }}>
+          Rigorous by design — not a generic chatbot
+        </h2>
+        <p style={{ color: "#94a3b8", lineHeight: 1.7, fontSize: "1.02rem", marginBottom: "1.5rem" }}>
+          Your answers run through a deterministic, rule-based scoring engine and a
+          purpose-built aviation knowledge base — then AI-powered analysis turns the
+          results into clear, personal guidance. Transparent scoring, built only for crew.
+        </p>
+        <a
+          href="/methodology"
           style={{
-            background: "rgba(255,255,255,0.02)",
-            border: "1px solid #1e293b",
-            borderRadius: "16px",
-            padding: "1.5rem",
-            marginBottom: "2rem",
+            display: "inline-block",
+            color: "#60a5fa",
+            textDecoration: "none",
+            fontWeight: 600,
+            fontSize: "0.95rem",
+            borderBottom: "1px solid rgba(96,165,250,0.4)",
+            paddingBottom: "2px",
           }}
         >
-          <h3
-            style={{
-              fontSize: "1.2rem",
-              fontWeight: 700,
-              marginBottom: "2rem",
-              textAlign: "center",
-            }}
-          >
-            What powers every recommendation
-          </h3>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-              gap: "2rem",
-            }}
-          >
-            {[
-              {
-                title: "Aviation Skills Translation",
-                desc: "Maps cabin crew competencies — CRM, emergency response, cross-cultural service, de-escalation — to their ground-side equivalents across 14 industries.",
-              },
-              {
-                title: "Global Labour Market Context",
-                desc: "Region-specific intelligence on visa constraints, notice periods, end-of-service gratuities, salary benchmarks, and market demand across key aviation hubs.",
-              },
-              {
-                title: "Urgency & Constraint Signals",
-                desc: "Detects financial runway, contractual lock-ins, family obligations, and time-sensitivity to calibrate the realism and pacing of every recommendation.",
-              },
-              {
-                title: "Archetype Recognition",
-                desc: "Identifies recurring crew profiles — the Safety Purist, the Entrepreneurial FA, the Burned-Out Senior — to tailor tone, pathway weighting, and risk framing.",
-              },
-              {
-                title: "Contradiction Detection",
-                desc: "Flags inconsistencies in your responses (e.g., wanting high salary but low stress) and addresses them transparently rather than ignoring the tension.",
-              },
-              {
-                title: "Partial Completion Handling",
-                desc: "Adapts analysis depth to your completion level with explicit confidence disclosures, so you always know where the evidence is strong and where it's inferred.",
-              },
-            ].map((item) => (
-              <div key={item.title}>
-                <h4
-                  style={{
-                    fontSize: "0.95rem",
-                    fontWeight: 600,
-                    marginBottom: "0.5rem",
-                    color: "#e2e8f0",
-                  }}
-                >
-                  {item.title}
-                </h4>
-                <p
-                  style={{
-                    color: "#94a3b8",
-                    fontSize: "0.85rem",
-                    lineHeight: 1.65,
-                  }}
-                >
-                  {item.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Stats bar */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-            gap: "1rem",
-            textAlign: "center",
-          }}
-        >
-          {[
-            { stat: "3,000+", label: "Lines of domain knowledge" },
-            { stat: "3", label: "Progressive assessment stages" },
-            { stat: "14", label: "Scored career pathways" },
-            { stat: "6", label: "Independent scoring dimensions" },
-            { stat: "8", label: "Assessment modules" },
-          ].map((item) => (
-            <div
-              key={item.label}
-              style={{
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid #1e293b",
-                borderRadius: "10px",
-                padding: "1.25rem 1rem",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: "1.5rem",
-                  fontWeight: 700,
-                  background: "linear-gradient(135deg, #38bdf8, #2563eb)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  marginBottom: "0.25rem",
-                }}
-              >
-                {item.stat}
-              </div>
-              <div style={{ color: "#94a3b8", fontSize: "0.8rem", fontWeight: 500 }}>
-                {item.label}
-              </div>
-            </div>
-          ))}
-        </div>
+          See how it works →
+        </a>
       </section>
 
       {/* CTA */}
@@ -826,13 +700,13 @@ export default function Home() {
         }}
       >
         <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1rem" }}>
-          Ready for your career takeoff?
+          See what you&apos;re worth — on your terms
         </h2>
         <p style={{ color: "#94a3b8", marginBottom: "2rem" }}>
-          Create a free account and start your career assessment today.
+          Take the 60-second read. No account, no commitment, completely private — just your value, made clear.
         </p>
         <button
-          onClick={() => router.push(isLoggedIn ? dashboardPath : "/register")}
+          onClick={() => router.push(isLoggedIn ? dashboardPath : "/start")}
           style={{
             background: "#2563eb",
             color: "white",
@@ -844,7 +718,7 @@ export default function Home() {
             cursor: "pointer",
           }}
         >
-          {isLoggedIn ? "Go to dashboard" : "Get started free"}
+          {isLoggedIn ? "Go to dashboard" : "See what my skills are worth"}
         </button>
       </section>
 

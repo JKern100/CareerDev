@@ -151,9 +151,19 @@ export default function ResultsPage() {
             {" · "}Model: {report?.model_name ?? "—"}
           </p>
           <p className="text-sm text-muted" style={{ textAlign: "center" }}>
+            Saved to your account — come back to it anytime, whenever you're ready.
+          </p>
+          <p className="text-sm text-muted" style={{ textAlign: "center" }}>
             {p("disclaimer")}
           </p>
           <div style={{ display: "flex", justifyContent: "center", gap: "12px", marginTop: "1rem", flexWrap: "wrap" }}>
+            <button
+              className="btn btn-outline"
+              onClick={() => window.print()}
+              style={{ padding: "0.625rem 1.25rem", fontSize: "0.875rem" }}
+            >
+              Save a copy (print / PDF)
+            </button>
             {pathways.length > 0 && (
               <button
                 onClick={() => setShareOpen(true)}
@@ -192,37 +202,33 @@ export default function ResultsPage() {
 
         {pathways.length > 0 && <ResourcesSection pathways={pathways} />}
 
-        {/* Action Plan CTA */}
+        {/* Single, pressure-free CTA — there's a plan here for whenever you want it */}
         <div style={{
           marginTop: "1.5rem",
-          padding: "1.25rem 1.5rem",
+          padding: "1.5rem",
           background: "linear-gradient(135deg, rgba(34, 197, 94, 0.08), rgba(34, 197, 94, 0.02))",
           border: "1px solid rgba(34, 197, 94, 0.25)",
           borderRadius: "12px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "1rem",
+          textAlign: "center",
         }}>
-          <div>
-            <h3 style={{ fontSize: "1rem", marginBottom: "0.25rem" }}>{p("take_action")}</h3>
-            <p className="text-muted" style={{ fontSize: "0.875rem" }}>
-              {p("take_action_text")}
-            </p>
-          </div>
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          <h3 style={{ fontSize: "1.05rem", marginBottom: "0.4rem" }}>
+            There&apos;s a step-by-step plan here — for whenever you&apos;re ready
+          </h3>
+          <p className="text-muted" style={{ fontSize: "0.9rem", marginBottom: "1.1rem", lineHeight: 1.6 }}>
+            No pressure and no timeline. Open it when you want to see exactly how to move on any
+            pathway above — or just keep it for later.
+          </p>
+          <button
+            className="btn btn-primary"
+            style={{ padding: "0.7rem 1.75rem", fontSize: "0.95rem", whiteSpace: "nowrap" }}
+            onClick={() => router.push("/plan")}
+          >
+            See my step-by-step plan
+          </button>
+          <div style={{ marginTop: "0.85rem" }}>
             <button
-              className="btn btn-primary"
-              style={{ padding: "0.6rem 1.5rem", fontSize: "0.9rem", whiteSpace: "nowrap" }}
-              onClick={() => router.push("/plan")}
-            >
-              {p("view_plan")}
-            </button>
-            <button
-              className="btn btn-outline"
-              style={{ padding: "0.6rem 1.5rem", fontSize: "0.9rem", borderColor: "rgba(234, 179, 8, 0.4)", color: "#eab308", whiteSpace: "nowrap" }}
               onClick={() => router.push("/coach")}
+              style={{ background: "none", border: "none", color: "#94a3b8", fontSize: "0.85rem", cursor: "pointer", textDecoration: "underline" }}
             >
               {p("ask_coach")}
             </button>

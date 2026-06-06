@@ -6,12 +6,12 @@ import { getAllPosts, SITE_URL } from "@/lib/blog";
 export const metadata: Metadata = {
   title: "Blog — CrewTransition",
   description:
-    "Practical guidance for UAE cabin crew planning what's next: gratuity and end-of-service, visas, pay, and career pathways beyond the cabin.",
+    "Practical guidance for UAE cabin crew planning what's next: gratuity and end-of-service, visas, pay, and career pathways on the ground.",
   alternates: { canonical: `${SITE_URL}/blog` },
   openGraph: {
     title: "Blog — CrewTransition",
     description:
-      "Practical guidance for UAE cabin crew planning what's next: gratuity and end-of-service, visas, pay, and career pathways beyond the cabin.",
+      "Practical guidance for UAE cabin crew planning what's next: gratuity and end-of-service, visas, pay, and career pathways on the ground.",
     url: `${SITE_URL}/blog`,
     siteName: "CrewTransition",
     type: "website",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     card: "summary",
     title: "Blog — CrewTransition",
     description:
-      "Practical guidance for UAE cabin crew planning what's next: gratuity and end-of-service, visas, pay, and career pathways beyond the cabin.",
+      "Practical guidance for UAE cabin crew planning what's next: gratuity and end-of-service, visas, pay, and career pathways on the ground.",
     images: [`${SITE_URL}/hero-logo.png`],
   },
 };
@@ -49,7 +49,7 @@ export default function BlogIndexPage() {
           </h1>
           <p style={{ color: "#94a3b8", fontSize: "1.05rem", lineHeight: 1.7 }}>
             Practical, no-fluff guidance for UAE cabin crew — gratuity and end-of-service, visas, pay,
-            and the realistic mechanics of building a career beyond the cabin.
+            and the realistic mechanics of building a career on the ground.
           </p>
         </header>
 
