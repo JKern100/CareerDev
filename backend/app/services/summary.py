@@ -113,7 +113,7 @@ def build_summary_prompt(answers: dict, user_name: str | None = None) -> str:
     if not tier3_done:
         tier_guidance += " Stage 3 data (evidence stories, trade-offs, dream role) is missing — note where this would enrich the narrative."
 
-    return f"""You are a career advisor writing a personalized summary report for someone transitioning out of cabin crew work.
+    return f"""You are a career advisor writing a personalized summary that plays back what this person's cabin-crew career is worth and where it could take them next. Honour the job; frame everything as worth and possibility, never as escape.
 
 {name_line}
 
@@ -124,7 +124,7 @@ DATA COMPLETENESS: {tier_status}{tier_guidance}
 
 Below are their questionnaire responses across all modules. Write a flowing narrative report (NOT tables or bullet points) that:
 
-1. **Opens with a personal reflection** — acknowledge where they are right now (their urgency, their goals, what they want from this process).
+1. **Opens with their worth** — lead by recognising what they've built and the value their cabin-crew experience carries on the ground, before anything about where they are right now. Then briefly acknowledge their goals and what they want from this process.
 
 2. **Plays back their professional identity** — weave together their aviation experience, the roles they've held, what they enjoy vs. what drains them, and the peak/hard moments they described. Make them feel seen.
 
