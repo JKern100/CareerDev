@@ -183,10 +183,6 @@ h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.25rem; }
     font-size: 0.7rem !important;
     padding: 0.3rem 1rem !important;
   }
-  .hero-logo-img {
-    max-width: min(320px, 75vw) !important;
-    margin-bottom: 0.5rem !important;
-  }
   .hero-headline {
     font-size: 1.5rem !important;
     margin-bottom: 0.5rem !important;

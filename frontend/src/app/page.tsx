@@ -158,21 +158,7 @@ export default function Home() {
             Built for flight attendants
           </div>
 
-          {/* Logo image */}
-          <div className="hero-logo-img" style={{ marginBottom: "1.25rem" }}>
-            <img
-              src="/hero-logo.png"
-              alt="CrewTransition"
-              className="hero-logo-img"
-              style={{
-                maxWidth: "min(480px, 85vw)",
-                height: "auto",
-                display: "block",
-                margin: "0 auto",
-                filter: "drop-shadow(0 4px 24px rgba(0,0,0,0.5))",
-              }}
-            />
-          </div>
+          {/* Hero wordmark removed — the logo already appears in the nav */}
 
           {/* Headline */}
           <h1
@@ -230,9 +216,22 @@ export default function Home() {
             }}
           >
             {[
-              { icon: "\uD83D\uDC8E", label: "What you're worth elsewhere" },
-              { icon: "\uD83D\uDCCA", label: "Real salary ranges" },
-              { icon: "\uD83E\uDDED", label: "A plan, if you ever want it" },
+              {
+                label: "What you're worth elsewhere",
+                icon: (
+                  <path d="M6 3h12l4 6-10 12L2 9z M3 9h18 M9 3l3 18 M15 3l-3 18" />
+                ),
+              },
+              {
+                label: "Real salary ranges",
+                icon: <path d="M4 4v16h16 M8 14l3-3 3 2 4-6" />,
+              },
+              {
+                label: "A plan, if you ever want it",
+                icon: (
+                  <path d="M12 21s-6-5.4-6-10a6 6 0 0 1 12 0c0 4.6-6 10-6 10z M12 11h.01" />
+                ),
+              },
             ].map((item) => (
               <div
                 key={item.label}
@@ -255,10 +254,21 @@ export default function Home() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: "0.9rem",
                   }}
                 >
-                  {item.icon}
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#38bdf8"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    {item.icon}
+                  </svg>
                 </span>
                 {item.label}
               </div>
@@ -303,7 +313,7 @@ export default function Home() {
                   onMouseOver={(e) => (e.currentTarget.style.background = "#1d4ed8")}
                   onMouseOut={(e) => (e.currentTarget.style.background = "#2563eb")}
                 >
-                  See what your skills are worth — 60 sec, no signup
+                  See what you&apos;re worth
                 </button>
                 <button
                   onClick={() => router.push("/login")}
@@ -361,9 +371,9 @@ export default function Home() {
           <button
             onClick={() => router.push("/start")}
             style={{
-              background: "#2563eb",
-              color: "white",
-              border: "none",
+              background: "transparent",
+              color: "#f1f5f9",
+              border: "1px solid #1e293b",
               padding: "0.85rem 2rem",
               borderRadius: "10px",
               fontSize: "1rem",
