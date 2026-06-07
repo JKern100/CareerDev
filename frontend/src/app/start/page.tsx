@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { track } from "@vercel/analytics";
 import {
   computeTeaser,
   REGIONS,
@@ -73,12 +74,15 @@ export default function StartPage() {
   const TOTAL_STEPS = 5;
 
   function next() {
+    // Fire once, when the very first question is answered.
+    if (step === 0) track("hook_started");
     if (step < TOTAL_STEPS - 1) {
       setStep(step + 1);
     } else {
       // Last question answered → compute the teaser.
       const res = computeTeaser(answers);
       setResult(res);
+      track("hook_completed", { region: answers.region ?? "unknown", topPathway: res.topPathwayName });
       try {
         // Stash answers so they can prefill / inform the full assessment later.
         localStorage.setItem("teaser_answers", JSON.stringify(answers));
@@ -292,7 +296,7 @@ export default function StartPage() {
             </div>
           </>
         ) : (
-          result && <Teaser result={result} onUnlock={() => router.push("/register")} />
+          result && <Teaser result={result} onUnlock={() => { track("unlock_clicked"); router.push("/register"); }} />
         )}
       </div>
     </div>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getMe, APP_VERSION } from "@/lib/api";
+import { track } from "@vercel/analytics";
 
 export default function Home() {
   const router = useRouter();
@@ -298,7 +299,7 @@ export default function Home() {
             ) : (
               <>
                 <button
-                  onClick={() => router.push("/start")}
+                  onClick={() => { track("hero_cta_click", { location: "hero" }); router.push("/start"); }}
                   style={{
                     background: "#2563eb",
                     color: "white",
@@ -369,7 +370,7 @@ export default function Home() {
             strength you&apos;re underrating — before you decide whether to go further.
           </p>
           <button
-            onClick={() => router.push("/start")}
+            onClick={() => { track("hero_cta_click", { location: "hook_band" }); router.push("/start"); }}
             style={{
               background: "transparent",
               color: "#f1f5f9",
