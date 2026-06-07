@@ -18,3 +18,6 @@
 
 ## Full strategy — REQUIRED reading before any strategic, positioning, copy, question, report, or UX-framing work
 Read `docs/crewtransition-strategic-advisor.md` in full before such work. It is the source of truth and is revised over time.
+
+## Question bank — REQUIRED reading before touching any assessment question
+Read `docs/crewtransition-question-audit-framework.md` in full before changing question stems, options, premises, order, or gating. It governs how to reframe questions toward worth/curiosity without altering what the engine measures.
