@@ -165,17 +165,18 @@ function SendEmailsView() {
     });
   }
 
+  // Never auto-select users who have unsubscribed (the backend skips them too).
   function selectAllMatching() {
-    setSelectedIds(new Set(matchingUsers.map((u) => u.id)));
+    setSelectedIds(new Set(matchingUsers.filter((u) => u.email_nudges_enabled !== false).map((u) => u.id)));
   }
 
   function clearSelection() {
     setSelectedIds(new Set());
   }
 
-  // When template or filter changes, auto-select matching users
+  // When template or filter changes, auto-select matching users (minus opt-outs)
   useEffect(() => {
-    setSelectedIds(new Set(matchingUsers.map((u) => u.id)));
+    setSelectedIds(new Set(matchingUsers.filter((u) => u.email_nudges_enabled !== false).map((u) => u.id)));
     setResult(null);
     setError("");
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -343,10 +344,11 @@ function SendEmailsView() {
           <p style={{ color: "#f1f5f9", fontWeight: 600, marginBottom: "0.5rem" }}>
             Sent: <span style={{ color: "#22c55e" }}>{result.sent}</span>
             {result.failed > 0 && <> | Failed: <span style={{ color: "#ef4444" }}>{result.failed}</span></>}
+            {!!result.skipped && <> | Skipped (unsubscribed): <span style={{ color: "#fbbf24" }}>{result.skipped}</span></>}
           </p>
           <div style={{ maxHeight: "200px", overflowY: "auto" }}>
             {result.details.map((d, i) => (
-              <p key={i} style={{ fontSize: "0.8rem", color: d.status === "sent" ? "#94a3b8" : "#ef4444", margin: "2px 0" }}>
+              <p key={i} style={{ fontSize: "0.8rem", color: d.status === "sent" ? "#94a3b8" : d.status === "skipped" ? "#fbbf24" : "#ef4444", margin: "2px 0" }}>
                 {d.email}: {d.status}{d.error ? ` — ${d.error}` : ""}
               </p>
             ))}
@@ -391,6 +393,14 @@ function UserRow({ user, selected, onToggle, dimmed }: { user: AdminUser; select
         )}
       </div>
       <div style={{ display: "flex", gap: "0.5rem", flexShrink: 0 }}>
+        {user.email_nudges_enabled === false && (
+          <span
+            style={{ ...badge, background: "rgba(239,68,68,0.15)", color: "#f87171" }}
+            title="This user has unsubscribed — they are excluded from auto-select and the send will skip them."
+          >
+            Unsubscribed
+          </span>
+        )}
         {user.is_premium && <span style={{ ...badge, background: "rgba(59,130,246,0.15)", color: "#60a5fa" }}>Pro</span>}
         <span style={{ ...badge, background: "#334155" }}>
           {user.coach_message_count} msgs
