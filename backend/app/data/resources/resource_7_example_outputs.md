@@ -32,9 +32,15 @@
 
 ---
 
-**Before your recommendations, a note on your situation**
+**What you're worth**
 
-Your answers show someone who is genuinely ready for change — your burnout score and the way you described your "hard moment" make that clear — but who is navigating real constraints: a 4-month savings window, a dependent on your visa, and the responsibility of being the primary earner. These aren't reasons to delay. They're reasons to be strategic. Every recommendation below has been shaped by this reality.
+Nine years in the cabin — three as a purser — is not "just" service. You run pre-flight briefings and coach junior crew (that's facilitation and people development), you read and de-escalate a cabin full of strangers from 30+ cultures in minutes (stakeholder and conflict management), and you stay decisive through medical and safety emergencies (crisis leadership). On the ground these are paid, in-demand professions — and most crew quietly undervalue every one of them. Your service-orientation (5/5) and empathy (5/5) aren't "soft skills"; they're the exact signals customer-experience and L&D teams hire for, and your senior cabin experience supports mid-level entry, not starting at the bottom. Here's what that's worth, and the doors it opens.
+
+---
+
+**A note on your situation**
+
+You're navigating this from a real place — a 4-month savings window, a dependent on your visa, and being the primary earner. These aren't reasons to delay; they're reasons to be strategic. Every recommendation below is shaped by this reality, on your terms.
 
 ---
 
@@ -122,7 +128,7 @@ Your dream is not unrealistic. The timing just needs to be right.
 
 **ANNOTATION: Why this output is good**
 
-- Opens by acknowledging the user's real situation before recommendations — builds trust
+- Opens with the user's *worth* — specific, translated skills — before situation or plan; affirms value first, then grounds it in reality
 - Pathway 1 references specific answers (Q107, purser role, "hard moment") — user feels read, not processed
 - Transferable strengths are specific, not generic ("cross-cultural communication" not "good with people")
 - Gaps section is honest about the CIPD requirement without making it sound overwhelming
@@ -175,7 +181,7 @@ HR is a natural fit for people who enjoy working with others. Your interpersonal
 
 ## KEY PRINCIPLES DERIVED FROM THESE EXAMPLES
 
-1. **Always open with situation acknowledgement** — especially for users with high burnout or financial constraints
+1. **Open with worth first, then situation** — lead with a specific, evidence-based articulation of what the user has built and what it's worth on the ground (counter undervaluation; see Resource 1 Section C). Acknowledge situation and constraints immediately *after* — especially high burnout or financial pressure — but never as the headline.
 2. **Every strength must be specific** — no generic "interpersonal skills" or "people person" language
 3. **Every gap must have a resolution path** — credential + duration + cost + access route
 4. **Salary gaps must be named** — not hidden in a range

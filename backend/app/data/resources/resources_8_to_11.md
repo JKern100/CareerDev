@@ -13,11 +13,11 @@
 
 **Characteristic signals:** Q026 ≥ 7, Q022 (emotional labour drain) ≥ 4, Q025 describes exhaustion or loss of passion, Q059 family time ranked first, Q011 ≥ 8 years, Q014 includes Purser-like duties.
 
-**What they need from the analysis:** Permission to leave. Validation that their skills are worth something outside aviation. A realistic but not overwhelming first step. Acknowledgement of the sacrifice the transition requires.
+**What they need from the analysis:** Recognition that what they've built has real worth beyond the cabin. Validation that their skills are valued elsewhere. A realistic, unpressured first step. Acknowledgement of everything they've given to the role.
 
 **Tone:** Compassionate first, practical second. Do not open with a list of things they need to do. Acknowledge what they've built before talking about what comes next.
 
-**Pathway weighting adjustment:** Upweight pathways with lower emotional labour (P6 Safety, P7 PM, P5 Operations, P8a BA). Downweight pathways that replicate the service/people intensity they're escaping (P9 Hospitality entry-level, P12 Sales).
+**Pathway weighting adjustment:** Upweight pathways with lower emotional labour (P6 Safety, P7 PM, P5 Operations, P8a BA). Downweight pathways that replicate the service/people intensity that have drained them (P9 Hospitality entry-level, P12 Sales).
 
 **Pitfall to avoid:** Don't recommend P10 (Private Aviation) to a burned-out purser as a "natural transition" — they're burned out on aviation culture, not just the aircraft.
 

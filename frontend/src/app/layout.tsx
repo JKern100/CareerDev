@@ -2,6 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { APP_VERSION } from "@/lib/api";
 import { SITE_URL } from "@/lib/blog";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -62,6 +63,7 @@ export default function RootLayout({
           {" · "}
           <a href="/refund" style={{ color: "#64748b", textDecoration: "underline" }}>Refunds</a>
         </footer>
+        <Analytics />
       </body>
     </html>
   );
