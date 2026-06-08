@@ -32,6 +32,7 @@ class Settings(BaseSettings):
 
     # Newsletter
     NEWSLETTER_FROM: str = ""  # falls back to EMAIL_FROM if empty
+    NEWSLETTER_REPLY_TO: str = ""  # where newsletter/broadcast replies go (e.g. a Gmail you read)
     NEWSLETTER_SENDER_ADDRESS: str = ""  # CAN-SPAM physical address; logs warning if empty
 
     # Resend webhooks (for open/click/bounce tracking)

@@ -148,6 +148,7 @@ async def _send_email(
     email_type: str = "unknown",
     *,
     from_addr: str | None = None,
+    reply_to: str | None = None,
     headers: dict[str, str] | None = None,
     text: str | None = None,
 ) -> bool:
@@ -167,6 +168,8 @@ async def _send_email(
         "subject": subject,
         "html": html,
     }
+    if reply_to:
+        payload["reply_to"] = reply_to
     if text:
         payload["text"] = text
     if headers:
@@ -497,7 +500,14 @@ async def send_custom_email(
               {unsub_html}"""
 
     html = _branded_email(body)
-    return await _send_email(to_email, subject, html, "custom")
+    return await _send_email(
+        to_email,
+        subject,
+        html,
+        "custom",
+        from_addr=_newsletter_from(),
+        reply_to=_newsletter_reply_to(),
+    )
 
 
 async def send_pro_welcome_email(to_email: str, user_name: str | None = None) -> bool:
@@ -539,6 +549,11 @@ async def send_pro_welcome_email(to_email: str, user_name: str | None = None) ->
 
 def _newsletter_from() -> str:
     return (settings.NEWSLETTER_FROM or settings.EMAIL_FROM).strip()
+
+
+def _newsletter_reply_to() -> str | None:
+    """Reply-To for newsletters/broadcasts so replies reach a real inbox."""
+    return settings.NEWSLETTER_REPLY_TO.strip() or None
 
 
 def _md_to_email_html(md: str) -> str:
@@ -623,6 +638,7 @@ async def send_newsletter_confirmation(to_email: str, confirm_token: str) -> boo
         html,
         "newsletter_confirm",
         from_addr=_newsletter_from(),
+        reply_to=_newsletter_reply_to(),
     )
 
 
@@ -688,6 +704,7 @@ async def send_newsletter_issue(
         html,
         email_type,
         from_addr=_newsletter_from(),
+        reply_to=_newsletter_reply_to(),
         headers=headers,
         text=text_body,
     )
