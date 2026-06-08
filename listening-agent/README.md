@@ -128,7 +128,7 @@ Running the script manually works, but automating it removes one more thing to r
 **Option B — A free cloud service (most reliable):**
 
 - **GitHub Actions** (free, recommended): commit the code to a private repo, add the credentials as repository secrets, create a workflow that runs on a schedule. ~15 minutes to set up. Survives your laptop being off.
-- **Render.com** or **Railway.app** scheduled jobs: similar concept, web UI instead of YAML.
+- **Railway.app** scheduled jobs: similar concept, web UI instead of YAML.
 
 Recommend GitHub Actions for the combination of free + reliable + survives anything.
 
