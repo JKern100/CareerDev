@@ -23,8 +23,4 @@ services:
         value: "false"
       - key: ALLOWED_ORIGINS
         value: "https://your-app.vercel.app"
-      - key: NEWSLETTER_FROM
-        value: "CrewTransition <newsletter@crewtransition.com>"
-      - key: NEWSLETTER_REPLY_TO
-        value: "crewtransition.app@gmail.com"
     healthCheckPath: /health
