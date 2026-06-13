@@ -51,6 +51,9 @@ class User(Base):
 
     # Login timestamps
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    # Login time from the PRIOR session, captured before last_login_at is overwritten.
+    # Used to summarise activity "since you were last here".
+    previous_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     login_count: Mapped[int | None] = mapped_column(Integer, default=0)
 
     # Activity tracking (updated on every authenticated request, throttled to 1/min)

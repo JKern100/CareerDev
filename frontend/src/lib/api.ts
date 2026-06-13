@@ -307,6 +307,7 @@ export interface AdminUser {
 export interface DashboardStats {
   total_users: number;
   users_online: number;
+  users_completed_tier1: number;
   users_completed_questionnaire: number;
   users_with_reports: number;
   total_answers: number;
@@ -357,6 +358,16 @@ export interface UserAnswer {
 
 export async function getAdminStats() {
   return request<DashboardStats>("/admin/stats");
+}
+
+export interface LoginDigest {
+  since: string | null;
+  new_users: number;
+  quick_assessment_starts: number;
+}
+
+export async function getLoginDigest() {
+  return request<LoginDigest>("/admin/login-digest");
 }
 
 export async function getAdminUsers() {
