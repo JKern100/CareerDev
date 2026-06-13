@@ -307,6 +307,7 @@ export interface AdminUser {
 export interface DashboardStats {
   total_users: number;
   users_online: number;
+  users_completed_tier1: number;
   users_completed_questionnaire: number;
   users_with_reports: number;
   total_answers: number;

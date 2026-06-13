@@ -986,6 +986,7 @@ export default function AdminPage() {
             <div style={styles.statsGrid}>
               <StatCard label="Total Users" value={stats.total_users} />
               <StatCard label="Online Now" value={stats.users_online} />
+              <StatCard label="Completed Free Assessment" value={stats.users_completed_tier1} />
               <StatCard label="Completed Questionnaire" value={stats.users_completed_questionnaire} />
               <StatCard label="Completion Rate" value={`${stats.completion_rate}%`} />
               <StatCard label="Users with Reports" value={stats.users_with_reports} />

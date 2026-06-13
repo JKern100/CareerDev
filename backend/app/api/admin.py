@@ -31,6 +31,7 @@ from app.models.promo import PromoRedemption
 from app.api.deps import get_admin_user
 from app.services.auth import hash_password, create_access_token
 from app.services.activity import log_activity
+from app.services.routing import TIER1_QUESTION_IDS
 from app.config import settings
 
 logger = logging.getLogger(__name__)
@@ -76,6 +77,7 @@ class AdminUserUpdate(BaseModel):
 class DashboardStats(BaseModel):
     total_users: int
     users_online: int
+    users_completed_tier1: int
     users_completed_questionnaire: int
     users_with_reports: int
     total_answers: int
@@ -166,6 +168,20 @@ async def get_dashboard_stats(
         select(func.count(User.id)).where(User.questionnaire_completed == True)
     )).scalar() or 0
 
+    # Free Tier 1 completions: users who have answered all Tier 1 questions.
+    # Tier 1 completion is derived from answers (no stored flag), so count
+    # users whose distinct answered Tier 1 question IDs covers the full set.
+    tier1_done_sub = (
+        select(Answer.user_id)
+        .where(Answer.question_id.in_(TIER1_QUESTION_IDS))
+        .group_by(Answer.user_id)
+        .having(func.count(func.distinct(Answer.question_id)) == len(TIER1_QUESTION_IDS))
+        .subquery()
+    )
+    completed_tier1 = (await db.execute(
+        select(func.count()).select_from(tier1_done_sub)
+    )).scalar() or 0
+
     users_with_reports = (await db.execute(
         select(func.count(func.distinct(Report.user_id)))
     )).scalar() or 0
@@ -184,6 +200,7 @@ async def get_dashboard_stats(
     return DashboardStats(
         total_users=total_users,
         users_online=users_online,
+        users_completed_tier1=completed_tier1,
         users_completed_questionnaire=completed,
         users_with_reports=users_with_reports,
         total_answers=total_answers,
