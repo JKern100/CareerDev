@@ -558,7 +558,7 @@ function formatSince(iso: string | null): string {
   return `${days} days ago`;
 }
 
-function LoginDigestModal({ digest, onClose }: { digest: LoginDigest; onClose: () => void }) {
+function digestLines(digest: LoginDigest): string[] {
   const lines: string[] = [];
   if (digest.quick_assessment_starts > 0) {
     const n = digest.quick_assessment_starts;
@@ -568,6 +568,11 @@ function LoginDigestModal({ digest, onClose }: { digest: LoginDigest; onClose: (
     const n = digest.new_users;
     lines.push(`${n} new ${n === 1 ? "person" : "people"} registered`);
   }
+  return lines;
+}
+
+function LoginDigestModal({ digest, onClose }: { digest: LoginDigest; onClose: () => void }) {
+  const lines = digestLines(digest);
   return (
     <div style={modalStyles.overlay} onClick={onClose}>
       <div style={{ ...modalStyles.modal, maxWidth: "420px" }} onClick={(e) => e.stopPropagation()}>
@@ -598,6 +603,7 @@ export default function AdminPage() {
   // Dashboard
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [digest, setDigest] = useState<LoginDigest | null>(null);
+  const [dashDigest, setDashDigest] = useState<LoginDigest | null>(null);
 
   // Users
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -646,7 +652,7 @@ export default function AdminPage() {
           return;
         }
         loadDashboard();
-        maybeShowLoginDigest();
+        loadLoginDigest();
       })
       .catch(() => {
         router.push("/login");
@@ -660,16 +666,20 @@ export default function AdminPage() {
     return () => clearTimeout(t);
   }, [actionMsg]);
 
-  // Welcome popup summarising good news since the admin's previous login.
-  // Shown once per browser session, and only when there's something positive.
-  async function maybeShowLoginDigest() {
-    if (sessionStorage.getItem("admin_digest_shown")) return;
+  // Good news since the admin's previous login. Drives two surfaces:
+  //  - a welcome popup, shown once per browser session
+  //  - a persistent panel on the Dashboard tab
+  // Both only appear when there's something positive to report.
+  async function loadLoginDigest() {
     try {
       const d = await getLoginDigest();
-      if (d.new_users > 0 || d.quick_assessment_starts > 0) {
+      const hasNews = d.new_users > 0 || d.quick_assessment_starts > 0;
+      if (!hasNews) return;
+      setDashDigest(d);
+      if (!sessionStorage.getItem("admin_digest_shown")) {
         setDigest(d);
+        sessionStorage.setItem("admin_digest_shown", "1");
       }
-      sessionStorage.setItem("admin_digest_shown", "1");
     } catch {
       // Non-critical — never block the dashboard on the digest.
     }
@@ -1045,6 +1055,15 @@ export default function AdminPage() {
                 What do these metrics mean?
               </button>
             </div>
+            {dashDigest && (
+              <div style={styles.digestPanel}>
+                <span style={{ fontSize: "1.1rem" }}>🎉</span>
+                <span>
+                  <strong style={{ color: "#f1f5f9" }}>Since {formatSince(dashDigest.since)}: </strong>
+                  <span style={{ color: "#cbd5e1" }}>{digestLines(dashDigest).join(" · ")}.</span>
+                </span>
+              </div>
+            )}
             <div style={styles.statsGrid}>
               <StatCard label="Total Users" value={stats.total_users} />
               <StatCard label="Online Now" value={stats.users_online} />
@@ -1756,6 +1775,12 @@ const styles: Record<string, React.CSSProperties> = {
   error: { color: "#ef4444", padding: "0.75rem 1rem", fontSize: "0.9rem" },
   success: { color: "#22c55e", padding: "0.75rem 1rem", fontSize: "0.9rem" },
   muted: { color: "#64748b", fontSize: "0.9rem" },
+  digestPanel: {
+    display: "flex", alignItems: "center", gap: "0.6rem",
+    background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.35)",
+    borderRadius: "10px", padding: "0.75rem 1rem", marginBottom: "1rem",
+    fontSize: "0.9rem", lineHeight: "1.4",
+  },
   statsGrid: {
     display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
     gap: "0.75rem",
