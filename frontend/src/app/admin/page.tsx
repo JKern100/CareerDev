@@ -7,6 +7,7 @@ import remarkGfm from "remark-gfm";
 import {
   getMe,
   getAdminStats,
+  getLoginDigest,
   getAdminUsers,
   getAdminQuestions,
   updateAdminUser,
@@ -27,6 +28,7 @@ import {
   adminRevokePlan,
   sendStage1Email,
   DashboardStats,
+  LoginDigest,
   AdminUser,
   AdminQuestion,
   AdminAnalysisReport,
@@ -545,6 +547,46 @@ function ConfirmDialog({
   );
 }
 
+/* ── Login Digest Modal ───────────────────────────────────────────── */
+
+function formatSince(iso: string | null): string {
+  if (!iso) return "you were last here";
+  const then = new Date(iso).getTime();
+  const days = Math.floor((Date.now() - then) / 86400000);
+  if (days <= 0) return "earlier today";
+  if (days === 1) return "yesterday";
+  return `${days} days ago`;
+}
+
+function LoginDigestModal({ digest, onClose }: { digest: LoginDigest; onClose: () => void }) {
+  const lines: string[] = [];
+  if (digest.quick_assessment_starts > 0) {
+    const n = digest.quick_assessment_starts;
+    lines.push(`${n} ${n === 1 ? "person" : "people"} tried the quick assessment`);
+  }
+  if (digest.new_users > 0) {
+    const n = digest.new_users;
+    lines.push(`${n} new ${n === 1 ? "person" : "people"} registered`);
+  }
+  return (
+    <div style={modalStyles.overlay} onClick={onClose}>
+      <div style={{ ...modalStyles.modal, maxWidth: "420px" }} onClick={(e) => e.stopPropagation()}>
+        <div style={modalStyles.header}>
+          <h2 style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0 }}>Since {formatSince(digest.since)} 🎉</h2>
+          <button style={modalStyles.closeBtn} onClick={onClose}>X</button>
+        </div>
+        <div style={{ ...modalStyles.body, padding: "1.25rem 1.5rem" }}>
+          <ul style={{ margin: 0, paddingLeft: "1.1rem", color: "#cbd5e1", fontSize: "0.95rem", lineHeight: "1.8" }}>
+            {lines.map((l, i) => (
+              <li key={i}><strong style={{ color: "#f1f5f9" }}>{l}</strong></li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Main Admin Page ──────────────────────────────────────────────── */
 
 export default function AdminPage() {
@@ -555,6 +597,7 @@ export default function AdminPage() {
 
   // Dashboard
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [digest, setDigest] = useState<LoginDigest | null>(null);
 
   // Users
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -603,6 +646,7 @@ export default function AdminPage() {
           return;
         }
         loadDashboard();
+        maybeShowLoginDigest();
       })
       .catch(() => {
         router.push("/login");
@@ -615,6 +659,21 @@ export default function AdminPage() {
     const t = setTimeout(() => setActionMsg(""), 4000);
     return () => clearTimeout(t);
   }, [actionMsg]);
+
+  // Welcome popup summarising good news since the admin's previous login.
+  // Shown once per browser session, and only when there's something positive.
+  async function maybeShowLoginDigest() {
+    if (sessionStorage.getItem("admin_digest_shown")) return;
+    try {
+      const d = await getLoginDigest();
+      if (d.new_users > 0 || d.quick_assessment_starts > 0) {
+        setDigest(d);
+      }
+      sessionStorage.setItem("admin_digest_shown", "1");
+    } catch {
+      // Non-critical — never block the dashboard on the digest.
+    }
+  }
 
   async function loadDashboard() {
     setLoading(true);
@@ -900,6 +959,9 @@ export default function AdminPage() {
 
   return (
     <div style={styles.page}>
+      {/* Login digest popup */}
+      {digest && <LoginDigestModal digest={digest} onClose={() => setDigest(null)} />}
+
       {/* Help Modal */}
       {showHelp && <HelpModal tab={tab} onClose={() => setShowHelp(false)} />}
 

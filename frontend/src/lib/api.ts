@@ -360,6 +360,16 @@ export async function getAdminStats() {
   return request<DashboardStats>("/admin/stats");
 }
 
+export interface LoginDigest {
+  since: string | null;
+  new_users: number;
+  quick_assessment_starts: number;
+}
+
+export async function getLoginDigest() {
+  return request<LoginDigest>("/admin/login-digest");
+}
+
 export async function getAdminUsers() {
   return request<AdminUser[]>("/admin/users");
 }

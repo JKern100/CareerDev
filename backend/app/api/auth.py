@@ -161,7 +161,9 @@ async def login(request: Request, data: UserLogin, db: AsyncSession = Depends(ge
     if is_first_login:
         user.has_logged_in = True
 
-    # Track login time and count
+    # Track login time and count. Preserve the prior login time first so we can
+    # summarise activity since the admin was last here.
+    user.previous_login_at = user.last_login_at
     user.last_login_at = datetime.utcnow()
     user.login_count = (user.login_count or 0) + 1
     await log_activity(db, user, "login")
@@ -387,6 +389,7 @@ async def google_callback(data: GoogleCallbackRequest, db: AsyncSession = Depend
     is_first_login = not user.has_logged_in
     if is_first_login:
         user.has_logged_in = True
+    user.previous_login_at = user.last_login_at
     user.last_login_at = datetime.utcnow()
     user.login_count = (user.login_count or 0) + 1
     await log_activity(db, user, "login", detail="google_oauth")

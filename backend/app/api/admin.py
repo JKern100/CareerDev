@@ -88,6 +88,13 @@ class DashboardStats(BaseModel):
     avg_answers_per_user: float
 
 
+class LoginDigest(BaseModel):
+    """Activity since the admin was last logged in. Counts are 0 on first login."""
+    since: datetime | None
+    new_users: int
+    quick_assessment_starts: int
+
+
 VALID_QUESTION_TYPES = [
     "single_select", "multi_select", "likert_1_5", "slider_0_10",
     "numeric", "text_short", "text_long", "file_upload",
@@ -209,6 +216,49 @@ async def get_dashboard_stats(
         users_last_30_days=users_30d,
         completion_rate=round(completed / total_users * 100, 1) if total_users > 0 else 0,
         avg_answers_per_user=round(total_answers / total_users, 1) if total_users > 0 else 0,
+    )
+
+
+@router.get("/login-digest", response_model=LoginDigest)
+async def get_login_digest(
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Summarise activity since this admin's previous login, for a welcome popup.
+
+    `previous_login_at` is captured at login time before `last_login_at` is
+    overwritten, so it reflects the start of the admin's prior session. On the
+    very first login it is None and all counts are 0.
+    """
+    since = admin.previous_login_at
+    if since is None:
+        return LoginDigest(since=None, new_users=0, quick_assessment_starts=0)
+
+    new_users = (await db.execute(
+        select(func.count(User.id)).where(User.created_at >= since)
+    )).scalar() or 0
+
+    # People who *started* the quick (Tier 1) assessment since `since`:
+    # users whose earliest Tier 1 answer falls inside the window. Using the
+    # first answer (not any answer) so returning users who merely continued an
+    # earlier attempt aren't counted as new triers.
+    first_t1 = (
+        select(
+            Answer.user_id,
+            func.min(Answer.created_at).label("first_at"),
+        )
+        .where(Answer.question_id.in_(TIER1_QUESTION_IDS))
+        .group_by(Answer.user_id)
+        .subquery()
+    )
+    quick_assessment_starts = (await db.execute(
+        select(func.count()).select_from(first_t1).where(first_t1.c.first_at >= since)
+    )).scalar() or 0
+
+    return LoginDigest(
+        since=since,
+        new_users=new_users,
+        quick_assessment_starts=quick_assessment_starts,
     )
 
 
