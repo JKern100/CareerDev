@@ -314,7 +314,7 @@ export default function Home() {
                   onMouseOver={(e) => (e.currentTarget.style.background = "#1d4ed8")}
                   onMouseOut={(e) => (e.currentTarget.style.background = "#2563eb")}
                 >
-                  See what you&apos;re worth
+                  See what your skills are worth
                 </button>
                 <button
                   onClick={() => router.push("/login")}
