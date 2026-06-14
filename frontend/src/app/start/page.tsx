@@ -9,12 +9,19 @@ import {
   type TeaserAnswers,
   type Archetype,
   type Priority,
+  type ResponsibilityLevel,
   type TeaserResult,
 } from "@/lib/teaser";
 
 // ---- Hook question definitions (the ungated 60-second mini-assessment) ----
 
-const YEARS = ["Under 2 years", "2–5 years", "5–10 years", "10+ years"];
+const RESPONSIBILITY_OPTIONS: { value: ResponsibilityLevel; label: string }[] = [
+  { value: "entry",     label: "I deliver the service to a high standard" },
+  { value: "section",   label: "I run my section and back up the team" },
+  { value: "cabin",     label: "I manage the full cabin and the crew in it" },
+  { value: "emergency", label: "I lead in safety and emergency situations" },
+  { value: "trainer",   label: "I train, assess, or sign off other crew" },
+];
 
 const PRIORITY_OPTIONS: { value: Priority; label: string }[] = [
   { value: "pay", label: "Higher pay" },
@@ -105,7 +112,7 @@ export default function StartPage() {
   const canAdvance = (() => {
     switch (step) {
       case 0:
-        return !!answers.years;
+        return !!answers.responsibility;
       case 1:
         return (answers.priorities?.length || 0) > 0;
       case 2:
@@ -165,14 +172,14 @@ export default function StartPage() {
 
             <div style={card}>
               {step === 0 && (
-                <Question title="How long have you been flying?">
-                  {YEARS.map((y) => (
+                <Question title="What's the most you've been responsible for in the cabin?">
+                  {RESPONSIBILITY_OPTIONS.map((opt) => (
                     <button
-                      key={y}
-                      style={optionButton(answers.years === y)}
-                      onClick={() => setAnswers((a) => ({ ...a, years: y }))}
+                      key={opt.value}
+                      style={optionButton(answers.responsibility === opt.value)}
+                      onClick={() => setAnswers((a) => ({ ...a, responsibility: opt.value }))}
                     >
-                      {y}
+                      {opt.label}
                     </button>
                   ))}
                 </Question>
