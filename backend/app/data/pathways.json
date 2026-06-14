@@ -15,7 +15,7 @@
       {"name": "IATA Instructional Techniques", "duration": "3 days / 24 hours", "source_url": "https://www.iata.org/en/training/courses/instructional-techniques/gmc012veen02/en/"},
       {"name": "IATA Dangerous Goods Regulations (DGR) Initial", "duration": "3 days / 24 hours", "source_url": "https://www.iata.org/en/training/courses/dangerous-goods-initial-category-6/tcgp26/en/"}
     ],
-    "skill_questions": ["Q027", "Q028", "Q029", "Q033", "Q034", "Q035"],
+    "skill_questions": ["Q027", "Q028", "Q029", "Q033", "Q034", "Q035", "Q124"],
     "interest_questions": ["Q016", "Q017", "Q019", "Q106"],
     "interest_match_values": {"Q106": ["L&D"]},
     "environment_questions": ["Q047", "Q048", "Q049", "Q050"],
@@ -46,7 +46,7 @@
       {"name": "CIPD Level 5 Associate Diploma in People Management", "duration": "12-16 months", "source_url": "https://www.cipd.org/en/learning/qualifications/associate/associate-diploma-in-people-management/"},
       {"name": "IATA Instructional Techniques", "duration": "3 days / 24 hours", "source_url": "https://www.iata.org/en/training/courses/instructional-techniques/gmc012veen02/en/"}
     ],
-    "skill_questions": ["Q028", "Q029", "Q033", "Q034", "Q035", "Q036"],
+    "skill_questions": ["Q028", "Q029", "Q033", "Q034", "Q035", "Q036", "Q124", "Q125"],
     "interest_questions": ["Q019", "Q034", "Q106"],
     "interest_match_values": {"Q106": ["L&D"]},
     "environment_questions": ["Q047", "Q048", "Q049", "Q050"],
@@ -75,7 +75,7 @@
       {"name": "CIPD Level 5 Associate Diploma in People Management", "duration": "12-16 months", "source_url": "https://www.cipd.org/en/learning/qualifications/associate/associate-diploma-in-people-management/"},
       {"name": "SHRM Certification", "duration": "Varies", "source_url": "https://www.shrm.org/credentials/certification/eligibility-criteria"}
     ],
-    "skill_questions": ["Q028", "Q029", "Q030", "Q031", "Q033", "Q035"],
+    "skill_questions": ["Q028", "Q029", "Q030", "Q031", "Q033", "Q035", "Q125"],
     "interest_questions": ["Q018", "Q019", "Q106"],
     "interest_match_values": {"Q106": ["HR"]},
     "environment_questions": ["Q047", "Q048", "Q049", "Q050", "Q051"],
@@ -130,7 +130,7 @@
       {"name": "IATA Airport Operations Diploma", "duration": "12-18 months self-paced", "source_url": "https://www.iata.org/en/training/courses/airport-operations-diploma/"},
       {"name": "Lean Six Sigma Green Belt", "duration": "2-4 weeks intensive or self-paced", "source_url": "https://asq.org/cert/six-sigma-green-belt"}
     ],
-    "skill_questions": ["Q033", "Q035", "Q036", "Q037", "Q031"],
+    "skill_questions": ["Q033", "Q035", "Q036", "Q037", "Q031", "Q123", "Q125"],
     "interest_questions": ["Q019", "Q020", "Q106"],
     "interest_match_values": {"Q106": ["Operations"]},
     "environment_questions": ["Q047", "Q048", "Q049", "Q052"],
@@ -158,7 +158,7 @@
       {"name": "NEBOSH International General Certificate", "duration": "63 taught hours + ~40 private study", "source_url": "https://www.nebosh.org.uk/qualifications/international-general-certificate/"},
       {"name": "ISO 45001 Lead Auditor (CQI/IRCA)", "duration": "5 days", "source_url": "https://www.bsigroup.com/en-ID/training-courses/iso-45001-lead-auditor/"}
     ],
-    "skill_questions": ["Q031", "Q032", "Q035", "Q036", "Q020"],
+    "skill_questions": ["Q031", "Q032", "Q035", "Q036", "Q020", "Q123"],
     "interest_questions": ["Q016", "Q020", "Q106"],
     "interest_match_values": {"Q106": ["Safety"]},
     "environment_questions": ["Q047", "Q048", "Q049", "Q052"],
@@ -186,7 +186,7 @@
       {"name": "CAPM (PMI)", "duration": "23 hours PM education required", "source_url": "https://www.pmi.org/certifications/certified-associate-capm"},
       {"name": "PMP (PMI)", "duration": "35 hours PM education + 3 years experience", "source_url": "https://www.pmi.org/certifications/project-management-pmp"}
     ],
-    "skill_questions": ["Q033", "Q035", "Q036", "Q037", "Q028"],
+    "skill_questions": ["Q033", "Q035", "Q036", "Q037", "Q028", "Q125"],
     "interest_questions": ["Q019", "Q056", "Q106"],
     "interest_match_values": {"Q106": ["Operations"]},
     "environment_questions": ["Q047", "Q048", "Q049", "Q053"],
@@ -295,7 +295,7 @@
     },
     "salary_global_note": "Private aviation ground roles pay moderately at entry but senior coordination and management roles are well compensated, with operators in UAE, Europe, and US paying premiums. Consult local salary guides for your target market.",
     "recommended_credentials": [],
-    "skill_questions": ["Q027", "Q033", "Q035", "Q036", "Q031"],
+    "skill_questions": ["Q027", "Q033", "Q035", "Q036", "Q031", "Q123"],
     "interest_questions": ["Q016", "Q017", "Q106"],
     "interest_match_values": {"Q106": ["Operations"]},
     "environment_questions": ["Q047", "Q048", "Q049", "Q052"],
@@ -326,7 +326,7 @@
       {"name": "Patient Experience Certificate (The Beryl Institute)", "duration": "Self-paced online", "source_url": "https://www.theberylinstitute.org/"},
       {"name": "Certified Medical Administrative Assistant (NHA)", "duration": "Self-study + exam", "source_url": "https://www.nhanow.com/certifications/medical-administrative-assistant"}
     ],
-    "skill_questions": ["Q027", "Q028", "Q029", "Q032", "Q030"],
+    "skill_questions": ["Q027", "Q028", "Q029", "Q032", "Q030", "Q123"],
     "interest_questions": ["Q017", "Q018", "Q106"],
     "interest_match_values": {"Q106": ["Healthcare", "CX"]},
     "environment_questions": ["Q047", "Q048", "Q049", "Q050"],
@@ -417,7 +417,7 @@
       {"name": "ICF Associate Certified Coach (ACC)", "duration": "60+ hours coach training + 100 hrs experience", "source_url": "https://coachingfederation.org/credentials-and-standards/acc"},
       {"name": "PGCE / Teaching Qualification", "duration": "1 year full-time", "source_url": "https://getintoteaching.education.gov.uk/"}
     ],
-    "skill_questions": ["Q028", "Q029", "Q034", "Q033", "Q030"],
+    "skill_questions": ["Q028", "Q029", "Q034", "Q033", "Q030", "Q124", "Q125"],
     "interest_questions": ["Q034", "Q019", "Q106"],
     "interest_match_values": {"Q106": ["Education", "L&D"]},
     "environment_questions": ["Q047", "Q048", "Q049", "Q050"],
