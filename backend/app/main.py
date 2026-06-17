@@ -266,6 +266,45 @@ async def _backfill_referral_codes():
             logger.info("Backfilled referral codes for %d existing users", updated)
 
 
+async def _seed_hook_baseline():
+    """One-time historical estimate for the 60-second hook funnel.
+
+    The hook ran without server-side instrumentation until mid-Jun 2026, so
+    no rows exist for the handful of people who reached /start before tracking
+    landed. Vercel page-view data caps that at ~7 visitors to /start. Per the
+    founder's call we seed 7 estimated "started" events, dated across the days
+    /start actually saw traffic, so the all-time dashboard count reflects them.
+
+    Honest by design: rows are flagged as estimates (top_pathway marker), only
+    "started" is seeded (we don't fabricate completions), and the seed is
+    idempotent — it runs once and never duplicates. Real events recorded going
+    forward are exact and simply add to this baseline.
+    """
+    from datetime import timedelta
+    from app.models.hook import HookEvent
+
+    MARKER = "historical estimate (pre-tracking)"
+    async with async_session() as session:
+        already = (await session.execute(
+            select(HookEvent.id).where(HookEvent.top_pathway == MARKER).limit(1)
+        )).first()
+        if already:
+            return
+        # 7 estimated starts spread across the days /start saw traffic
+        # (Vercel shows a small ramp from ~Jun 7 with a Jun 13–14 spike).
+        days_ago = [9, 8, 5, 4, 4, 3, 2]
+        now = datetime.utcnow()
+        for d in days_ago:
+            session.add(HookEvent(
+                event="started",
+                region=None,
+                top_pathway=MARKER,
+                created_at=now - timedelta(days=d),
+            ))
+        await session.commit()
+        logger.info("Seeded %d historical hook 'started' estimates", len(days_ago))
+
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -304,6 +343,8 @@ async def lifespan(app: FastAPI):
         await _dedup_subscriptions()
         print("[startup] Backfilling referral codes...", flush=True)
         await _backfill_referral_codes()
+        print("[startup] Seeding hook baseline...", flush=True)
+        await _seed_hook_baseline()
         print("[startup] All startup tasks complete — app ready", flush=True)
     except Exception:
         import traceback
