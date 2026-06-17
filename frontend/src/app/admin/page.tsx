@@ -677,7 +677,7 @@ export default function AdminPage() {
   async function loadLoginDigest() {
     try {
       const d = await getLoginDigest();
-      const hasNews = d.new_users > 0 || d.quick_assessment_starts > 0;
+      const hasNews = d.new_users > 0 || d.quick_assessment_starts > 0 || d.assessments_run > 0;
       if (!hasNews) return;
       setDashDigest(d);
       if (!sessionStorage.getItem("admin_digest_shown")) {
