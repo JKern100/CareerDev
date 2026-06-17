@@ -680,9 +680,13 @@ export default function AdminPage() {
       const hasNews = d.new_users > 0 || d.quick_assessment_starts > 0 || d.assessments_run > 0;
       if (!hasNews) return;
       setDashDigest(d);
-      if (!sessionStorage.getItem("admin_digest_shown")) {
+      // Show the popup once per login window, for every admin — never assume
+      // a prior session already saw it. `since` (the admin's previous login)
+      // changes on each fresh login, so a new login re-surfaces the popup.
+      const seenSince = localStorage.getItem("admin_digest_seen_since");
+      if (d.since && seenSince !== d.since) {
         setDigest(d);
-        sessionStorage.setItem("admin_digest_shown", "1");
+        localStorage.setItem("admin_digest_seen_since", d.since);
       }
     } catch {
       // Non-critical — never block the dashboard on the digest.
