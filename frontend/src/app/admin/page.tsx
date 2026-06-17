@@ -75,7 +75,7 @@ const HELP_CONTENT: Record<Tab, { title: string; sections: { heading: string; bo
       },
       {
         heading: "Metrics Explained",
-        body: `- **Total Users**: All registered accounts.\n- **60-sec Assessment Starts/Finishes**: Anonymous runs of the ungated 60-second hook at /start — no account needed, so these are counted separately from everything below. Starts = answered the first question; Finishes = reached the teaser.\n- **Completed Free Assessment**: Signed-in users who finished the gated Tier 1 questions (a different, later step than the 60-second hook).\n- **Completed Questionnaire**: Users who finished all 8 modules.\n- **Completion Rate**: Percentage of users who completed the questionnaire.\n- **Users with Reports**: Users who have generated an analysis report.\n- **Total Answers / Reports**: Aggregate counts across all users.\n- **Avg Answers/User**: Average number of answered questions per user.\n- **New (7/30 days)**: Recently registered users.`,
+        body: `- **Total Users**: All registered accounts.\n- **60-sec Assessments Run**: Runs of the ungated 60-second assessment at /start — anonymous, no account needed, so counted separately from everything below.\n- **Completed Free Assessment**: Signed-in users who finished the gated Tier 1 questions (a different, later step than the 60-second assessment).\n- **Completed Questionnaire**: Users who finished all 8 modules.\n- **Completion Rate**: Percentage of users who completed the questionnaire.\n- **Users with Reports**: Users who have generated an analysis report.\n- **Total Answers / Reports**: Aggregate counts across all users.\n- **Avg Answers/User**: Average number of answered questions per user.\n- **New (7/30 days)**: Recently registered users.`,
       },
     ],
   },
@@ -560,9 +560,9 @@ function formatSince(iso: string | null): string {
 
 function digestLines(digest: LoginDigest): string[] {
   const lines: string[] = [];
-  if (digest.hook_starts > 0) {
-    const n = digest.hook_starts;
-    lines.push(`${n} ${n === 1 ? "person" : "people"} started the 60-second assessment`);
+  if (digest.assessments_run > 0) {
+    const n = digest.assessments_run;
+    lines.push(`${n} 60-second ${n === 1 ? "assessment" : "assessments"} run`);
   }
   if (digest.quick_assessment_starts > 0) {
     const n = digest.quick_assessment_starts;
@@ -1071,9 +1071,7 @@ export default function AdminPage() {
             <div style={styles.statsGrid}>
               <StatCard label="Total Users" value={stats.total_users} />
               <StatCard label="Online Now" value={stats.users_online} />
-              <StatCard label="60-sec Assessment Starts" value={stats.hook_starts} />
-              <StatCard label="60-sec Assessment Finishes" value={stats.hook_completions} />
-              <StatCard label="60-sec Starts (7 days)" value={stats.hook_starts_last_7_days} />
+              <StatCard label="60-sec Assessments Run" value={stats.assessments_run} />
               <StatCard label="Completed Free Assessment" value={stats.users_completed_tier1} />
               <StatCard label="Completed Questionnaire" value={stats.users_completed_questionnaire} />
               <StatCard label="Completion Rate" value={`${stats.completion_rate}%`} />

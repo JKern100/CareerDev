@@ -316,9 +316,7 @@ export interface DashboardStats {
   users_last_30_days: number;
   completion_rate: number;
   avg_answers_per_user: number;
-  hook_starts: number;
-  hook_completions: number;
-  hook_starts_last_7_days: number;
+  assessments_run: number;
 }
 
 export interface AdminQuestion {
@@ -367,7 +365,7 @@ export interface LoginDigest {
   since: string | null;
   new_users: number;
   quick_assessment_starts: number;
-  hook_starts: number;
+  assessments_run: number;
 }
 
 /**
