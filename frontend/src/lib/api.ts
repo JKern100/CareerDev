@@ -316,6 +316,9 @@ export interface DashboardStats {
   users_last_30_days: number;
   completion_rate: number;
   avg_answers_per_user: number;
+  hook_starts: number;
+  hook_completions: number;
+  hook_starts_last_7_days: number;
 }
 
 export interface AdminQuestion {
@@ -364,6 +367,31 @@ export interface LoginDigest {
   since: string | null;
   new_users: number;
   quick_assessment_starts: number;
+  hook_starts: number;
+}
+
+/**
+ * Record an anonymous 60-second hook milestone ("started" / "completed").
+ * Fire-and-forget: never block or break the visitor's flow if it fails.
+ */
+export async function logHookEvent(
+  event: "started" | "completed",
+  detail?: { region?: string; topPathway?: string }
+): Promise<void> {
+  try {
+    await fetch(`${API_BASE}/hook/event`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      keepalive: true,
+      body: JSON.stringify({
+        event,
+        region: detail?.region,
+        top_pathway: detail?.topPathway,
+      }),
+    });
+  } catch {
+    /* ignore — analytics must never affect the user experience */
+  }
 }
 
 export async function getLoginDigest() {

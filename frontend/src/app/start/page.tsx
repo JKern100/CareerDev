@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { track } from "@vercel/analytics";
+import { logHookEvent } from "@/lib/api";
 import {
   computeTeaser,
   REGIONS,
@@ -82,7 +83,11 @@ export default function StartPage() {
 
   function next() {
     // Fire once, when the very first question is answered.
-    if (step === 0) track("hook_started");
+    if (step === 0) {
+      track("hook_started");
+      // Server-side count so the admin dashboard sees anonymous 60-sec runs.
+      logHookEvent("started");
+    }
     if (step < TOTAL_STEPS - 1) {
       setStep(step + 1);
     } else {
@@ -90,6 +95,7 @@ export default function StartPage() {
       const res = computeTeaser(answers);
       setResult(res);
       track("hook_completed", { region: answers.region ?? "unknown", topPathway: res.topPathwayName });
+      logHookEvent("completed", { region: answers.region ?? "unknown", topPathway: res.topPathwayName });
       try {
         // Stash answers so they can prefill / inform the full assessment later.
         localStorage.setItem("teaser_answers", JSON.stringify(answers));

@@ -28,6 +28,7 @@ from app.models.action_plan import ActionStep
 from app.models.advisor import Advisor, AvailabilitySlot, Booking
 from app.models.payment import Payment, Subscription
 from app.models.promo import PromoRedemption
+from app.models.hook import HookEvent
 from app.api.deps import get_admin_user
 from app.services.auth import hash_password, create_access_token
 from app.services.activity import log_activity
@@ -86,13 +87,20 @@ class DashboardStats(BaseModel):
     users_last_30_days: int
     completion_rate: float
     avg_answers_per_user: float
+    # Anonymous 60-second hook (the ungated /start mini-assessment). These
+    # count first-touch runs that never create an account, so they sit
+    # outside every user-based metric above.
+    hook_starts: int
+    hook_completions: int
+    hook_starts_last_7_days: int
 
 
 class LoginDigest(BaseModel):
     """Activity since the admin was last logged in. Counts are 0 on first login."""
     since: datetime | None
     new_users: int
-    quick_assessment_starts: int
+    quick_assessment_starts: int  # gated Tier 1 (signed-in) starts
+    hook_starts: int              # anonymous 60-second hook (/start) starts
 
 
 VALID_QUESTION_TYPES = [
@@ -204,6 +212,19 @@ async def get_dashboard_stats(
         select(func.count(User.id)).where(User.created_at >= month_ago)
     )).scalar() or 0
 
+    # 60-second hook funnel (anonymous, from the hook_events table).
+    hook_starts = (await db.execute(
+        select(func.count(HookEvent.id)).where(HookEvent.event == "started")
+    )).scalar() or 0
+    hook_completions = (await db.execute(
+        select(func.count(HookEvent.id)).where(HookEvent.event == "completed")
+    )).scalar() or 0
+    hook_starts_7d = (await db.execute(
+        select(func.count(HookEvent.id)).where(
+            HookEvent.event == "started", HookEvent.created_at >= week_ago
+        )
+    )).scalar() or 0
+
     return DashboardStats(
         total_users=total_users,
         users_online=users_online,
@@ -216,6 +237,9 @@ async def get_dashboard_stats(
         users_last_30_days=users_30d,
         completion_rate=round(completed / total_users * 100, 1) if total_users > 0 else 0,
         avg_answers_per_user=round(total_answers / total_users, 1) if total_users > 0 else 0,
+        hook_starts=hook_starts,
+        hook_completions=hook_completions,
+        hook_starts_last_7_days=hook_starts_7d,
     )
 
 
@@ -232,7 +256,7 @@ async def get_login_digest(
     """
     since = admin.previous_login_at
     if since is None:
-        return LoginDigest(since=None, new_users=0, quick_assessment_starts=0)
+        return LoginDigest(since=None, new_users=0, quick_assessment_starts=0, hook_starts=0)
 
     new_users = (await db.execute(
         select(func.count(User.id)).where(User.created_at >= since)
@@ -255,10 +279,18 @@ async def get_login_digest(
         select(func.count()).select_from(first_t1).where(first_t1.c.first_at >= since)
     )).scalar() or 0
 
+    # Anonymous 60-second hook starts in the same window.
+    hook_starts = (await db.execute(
+        select(func.count(HookEvent.id)).where(
+            HookEvent.event == "started", HookEvent.created_at >= since
+        )
+    )).scalar() or 0
+
     return LoginDigest(
         since=since,
         new_users=new_users,
         quick_assessment_starts=quick_assessment_starts,
+        hook_starts=hook_starts,
     )
 
 
