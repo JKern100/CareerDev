@@ -679,15 +679,12 @@ export default function AdminPage() {
       const d = await getLoginDigest();
       const hasNews = d.new_users > 0 || d.quick_assessment_starts > 0 || d.assessments_run > 0;
       if (!hasNews) return;
+      // Show whatever this admin hasn't seen. "Seen" state lives server-side:
+      // the digest reports unseen assessment runs (the baseline once, then only
+      // newer) and marks them seen as it hands them over, so the popup surfaces
+      // reliably for every admin without assuming a prior view.
       setDashDigest(d);
-      // Show the popup once per login window, for every admin — never assume
-      // a prior session already saw it. `since` (the admin's previous login)
-      // changes on each fresh login, so a new login re-surfaces the popup.
-      const seenSince = localStorage.getItem("admin_digest_seen_since");
-      if (d.since && seenSince !== d.since) {
-        setDigest(d);
-        localStorage.setItem("admin_digest_seen_since", d.since);
-      }
+      setDigest(d);
     } catch {
       // Non-critical — never block the dashboard on the digest.
     }
