@@ -236,15 +236,29 @@ async def get_login_digest(
     admin: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Summarise activity since this admin's previous login, for a welcome popup.
+    """Summarise activity for a welcome popup.
 
-    `previous_login_at` is captured at login time before `last_login_at` is
-    overwritten, so it reflects the start of the admin's prior session. On the
-    very first login it is None and all counts are 0.
+    New users + gated Tier 1 starts are reported "since you were last here"
+    (`previous_login_at`, captured at login before `last_login_at` is
+    overwritten). The 60-second assessment runs use their own per-admin
+    high-water mark instead: the first time, every run to date is reported
+    (so the seeded baseline shows once); after that, only newer runs. The
+    mark advances here, the moment the count is handed to the popup.
     """
+    # 60-second assessment runs: unseen by THIS admin (independent of login).
+    seen = admin.assessments_digest_seen_at
+    runs_q = select(func.count(HookEvent.id)).where(HookEvent.event == "started")
+    if seen is not None:
+        runs_q = runs_q.where(HookEvent.created_at > seen)
+    assessments_run = (await db.execute(runs_q)).scalar() or 0
+    if assessments_run > 0:
+        # Reported now → don't report these same runs again.
+        admin.assessments_digest_seen_at = datetime.utcnow()
+
     since = admin.previous_login_at
     if since is None:
-        return LoginDigest(since=None, new_users=0, quick_assessment_starts=0, assessments_run=0)
+        await db.commit()
+        return LoginDigest(since=None, new_users=0, quick_assessment_starts=0, assessments_run=assessments_run)
 
     new_users = (await db.execute(
         select(func.count(User.id)).where(User.created_at >= since)
@@ -267,13 +281,7 @@ async def get_login_digest(
         select(func.count()).select_from(first_t1).where(first_t1.c.first_at >= since)
     )).scalar() or 0
 
-    # Runs of the anonymous 60-second assessment in the same window.
-    assessments_run = (await db.execute(
-        select(func.count(HookEvent.id)).where(
-            HookEvent.event == "started", HookEvent.created_at >= since
-        )
-    )).scalar() or 0
-
+    await db.commit()
     return LoginDigest(
         since=since,
         new_users=new_users,

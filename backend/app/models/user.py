@@ -55,6 +55,11 @@ class User(Base):
     # Used to summarise activity "since you were last here".
     previous_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     login_count: Mapped[int | None] = mapped_column(Integer, default=0)
+    # High-water mark for the 60-second-assessment digest: the moment this admin
+    # was last shown the run count. NULL = never shown, so the first digest
+    # reports every run to date (incl. the seeded baseline); afterwards only
+    # runs newer than this are reported. Independent of login timing.
+    assessments_digest_seen_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Activity tracking (updated on every authenticated request, throttled to 1/min)
     last_active_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
