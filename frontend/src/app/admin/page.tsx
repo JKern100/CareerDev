@@ -562,7 +562,7 @@ function digestLines(digest: LoginDigest): string[] {
   const lines: string[] = [];
   if (digest.assessments_run > 0) {
     const n = digest.assessments_run;
-    lines.push(`${n} 60-second ${n === 1 ? "assessment" : "assessments"} run`);
+    lines.push(`${n} ${n === 1 ? "run" : "runs"} of the 60-second assessment`);
   }
   if (digest.quick_assessment_starts > 0) {
     const n = digest.quick_assessment_starts;
