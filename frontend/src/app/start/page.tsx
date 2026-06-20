@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { track } from "@vercel/analytics";
+import { trackEvent } from "@/lib/analytics";
 import { logHookEvent } from "@/lib/api";
 import {
   computeTeaser,
@@ -84,7 +84,9 @@ export default function StartPage() {
   function next() {
     // Fire once, when the very first question is answered.
     if (step === 0) {
-      track("hook_started");
+      // Legacy name kept for data continuity; assessment_started added per funnel spec.
+      trackEvent("hook_started");
+      trackEvent("assessment_started");
       // Server-side count so the admin dashboard sees anonymous 60-sec runs.
       logHookEvent("started");
     }
@@ -94,7 +96,11 @@ export default function StartPage() {
       // Last question answered → compute the teaser.
       const res = computeTeaser(answers);
       setResult(res);
-      track("hook_completed", { region: answers.region ?? "unknown", topPathway: res.topPathwayName });
+      const eventProps = { region: answers.region ?? "unknown", topPathway: res.topPathwayName };
+      // Legacy name kept for data continuity; assessment_completed + result_viewed added per funnel spec.
+      trackEvent("hook_completed", eventProps);
+      trackEvent("assessment_completed", eventProps);
+      trackEvent("result_viewed", eventProps);
       logHookEvent("completed", { region: answers.region ?? "unknown", topPathway: res.topPathwayName });
       try {
         // Stash answers so they can prefill / inform the full assessment later.
@@ -309,7 +315,7 @@ export default function StartPage() {
             </div>
           </>
         ) : (
-          result && <Teaser result={result} onUnlock={() => { track("unlock_clicked"); router.push("/register"); }} />
+          result && <Teaser result={result} onUnlock={() => { trackEvent("unlock_clicked"); router.push("/register"); }} />
         )}
       </div>
     </div>
@@ -460,7 +466,7 @@ function Teaser({ result, onUnlock }: { result: TeaserResult; onUnlock: () => vo
         <h3 style={{ fontSize: "1.15rem", fontWeight: 700, marginBottom: "0.6rem" }}>Want the full picture?</h3>
         <p style={{ color: "#cbd5e1", fontSize: "0.95rem", lineHeight: 1.6, marginBottom: "1.25rem" }}>
           All 17 pathways scored to you, a step-by-step plan for whenever you&apos;re ready, credential
-          recommendations, and full salary detail. Create a free account to unlock it.
+          recommendations, and full salary detail. Create a free account to unlock your full analysis.
         </p>
         <button
           onClick={onUnlock}

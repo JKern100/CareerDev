@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getMe } from "@/lib/api";
+import { trackEvent } from "@/lib/analytics";
 
 const API_BASE = "/api";
 
@@ -52,6 +53,7 @@ function AuthCallbackContent() {
         localStorage.setItem("token", data.access_token);
         if (data.is_first_login) {
           localStorage.setItem("is_first_login", "true");
+          trackEvent("signup_completed", { method: "google" });
         }
 
         const user = await getMe();

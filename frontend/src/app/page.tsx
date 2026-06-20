@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getMe, APP_VERSION } from "@/lib/api";
-import { track } from "@vercel/analytics";
+import { trackEvent } from "@/lib/analytics";
 
 export default function Home() {
   const router = useRouter();
@@ -11,6 +11,7 @@ export default function Home() {
   const [dashboardPath, setDashboardPath] = useState("/questionnaire");
 
   useEffect(() => {
+    trackEvent("landing_view");
     const token = localStorage.getItem("token");
     if (!token) return;
     getMe()
@@ -297,42 +298,24 @@ export default function Home() {
                 Continue where you left off
               </button>
             ) : (
-              <>
-                <button
-                  onClick={() => { track("hero_cta_click", { location: "hero" }); router.push("/start"); }}
-                  style={{
-                    background: "#2563eb",
-                    color: "white",
-                    border: "none",
-                    padding: "0.875rem 2rem",
-                    borderRadius: "10px",
-                    fontSize: "1rem",
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    transition: "background 0.15s",
-                  }}
-                  onMouseOver={(e) => (e.currentTarget.style.background = "#1d4ed8")}
-                  onMouseOut={(e) => (e.currentTarget.style.background = "#2563eb")}
-                >
-                  See what your skills are worth
-                </button>
-                <button
-                  onClick={() => router.push("/login")}
-                  style={{
-                    background: "rgba(255,255,255,0.08)",
-                    color: "#f1f5f9",
-                    border: "1px solid rgba(255,255,255,0.15)",
-                    padding: "0.875rem 2rem",
-                    borderRadius: "10px",
-                    fontSize: "1rem",
-                    fontWeight: 500,
-                    cursor: "pointer",
-                    backdropFilter: "blur(8px)",
-                  }}
-                >
-                  Sign in
-                </button>
-              </>
+              <button
+                onClick={() => { trackEvent("hero_cta_click", { location: "hero" }); router.push("/start"); }}
+                style={{
+                  background: "#2563eb",
+                  color: "white",
+                  border: "none",
+                  padding: "0.875rem 2rem",
+                  borderRadius: "10px",
+                  fontSize: "1rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "background 0.15s",
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.background = "#1d4ed8")}
+                onMouseOut={(e) => (e.currentTarget.style.background = "#2563eb")}
+              >
+                See what your skills are worth
+              </button>
             )}
           </div>
 
@@ -370,7 +353,7 @@ export default function Home() {
             strength you&apos;re underrating — before you decide whether to go further.
           </p>
           <button
-            onClick={() => { track("hero_cta_click", { location: "hook_band" }); router.push("/start"); }}
+            onClick={() => { trackEvent("hero_cta_click", { location: "hook_band" }); router.push("/start"); }}
             style={{
               background: "transparent",
               color: "#f1f5f9",

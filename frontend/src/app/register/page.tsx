@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { register } from "@/lib/api";
+import { trackEvent } from "@/lib/analytics";
 import FlowerSpinner from "@/components/FlowerSpinner";
 import { useTranslation } from "@/hooks/useTranslation";
 import { settings } from "@/lib/settings";
@@ -41,7 +42,10 @@ function RegisterContent() {
     setError("");
     setLoading(true);
     try {
-      await register(email, password, fullName || undefined, refCode || undefined);
+      const data = await register(email, password, fullName || undefined, refCode || undefined);
+      if (data.is_first_login) {
+        trackEvent("signup_completed", { method: "password" });
+      }
       router.push("/dashboard");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Registration failed");
