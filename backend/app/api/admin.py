@@ -64,6 +64,7 @@ class AdminUserOut(BaseModel):
     last_email_type: str | None
     plan: str
     is_premium: bool
+    email_nudges_enabled: bool = True
 
 
 class AdminUserUpdate(BaseModel):
@@ -390,6 +391,7 @@ async def list_users(
             created_at=u.created_at,
             plan=user_plan or "free",
             is_premium=bool(plan_active) and user_plan in ("pro", "premium", "monthly"),
+            email_nudges_enabled=u.email_nudges_enabled,
         )
         for u, answers_count, reports_count, analysis_count, coach_message_count, last_emailed_at, last_email_type, user_plan, plan_active in rows
     ]
@@ -454,6 +456,7 @@ async def get_user(
         created_at=u.created_at,
         plan=sub.plan if sub else "free",
         is_premium=bool(sub and sub.is_active and sub.plan in ("pro", "premium", "monthly")),
+        email_nudges_enabled=u.email_nudges_enabled,
     )
 
 
@@ -1673,6 +1676,40 @@ async def get_custom_email_engagement(
     return {"tracking_configured": tracking_configured, "campaigns": out}
 
 
+# ── Unsubscribed Users (email opt-outs) ──────────────────────────────────
+
+@router.get("/unsubscribed-users")
+async def get_unsubscribed_users(
+    db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
+):
+    """List users who opted out of emails (email_nudges_enabled = false).
+
+    This is the signal set when a recipient clicks 'unsubscribe' on a product
+    or broadcast email. Newsletter-only opt-outs are tracked separately in
+    newsletter_subscribers (see /admin/newsletter/subscribers).
+    """
+    result = await db.execute(
+        select(User)
+        .where(User.email_nudges_enabled.is_(False))
+        .order_by(User.created_at.desc())
+    )
+    users = result.scalars().all()
+    return {
+        "count": len(users),
+        "users": [
+            {
+                "id": str(u.id),
+                "email": u.email,
+                "full_name": u.full_name,
+                "last_active_at": u.last_active_at.isoformat() if u.last_active_at else None,
+                "created_at": u.created_at.isoformat() if u.created_at else None,
+            }
+            for u in users
+        ],
+    }
+
+
 # ── Send Test Email / Trigger Stage 1 Email ──────────────────────────────
 
 @router.post("/send-test-email")
@@ -1789,6 +1826,7 @@ async def send_bulk_email(
 
     sent = 0
     failed = 0
+    skipped = 0
     details: list[dict] = []
 
     for uid_str in data.user_ids:
@@ -1804,6 +1842,13 @@ async def send_bulk_email(
         if not user:
             failed += 1
             details.append({"email": uid_str, "status": "failed", "error": "User not found"})
+            continue
+
+        # Respect opt-outs: never email a user who has unsubscribed. Honouring
+        # this is legally required (CAN-SPAM/GDPR) and protects deliverability.
+        if not user.email_nudges_enabled:
+            skipped += 1
+            details.append({"email": user.email, "status": "skipped", "error": "User unsubscribed"})
             continue
 
         # Ensure unsubscribe token exists
@@ -1883,7 +1928,7 @@ async def send_bulk_email(
             failed += 1
             details.append({"email": user.email, "status": "failed", "error": str(exc)[:200]})
 
-    return {"sent": sent, "failed": failed, "details": details}
+    return {"sent": sent, "failed": failed, "skipped": skipped, "details": details}
 
 
 # ── Email Templates ──────────────────────────────────────────────────────

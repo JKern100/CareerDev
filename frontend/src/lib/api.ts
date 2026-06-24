@@ -302,6 +302,19 @@ export interface AdminUser {
   last_email_type: string | null;
   plan: string;
   is_premium: boolean;
+  email_nudges_enabled?: boolean;
+}
+
+export interface UnsubscribedUser {
+  id: string;
+  email: string;
+  full_name: string | null;
+  last_active_at: string | null;
+  created_at: string | null;
+}
+
+export async function getUnsubscribedUsers() {
+  return request<{ count: number; users: UnsubscribedUser[] }>("/admin/unsubscribed-users");
 }
 
 export interface DashboardStats {
@@ -994,6 +1007,7 @@ export async function getEmailLogs(params?: { email_type?: string; status?: stri
 export interface BulkEmailResult {
   sent: number;
   failed: number;
+  skipped?: number;
   details: { email: string; status: string; error: string | null }[];
 }
 
