@@ -26,6 +26,32 @@ export default function Home() {
 
   return (
     <div style={{ background: "#0a0e1a", color: "#f1f5f9", minHeight: "100vh" }}>
+      {/* Sunset notice */}
+      <div
+        style={{
+          background: "#1e293b",
+          borderBottom: "1px solid #334155",
+          padding: "0.75rem 1rem",
+          textAlign: "center",
+          fontSize: "0.9rem",
+          color: "#e2e8f0",
+          lineHeight: 1.6,
+        }}
+      >
+        <strong style={{ color: "#f1f5f9" }}>CrewTransition is winding down.</strong>{" "}
+        The assessment and saved reports stay available until{" "}
+        <strong style={{ color: "#f1f5f9" }}>September 30, 2026</strong>; after that,
+        all accounts and data will be permanently deleted. Thank you to every crew
+        member who tried it. Interested in taking the project forward?{" "}
+        <a
+          href="mailto:jay06525@gmail.com"
+          style={{ color: "#60a5fa", textDecoration: "underline" }}
+        >
+          Get in touch
+        </a>
+        .
+      </div>
+
       {/* Nav */}
       <nav
         style={{
