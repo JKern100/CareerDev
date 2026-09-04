@@ -1,19 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Wind-down: the account entry points now land on the closing page.
-  // `?admin=1` still reaches the real login form so the admin panel stays
-  // reachable until the app is switched off.
+  // Wind-down: the account entry points and the admin panel all land on the
+  // closing page. There is no bypass — restoring access means reverting this
+  // block and redeploying.
   async redirects() {
-    const toHome = (source) => ({
-      source,
-      destination: "/",
-      permanent: false,
-      missing: [{ type: "query", key: "admin" }],
-    });
+    const toHome = (source) => ({ source, destination: "/", permanent: false });
     return [
       toHome("/login"),
       toHome("/register"),
       toHome("/forgot-password"),
+      toHome("/admin"),
+      toHome("/admin/:path*"),
     ];
   },
   async rewrites() {
