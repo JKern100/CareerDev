@@ -6,21 +6,19 @@ import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "CrewTransition — See what your skills are worth",
-  description: "A free, private, AI-powered look at what your cabin-crew skills are worth across other industries — with matching pathways, salary ranges, and the steps to get there. Built for flight attendants. No signup.",
+  title: "CrewTransition — closing",
+  description: "CrewTransition has closed. Thank you to the cabin crew who took part.",
   openGraph: {
-    title: "See what your skills are worth",
-    description: "Built for flight attendants. Free · private · AI-powered.",
+    title: "CrewTransition — closing",
+    description: "CrewTransition has closed. Thank you to the cabin crew who took part.",
     url: SITE_URL,
     siteName: "CrewTransition",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "CrewTransition — See what your skills are worth" }],
     type: "website",
   },
   twitter: {
-    card: "summary_large_image",
-    title: "See what your skills are worth",
-    description: "Built for flight attendants. Free · private · AI-powered.",
-    images: ["/og-image.png"],
+    card: "summary",
+    title: "CrewTransition — closing",
+    description: "CrewTransition has closed. Thank you to the cabin crew who took part.",
   },
   icons: {
     icon: [
