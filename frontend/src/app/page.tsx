@@ -55,7 +55,7 @@ export default function Home() {
           <p style={{ fontSize: "1rem", lineHeight: 1.75, color: "#cbd5e1", margin: 0 }}>
             <strong style={{ color: UA_GOLD }}>If you&apos;d like to take it forward.</strong>{" "}
             The assessment engine is built and works well. If you know this world and want to
-            carry it on, I&apos;d like to hear from you:{" "}
+            carry it on, I&apos;d love to hear from you:{" "}
             <a
               href="mailto:jay06525@gmail.com"
               style={{ color: "#7aa7ec", textDecoration: "underline" }}
