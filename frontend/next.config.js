@@ -1,5 +1,21 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Wind-down: the account entry points now land on the closing page.
+  // `?admin=1` still reaches the real login form so the admin panel stays
+  // reachable until the app is switched off.
+  async redirects() {
+    const toHome = (source) => ({
+      source,
+      destination: "/",
+      permanent: false,
+      missing: [{ type: "query", key: "admin" }],
+    });
+    return [
+      toHome("/login"),
+      toHome("/register"),
+      toHome("/forgot-password"),
+    ];
+  },
   async rewrites() {
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     return [
