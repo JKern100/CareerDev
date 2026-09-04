@@ -9,29 +9,20 @@ export default function Home() {
       <div aria-hidden style={{ height: "3px", background: UA_BLUE }} />
       <div aria-hidden style={{ height: "3px", background: UA_GOLD }} />
 
-      {/* Nav — wordmark plus a quiet sign-in link, kept until accounts close. */}
       <nav
         style={{
           display: "flex",
-          justifyContent: "space-between",
           alignItems: "center",
+          gap: "0.75rem",
           padding: "1rem",
           maxWidth: "760px",
           margin: "0 auto",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <img src="/logo.svg" alt="CrewTransition" width={36} height={36} />
-          <span style={{ fontWeight: 600, fontSize: "1.1rem" }}>
-            Crew<span style={{ color: UA_BLUE, fontWeight: 700 }}>Transition</span>
-          </span>
-        </div>
-        <a
-          href="/login"
-          style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.9rem" }}
-        >
-          Sign in
-        </a>
+        <img src="/logo.svg" alt="CrewTransition" width={36} height={36} />
+        <span style={{ fontWeight: 600, fontSize: "1.1rem" }}>
+          Crew<span style={{ color: UA_BLUE, fontWeight: 700 }}>Transition</span>
+        </span>
       </nav>
 
       <main style={{ maxWidth: "680px", margin: "0 auto", padding: "3rem 1.25rem 5rem" }}>
@@ -60,13 +51,7 @@ export default function Home() {
           before this site existed, and it stays true now.
         </p>
 
-        <section
-          style={{
-            borderTop: `1px solid ${UA_GOLD}33`,
-            paddingTop: "1.75rem",
-            marginBottom: "1.75rem",
-          }}
-        >
+        <section style={{ borderTop: `1px solid ${UA_GOLD}33`, paddingTop: "1.75rem" }}>
           <p style={{ fontSize: "1rem", lineHeight: 1.75, color: "#cbd5e1", margin: 0 }}>
             <strong style={{ color: UA_GOLD }}>If you&apos;d like to take it forward.</strong>{" "}
             The assessment engine is built and works well. If you know this world and want to
@@ -77,23 +62,6 @@ export default function Home() {
             >
               jay06525@gmail.com
             </a>
-          </p>
-        </section>
-
-        {/* Remove this block after 5 September 2026, once accounts are deleted. */}
-        <section style={{ borderTop: `1px solid ${UA_GOLD}33`, paddingTop: "1.75rem" }}>
-          <p style={{ fontSize: "1rem", lineHeight: 1.75, color: "#cbd5e1", margin: 0 }}>
-            <strong style={{ color: UA_GOLD }}>If you have an account.</strong>{" "}
-            Accounts and saved reports will be deleted on September 5, 2026. Until then you can{" "}
-            <a href="/login" style={{ color: "#7aa7ec", textDecoration: "underline" }}>log in</a>,
-            open your results, and use &quot;Save a copy (print / PDF)&quot;. If you&apos;d like
-            your raw data, or want it deleted sooner,{" "}
-            <a
-              href="mailto:jay06525@gmail.com"
-              style={{ color: "#7aa7ec", textDecoration: "underline" }}
-            >
-              email me
-            </a>.
           </p>
         </section>
       </main>
